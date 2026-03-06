@@ -16,7 +16,7 @@ const T = {
   blue: "#2563eb", blueDim: "#dbeafe",
   purple: "#7c3aed", purpleDim: "#ede9fe",
   teal: "#0d9488", tealDim: "#ccfbf1",
-  gold: "#b45309", goldDim: "#fef3c7",
+  gold: "#b45309", goldDim: "#fef3c7", 
 };
 
 const CATEGORIES = [
