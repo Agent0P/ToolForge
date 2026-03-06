@@ -93,7 +93,7 @@ export default async function handler(req, res) {
   }
 
   // ── Monthly renewal — reset to 400 ─────────────────────────────────
-  if (eventName === 'subscription_renewed') {
+  if (eventName === "subscription_payment_success") {
     const subscriptionId = String(event.data?.id);
     const existingToken = await redis.get(`sub:${subscriptionId}:token`);
     if (existingToken) {
@@ -107,7 +107,12 @@ export default async function handler(req, res) {
     }
   }
 
-  // ── Subscription cancelled ──────────────────────────────────────────
+  // ── Subscription cancelled — keep access until period ends ────────
+  if (eventName === 'subscription_cancelled') {
+    console.log('Subscription cancelled — access continues until period end');
+  }
+
+  // ── Subscription expired — remove access ───────────────────────────
   if (eventName === 'subscription_expired') {
     const subscriptionId = String(event.data?.id);
     const existingToken = await redis.get(`sub:${subscriptionId}:token`);
