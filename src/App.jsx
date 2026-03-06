@@ -273,7 +273,7 @@ function UpgradeModal({ onClose }) {
         </a>
         <a href={proUrl} style={{ textDecoration:"none", display:"block", marginBottom:14 }}>
           <div style={{ padding:16, borderRadius:14, border:`2px solid ${T.gold}`, background:T.goldDim, cursor:"pointer", position:"relative" }}>
-            <div style={{ position:"absolute", top:10, right:10, fontSize:9, padding:"3px 8px", borderRadius:99, background:T.gold, color:"white", fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.5 }}>BEST VALUE</div>
+            <div style={{ position:"absolute", top:-10, right:10, fontSize:9, padding:"3px 8px", borderRadius:99, background:T.gold, color:"white", fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.5 }}>BEST VALUE</div>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}><div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:T.gold }}>Pro Monthly</div><div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.gold }}>$7.99<span style={{ fontSize:12, fontWeight:400 }}>/mo</span></div></div>
             <div style={{ fontSize:12, color:T.gold, fontFamily:"DM Sans, sans-serif" }}>400 Claude Sonnet generations/month · Top up anytime for $2.99 · No ads · Cancel anytime</div>
           </div>
