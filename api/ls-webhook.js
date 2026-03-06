@@ -1,16 +1,9 @@
 // api/ls-webhook.js
-// This runs on Vercel's servers when Lemon Squeezy sends a payment notification.
-// It creates an access token and stores it so the user can unlock Claude tools.
-
 import { kv } from '@vercel/kv';
 import crypto from 'crypto';
 
-// Tell Vercel not to auto-parse the body — we need the raw bytes to verify the signature
-export const config = {
-  api: { bodyParser: false }
-};
+export const config = { api: { bodyParser: false } };
 
-// Read the raw request body as a string
 async function getRawBody(req) {
   return new Promise((resolve, reject) => {
     let data = '';
@@ -25,7 +18,6 @@ export default async function handler(req, res) {
 
   const rawBody = await getRawBody(req);
 
-  // Verify the request is genuinely from Lemon Squeezy
   const secret = process.env.LS_WEBHOOK_SECRET;
   const signature = req.headers['x-signature'];
   if (secret && signature) {
@@ -38,13 +30,31 @@ export default async function handler(req, res) {
 
   const event = JSON.parse(rawBody);
   const eventName = event.meta?.event_name;
-  console.log('LS webhook received:', eventName);
+  const customData = event.meta?.custom_data || {};
+  console.log('LS webhook received:', eventName, 'custom:', customData);
 
-  // ── One-time purchase ──────────────────────────────────────────────
-  if (eventName === 'order_created') {
+  // ── Top-up purchase (100 extra generations added to existing token) ──
+  if (eventName === 'order_created' && customData.type === 'topup' && customData.existing_token) {
+    const existingToken = customData.existing_token;
+    const orderId = String(event.data?.id);
+    const raw = await kv.get(`token:${existingToken}`);
+    if (raw) {
+      const data = JSON.parse(raw);
+      data.generations_left = (data.generations_left || 0) + 100;
+      data.topup_at = Date.now();
+      await kv.set(`token:${existingToken}`, JSON.stringify(data), { ex: 60 * 60 * 24 * 365 });
+      // Map order so success page can confirm
+      await kv.set(`order:${orderId}:token`, existingToken, { ex: 60 * 60 * 24 * 30 });
+      console.log(`Top-up applied: +100 generations to token ${existingToken}`);
+    } else {
+      console.error(`Top-up failed: token ${existingToken} not found`);
+    }
+  }
+
+  // ── One-time purchase (50 generations) ─────────────────────────────
+  else if (eventName === 'order_created') {
     const orderId = String(event.data?.id);
     const email = event.data?.attributes?.user_email || '';
-
     const token = crypto.randomUUID();
     const tokenData = {
       type: 'onetime',
@@ -54,53 +64,40 @@ export default async function handler(req, res) {
       order_id: orderId,
       created_at: Date.now(),
     };
-
-    // Store the token data (expires after 1 year)
     await kv.set(`token:${token}`, JSON.stringify(tokenData), { ex: 60 * 60 * 24 * 365 });
-    // Map order ID → token so the success page can retrieve it
     await kv.set(`order:${orderId}:token`, token, { ex: 60 * 60 * 24 * 365 });
-
     console.log(`One-time token created for order ${orderId}`);
   }
 
-  // ── New Pro subscription ────────────────────────────────────────────
+  // ── New Pro subscription (400 generations/month) ────────────────────
   if (eventName === 'subscription_created') {
     const subscriptionId = String(event.data?.id);
     const email = event.data?.attributes?.user_email || '';
-
     const token = crypto.randomUUID();
     const tokenData = {
       type: 'pro',
-      generations_left: 500,
-      generations_total: 500,
+      generations_left: 400,
+      generations_total: 400,
       email,
       subscription_id: subscriptionId,
       created_at: Date.now(),
     };
-
     await kv.set(`token:${token}`, JSON.stringify(tokenData), { ex: 60 * 60 * 24 * 400 });
-    // Map subscription ID → token for renewal lookups
     await kv.set(`sub:${subscriptionId}:token`, token, { ex: 60 * 60 * 24 * 400 });
-
-    // Also map by order ID so the success page can retrieve it
     const orderId = String(event.data?.attributes?.order_id || '');
-    if (orderId) {
-      await kv.set(`order:${orderId}:token`, token, { ex: 60 * 60 * 24 * 400 });
-    }
-
+    if (orderId) await kv.set(`order:${orderId}:token`, token, { ex: 60 * 60 * 24 * 400 });
     console.log(`Pro token created for subscription ${subscriptionId}`);
   }
 
-  // ── Monthly renewal — reset generation count ────────────────────────
+  // ── Monthly renewal — reset to 400 ─────────────────────────────────
   if (eventName === 'subscription_renewed') {
     const subscriptionId = String(event.data?.id);
     const existingToken = await kv.get(`sub:${subscriptionId}:token`);
-
     if (existingToken) {
       const raw = await kv.get(`token:${existingToken}`);
       if (raw) {
         const data = JSON.parse(raw);
-        data.generations_left = 500; // Reset monthly allowance
+        data.generations_left = 400;
         data.renewed_at = Date.now();
         await kv.set(`token:${existingToken}`, JSON.stringify(data), { ex: 60 * 60 * 24 * 400 });
         console.log(`Pro token renewed for subscription ${subscriptionId}`);
@@ -112,7 +109,6 @@ export default async function handler(req, res) {
   if (eventName === 'subscription_expired') {
     const subscriptionId = String(event.data?.id);
     const existingToken = await kv.get(`sub:${subscriptionId}:token`);
-
     if (existingToken) {
       const raw = await kv.get(`token:${existingToken}`);
       if (raw) {
