@@ -16,7 +16,7 @@ const T = {
   blue: "#2563eb", blueDim: "#dbeafe",
   purple: "#7c3aed", purpleDim: "#ede9fe",
   teal: "#0d9488", tealDim: "#ccfbf1",
-  gold: "#b45309", goldDim: "#fef3c7", 
+  gold: "#b45309", goldDim: "#fef3c7",
 };
 
 const CATEGORIES = [
@@ -49,6 +49,7 @@ const CATEGORIES = [
     { id: "savings", icon: "🏦", name: "Savings Goal Calculator", desc: "Plan your way to any goal" },
     { id: "deadline", icon: "🗓", name: "Deadline Countdown", desc: "Days, hours, minutes to any date" },
     { id: "unit", icon: "📏", name: "Unit Converter", desc: "Length, weight, temp & more" },
+    { id: "timezone", icon: "🌍", name: "Timezone Converter", desc: "Convert times across the world instantly" },
   ]},
 ];
 
@@ -155,6 +156,239 @@ function DeadlineCountdown() {
   return <div><Row label="Event / Deadline Name"><input value={label} onChange={e => setLabel(e.target.value)} style={inputStyle} /></Row><Row label="Target Date"><input type="date" value={target} onChange={e => setTarget(e.target.value)} style={inputStyle} /></Row>{diff <= 0 ? <Result label={label} value="Past due!" color="#dc2626" /> : <><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 12 }}><MiniResult label="Days" value={days} /><MiniResult label="Hours" value={hours} /><MiniResult label="Minutes" value={mins} /></div><Result label={`Until: ${label}`} value={`${days}d ${hours}h ${mins}m`} /><CopyButton text={`${days} days until ${label} — ToolForge`} /></>}</div>;
 }
 
+
+
+
+function TimezoneConverter() {
+  const CITIES = [
+    // Americas
+    { label: "New York",      tz: "America/New_York",      flag: "🗽", region: "Americas" },
+    { label: "Los Angeles",   tz: "America/Los_Angeles",   flag: "🎬", region: "Americas" },
+    { label: "Chicago",       tz: "America/Chicago",       flag: "🏙", region: "Americas" },
+    { label: "Toronto",       tz: "America/Toronto",       flag: "🇨🇦", region: "Americas" },
+    { label: "Vancouver",     tz: "America/Vancouver",     flag: "🇨🇦", region: "Americas" },
+    { label: "Mexico City",   tz: "America/Mexico_City",   flag: "🇲🇽", region: "Americas" },
+    { label: "São Paulo",     tz: "America/Sao_Paulo",     flag: "🇧🇷", region: "Americas" },
+    { label: "Buenos Aires",  tz: "America/Argentina/Buenos_Aires", flag: "🇦🇷", region: "Americas" },
+    { label: "Bogotá",        tz: "America/Bogota",        flag: "🇨🇴", region: "Americas" },
+    { label: "Lima",          tz: "America/Lima",          flag: "🇵🇪", region: "Americas" },
+    { label: "Santiago",      tz: "America/Santiago",      flag: "🇨🇱", region: "Americas" },
+    // Europe
+    { label: "London",        tz: "Europe/London",         flag: "🇬🇧", region: "Europe" },
+    { label: "Paris",         tz: "Europe/Paris",          flag: "🗼", region: "Europe" },
+    { label: "Berlin",        tz: "Europe/Berlin",         flag: "🇩🇪", region: "Europe" },
+    { label: "Madrid",        tz: "Europe/Madrid",         flag: "🇪🇸", region: "Europe" },
+    { label: "Rome",          tz: "Europe/Rome",           flag: "🇮🇹", region: "Europe" },
+    { label: "Amsterdam",     tz: "Europe/Amsterdam",      flag: "🇳🇱", region: "Europe" },
+    { label: "Stockholm",     tz: "Europe/Stockholm",      flag: "🇸🇪", region: "Europe" },
+    { label: "Warsaw",        tz: "Europe/Warsaw",         flag: "🇵🇱", region: "Europe" },
+    { label: "Kyiv",          tz: "Europe/Kyiv",           flag: "🇺🇦", region: "Europe" },
+    { label: "Moscow",        tz: "Europe/Moscow",         flag: "🇷🇺", region: "Europe" },
+    { label: "Istanbul",      tz: "Europe/Istanbul",       flag: "🇹🇷", region: "Europe" },
+    { label: "Athens",        tz: "Europe/Athens",          flag: "🇬🇷", region: "Europe" },
+    // Middle East & Africa
+    { label: "Tel Aviv",      tz: "Asia/Jerusalem",        flag: "🇮🇱", region: "Middle East & Africa" },
+    { label: "Dubai",         tz: "Asia/Dubai",            flag: "🇦🇪", region: "Middle East & Africa" },
+    { label: "Riyadh",        tz: "Asia/Riyadh",           flag: "🇸🇦", region: "Middle East & Africa" },
+    { label: "Beirut",        tz: "Asia/Beirut",            flag: "🇱🇧", region: "Middle East & Africa" },
+    { label: "Cairo",         tz: "Africa/Cairo",          flag: "🇪🇬", region: "Middle East & Africa" },
+    { label: "Nairobi",       tz: "Africa/Nairobi",        flag: "🇰🇪", region: "Middle East & Africa" },
+    { label: "Lagos",         tz: "Africa/Lagos",          flag: "🇳🇬", region: "Middle East & Africa" },
+    { label: "Johannesburg",  tz: "Africa/Johannesburg",   flag: "🇿🇦", region: "Middle East & Africa" },
+    { label: "Casablanca",    tz: "Africa/Casablanca",     flag: "🇲🇦", region: "Middle East & Africa" },
+    // Asia
+    { label: "Mumbai",        tz: "Asia/Kolkata",          flag: "🇮🇳", region: "Asia" },
+    { label: "Delhi",         tz: "Asia/Kolkata",          flag: "🇮🇳", region: "Asia" },
+    { label: "Karachi",       tz: "Asia/Karachi",          flag: "🇵🇰", region: "Asia" },
+    { label: "Dhaka",         tz: "Asia/Dhaka",            flag: "🇧🇩", region: "Asia" },
+    { label: "Bangkok",       tz: "Asia/Bangkok",          flag: "🇹🇭", region: "Asia" },
+    { label: "Singapore",     tz: "Asia/Singapore",        flag: "🇸🇬", region: "Asia" },
+    { label: "Kuala Lumpur",  tz: "Asia/Kuala_Lumpur",     flag: "🇲🇾", region: "Asia" },
+    { label: "Jakarta",       tz: "Asia/Jakarta",          flag: "🇮🇩", region: "Asia" },
+    { label: "Manila",        tz: "Asia/Manila",           flag: "🇵🇭", region: "Asia" },
+    { label: "Hong Kong",     tz: "Asia/Hong_Kong",        flag: "🇭🇰", region: "Asia" },
+    { label: "Beijing",       tz: "Asia/Shanghai",         flag: "🇨🇳", region: "Asia" },
+    { label: "Shanghai",      tz: "Asia/Shanghai",         flag: "🇨🇳", region: "Asia" },
+    { label: "Tokyo",         tz: "Asia/Tokyo",            flag: "🇯🇵", region: "Asia" },
+    { label: "Seoul",         tz: "Asia/Seoul",            flag: "🇰🇷", region: "Asia" },
+    // Oceania
+    { label: "Sydney",        tz: "Australia/Sydney",      flag: "🇦🇺", region: "Oceania" },
+    { label: "Melbourne",     tz: "Australia/Melbourne",   flag: "🇦🇺", region: "Oceania" },
+    { label: "Brisbane",      tz: "Australia/Brisbane",    flag: "🇦🇺", region: "Oceania" },
+    { label: "Perth",         tz: "Australia/Perth",       flag: "🇦🇺", region: "Oceania" },
+    { label: "Auckland",      tz: "Pacific/Auckland",      flag: "🇳🇿", region: "Oceania" },
+    { label: "Wellington",    tz: "Pacific/Auckland",      flag: "🇳🇿", region: "Oceania" },
+    // UTC
+    { label: "UTC",           tz: "UTC",                   flag: "🌐", region: "UTC" },
+  ];
+
+  const UTC_OFFSETS = [
+    { offset: -12,   label: "UTC−12",    regions: "Baker Island, Howland Island" },
+    { offset: -11,   label: "UTC−11",    regions: "American Samoa, Niue" },
+    { offset: -10,   label: "UTC−10",    regions: "Hawaii, Cook Islands" },
+    { offset: -9.5,  label: "UTC−9:30",  regions: "Marquesas Islands" },
+    { offset: -9,    label: "UTC−9",     regions: "Alaska, Gambier Islands" },
+    { offset: -8,    label: "UTC−8",     regions: "Los Angeles, Vancouver, Tijuana" },
+    { offset: -7,    label: "UTC−7",     regions: "Denver, Phoenix, Calgary" },
+    { offset: -6,    label: "UTC−6",     regions: "Chicago, Mexico City, Guatemala" },
+    { offset: -5,    label: "UTC−5",     regions: "New York, Toronto, Lima, Bogotá" },
+    { offset: -4,    label: "UTC−4",     regions: "Santiago, Caracas, Halifax" },
+    { offset: -3.5,  label: "UTC−3:30",  regions: "Newfoundland" },
+    { offset: -3,    label: "UTC−3",     regions: "São Paulo, Buenos Aires, Montevideo" },
+    { offset: -2,    label: "UTC−2",     regions: "South Georgia Island" },
+    { offset: -1,    label: "UTC−1",     regions: "Azores, Cape Verde" },
+    { offset: 0,     label: "UTC±0",     regions: "London (winter), Dublin, Lisbon, Accra" },
+    { offset: 1,     label: "UTC+1",     regions: "Paris, Berlin, Rome, Lagos, Warsaw" },
+    { offset: 2,     label: "UTC+2",     regions: "Tel Aviv, Cairo, Athens, Johannesburg" },
+    { offset: 3,     label: "UTC+3",     regions: "Moscow, Nairobi, Riyadh, Kuwait" },
+    { offset: 3.5,   label: "UTC+3:30",  regions: "Tehran" },
+    { offset: 4,     label: "UTC+4",     regions: "Dubai, Baku, Tbilisi, Muscat" },
+    { offset: 4.5,   label: "UTC+4:30",  regions: "Kabul" },
+    { offset: 5,     label: "UTC+5",     regions: "Karachi, Tashkent, Yekaterinburg" },
+    { offset: 5.5,   label: "UTC+5:30",  regions: "Mumbai, New Delhi, Colombo" },
+    { offset: 5.75,  label: "UTC+5:45",  regions: "Kathmandu" },
+    { offset: 6,     label: "UTC+6",     regions: "Dhaka, Almaty, Omsk" },
+    { offset: 6.5,   label: "UTC+6:30",  regions: "Yangon (Myanmar)" },
+    { offset: 7,     label: "UTC+7",     regions: "Bangkok, Hanoi, Jakarta, Krasnoyarsk" },
+    { offset: 8,     label: "UTC+8",     regions: "Singapore, Beijing, Hong Kong, Perth" },
+    { offset: 8.75,  label: "UTC+8:45",  regions: "Eucla (Australia)" },
+    { offset: 9,     label: "UTC+9",     regions: "Tokyo, Seoul, Osaka, Yakutsk" },
+    { offset: 9.5,   label: "UTC+9:30",  regions: "Adelaide, Darwin" },
+    { offset: 10,    label: "UTC+10",    regions: "Sydney, Melbourne, Brisbane, Guam" },
+    { offset: 10.5,  label: "UTC+10:30", regions: "Lord Howe Island" },
+    { offset: 11,    label: "UTC+11",    regions: "Solomon Islands, Vanuatu, Noumea" },
+    { offset: 12,    label: "UTC+12",    regions: "Auckland, Fiji, Kamchatka" },
+    { offset: 12.75, label: "UTC+12:45", regions: "Chatham Islands" },
+    { offset: 13,    label: "UTC+13",    regions: "Tonga, Samoa, Phoenix Islands" },
+    { offset: 14,    label: "UTC+14",    regions: "Line Islands (Kiribati)" },
+  ];
+
+  const REGIONS = ["Americas", "Europe", "Middle East & Africa", "Asia", "Oceania", "UTC"];
+
+  const pad = n => String(n).padStart(2, "0");
+  const now = new Date();
+  const defaultTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  const [tab, setTab] = useState("cities");
+  const [fromZone, setFromZone] = useState("Europe/Berlin");
+  const [inputTime, setInputTime] = useState(defaultTime);
+  const [use24, setUse24] = useState(false);
+
+  const getOffset = (tz, date) => {
+    try {
+      const utcDate = new Date(date.toLocaleString("en-US", { timeZone: "UTC" }));
+      const tzDate = new Date(date.toLocaleString("en-US", { timeZone: tz }));
+      return (tzDate - utcDate) / 60000;
+    } catch { return 0; }
+  };
+
+  const convert = (toTz) => {
+    try {
+      const [h, m] = inputTime.split(":").map(Number);
+      const baseDate = new Date();
+      baseDate.setHours(h, m, 0, 0);
+      const fromOff = getOffset(fromZone, baseDate);
+      const toOff = getOffset(toTz, baseDate);
+      const utcMs = baseDate.getTime() - fromOff * 60000;
+      const targetMs = utcMs + toOff * 60000;
+      const d = new Date(targetMs);
+      const hours = d.getHours();
+      const mins = pad(d.getMinutes());
+      const dayDiff = Math.round((toOff - fromOff) / 60 / 24);
+      if (use24) return { time: `${pad(hours)}:${mins}`, day: dayDiff };
+      const ampm = hours >= 12 ? "PM" : "AM";
+      const h12 = hours % 12 || 12;
+      return { time: `${h12}:${mins} ${ampm}`, day: dayDiff };
+    } catch { return { time: "--:--", day: 0 }; }
+  };
+
+  const fromCity = CITIES.find(z => z.tz === fromZone && z.label !== "UTC");
+  const fromLabel = fromCity?.label || "Selected";
+
+  return (
+    <div>
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+        {[["cities", "🌆 City Converter"], ["utc", "🌐 UTC Table"]].map(([id, label]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: `1.5px solid ${tab === id ? T.teal : T.border}`, background: tab === id ? T.tealDim : "white", color: tab === id ? T.teal : T.muted, fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "cities" && (
+        <div>
+          <Row label="Your timezone">
+            <select value={fromZone} onChange={e => setFromZone(e.target.value)} style={inputStyle}>
+              {REGIONS.map(region => (
+                <optgroup key={region} label={region}>
+                  {CITIES.filter(z => z.region === region).map(z => (
+                    <option key={z.label} value={z.tz}>{z.flag} {z.label}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </Row>
+
+          <Row label={`Time in ${fromLabel}`}>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input type="time" value={inputTime} onChange={e => setInputTime(e.target.value)}
+                style={{ ...inputStyle, flex: 1, fontSize: 22, fontFamily: "Syne, sans-serif", fontWeight: 700, color: T.accent, padding: "10px 14px" }} />
+              <button onClick={() => setUse24(!use24)}
+                style={{ padding: "10px 14px", borderRadius: 9, border: `1px solid ${T.border}`, background: use24 ? T.tealDim : "white", color: use24 ? T.teal : T.muted, fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+                {use24 ? "24h" : "12h"}
+              </button>
+            </div>
+          </Row>
+
+          {/* Results grouped by region */}
+          {REGIONS.map(region => {
+            const cities = CITIES.filter(z => z.region === region && z.tz !== fromZone);
+            if (!cities.length) return null;
+            return (
+              <div key={region} style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 10, color: T.muted, marginBottom: 6, fontFamily: "Syne, sans-serif", fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase" }}>{region}</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                  {cities.map(z => {
+                    const result = convert(z.tz);
+                    const dayLabel = result.day > 0 ? `+${result.day}d` : result.day < 0 ? `${result.day}d` : "";
+                    return (
+                      <div key={z.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 13px", borderRadius: 9, background: T.bg, border: `1px solid ${T.border}` }}>
+                        <span style={{ fontFamily: "DM Sans, sans-serif", fontSize: 13, color: T.ink }}>{z.label}</span>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                          <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: T.ink }}>{result.time}</span>
+                          {dayLabel && <span style={{ fontSize: 10, color: T.accent, fontFamily: "Syne, sans-serif", fontWeight: 700 }}>{dayLabel}</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+          <CopyButton text={CITIES.filter(z => z.tz !== fromZone).map(z => { const r = convert(z.tz); return `${z.label}: ${r.time}`; }).join("\n")} />
+        </div>
+      )}
+
+      {tab === "utc" && (
+        <div>
+          <div style={{ fontSize: 12, color: T.muted, marginBottom: 12, fontFamily: "DM Sans, sans-serif", lineHeight: 1.5 }}>
+            All 38 standard UTC offsets. DST (daylight saving) may shift some regions by ±1 hour seasonally.
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            {UTC_OFFSETS.map(u => (
+              <div key={u.offset} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 12px", borderRadius: 9, background: u.offset === 0 ? T.tealDim : "white", border: `1px solid ${u.offset === 0 ? T.teal : T.border}` }}>
+                <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 12, color: T.teal, minWidth: 76, paddingTop: 1 }}>{u.label}</span>
+                <span style={{ fontFamily: "DM Sans, sans-serif", fontSize: 11, color: T.muted, lineHeight: 1.5 }}>{u.regions}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function UnitConverter() {
   const cats = { Length: { units: ["mm","cm","m","km","in","ft","yd","mi"], toBase: { mm:.001,cm:.01,m:1,km:1000,in:.0254,ft:.3048,yd:.9144,mi:1609.34 } }, Weight: { units: ["mg","g","kg","oz","lb"], toBase: { mg:.000001,g:.001,kg:1,oz:.0283495,lb:.453592 } }, Temperature: { units: ["°C","°F","K"], toBase: null }, Volume: { units: ["ml","L","fl oz","cup","gal"], toBase: { ml:.001,L:1,"fl oz":.0295735,cup:.236588,gal:3.78541 } } };
   const [catKey, setCatKey] = useState("Length"); const [fromUnit, setFromUnit] = useState("m"); const [toUnit, setToUnit] = useState("ft"); const [value, setValue] = useState(1);
@@ -232,7 +466,7 @@ function AIToolPlaceholder({ name, proToken, onNeedUpgrade, onTokenUpdate }) {
           <div style={{ fontSize:10, color:mode==="groq"?T.green:T.muted, marginTop:2 }}>{groqAtLimit?"Limit reached today":`${groqCount}/3 used today`}</div>
         </div>
         <div onClick={() => { if (!hasClaude) onNeedUpgrade(); else setMode("claude"); }} style={{ flex:1, padding:"10px 12px", borderRadius:10, border:`1.5px solid ${mode==="claude"?T.gold:T.border}`, background:mode==="claude"?T.goldDim:"white", cursor:"pointer", textAlign:"center" }}>
-          <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:mode==="claude"?T.gold:T.muted }}>✦ Premium (Claude AI Sonnet Model)</div>
+          <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:mode==="claude"?T.gold:T.muted }}>✦ Premium (Claude AI)</div>
           <div style={{ fontSize:10, color:mode==="claude"?T.gold:T.muted, marginTop:2 }}>{proToken && proToken.generations_left === 0 ? "Out of generations" : hasClaude ? `${proToken.generations_left} left` : "Unlock from $2.99"}</div>
         </div>
       </div>
@@ -246,7 +480,7 @@ function AIToolPlaceholder({ name, proToken, onNeedUpgrade, onTokenUpdate }) {
       {mode==="groq" && groqAtLimit && <div style={{ marginBottom:10, padding:"8px 12px", borderRadius:8, background:T.accentDim, border:`1px solid ${T.accent}44`, fontSize:11, color:T.accent, fontFamily:"DM Sans, sans-serif" }}>Daily free limit reached. Resets at midnight — or unlock Premium Claude now.</div>}
       <textarea value={input} onChange={e => setInput(e.target.value)} placeholder={mode==="claude"?"Describe in detail for best Claude results...":"Describe what you need..."} disabled={mode==="groq"&&groqAtLimit} style={{ ...inputStyle, width:"100%", height:90, resize:"vertical", boxSizing:"border-box", fontFamily:"DM Sans, sans-serif", opacity:(mode==="groq"&&groqAtLimit)?0.5:1 }} />
       <button onClick={() => mode==="claude"?generateClaude():generateGroq()} disabled={!canGenerate} style={{ width:"100%", padding:"11px 0", borderRadius:10, border:"none", background:!canGenerate?T.border:mode==="claude"?T.gold:T.green, color:!canGenerate?T.muted:"white", fontSize:13, fontFamily:"Syne, sans-serif", fontWeight:700, cursor:canGenerate?"pointer":"default", marginTop:8, letterSpacing:0.5 }}>
-        {loading?"Generating…":mode==="claude"?"✦ Generate with Claude AI (Sonnet Model)":"Generate with Groq AI"}
+        {loading?"Generating…":mode==="claude"?"✦ Generate with Claude AI":"Generate with Groq AI"}
       </button>
       {error && <div style={{ marginTop:10, padding:"9px 12px", borderRadius:8, background:"#fee2e2", border:"1px solid #fca5a5", fontSize:12, color:"#dc2626", fontFamily:"DM Sans, sans-serif" }}>{error}</div>}
       {output && <><div style={{ marginTop:14, padding:14, borderRadius:10, background:T.bg, border:`1px solid ${T.border}`, fontSize:13, lineHeight:1.7, color:T.ink, whiteSpace:"pre-wrap", fontFamily:"DM Sans, sans-serif" }}>{output}</div><CopyButton text={output} /></>}
@@ -268,14 +502,14 @@ function UpgradeModal({ onClose }) {
         <a href={onetimeUrl} style={{ textDecoration:"none", display:"block", marginBottom:10 }}>
           <div style={{ padding:16, borderRadius:14, border:`2px solid ${T.accent}`, background:T.accentDim, cursor:"pointer" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}><div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:T.accent }}>One-Time Pack</div><div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.accent }}>$2.99</div></div>
-            <div style={{ fontSize:12, color:T.accent, fontFamily:"DM Sans, sans-serif" }}>50 Claude Sonnet generations · Never expires · No subscription</div>
+            <div style={{ fontSize:12, color:T.accent, fontFamily:"DM Sans, sans-serif" }}>50 Claude generations · Never expires · No subscription</div>
           </div>
         </a>
         <a href={proUrl} style={{ textDecoration:"none", display:"block", marginBottom:14 }}>
           <div style={{ padding:16, borderRadius:14, border:`2px solid ${T.gold}`, background:T.goldDim, cursor:"pointer", position:"relative" }}>
-            <div style={{ position:"absolute", top:-10, right:10, fontSize:9, padding:"3px 8px", borderRadius:99, background:T.gold, color:"white", fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.5 }}>BEST VALUE</div>
+            <div style={{ position:"absolute", top:10, right:10, fontSize:9, padding:"3px 8px", borderRadius:99, background:T.gold, color:"white", fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.5 }}>BEST VALUE</div>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}><div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:T.gold }}>Pro Monthly</div><div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.gold }}>$7.99<span style={{ fontSize:12, fontWeight:400 }}>/mo</span></div></div>
-            <div style={{ fontSize:12, color:T.gold, fontFamily:"DM Sans, sans-serif" }}>400 Claude Sonnet generations/month · Top up anytime for $2.99 · No ads · Cancel anytime</div>
+            <div style={{ fontSize:12, color:T.gold, fontFamily:"DM Sans, sans-serif" }}>400 Claude generations/month · No ads · Cancel anytime</div>
           </div>
         </a>
         <div style={{ marginBottom:12, padding:"10px 12px", borderRadius:8, background:"#f0f9ff", border:"1px solid #bae6fd", fontSize:11, color:"#0369a1", fontFamily:"DM Sans, sans-serif", lineHeight:1.6 }}>
@@ -340,7 +574,7 @@ function ToolView({ tool, onBack, proToken, onNeedUpgrade, onTokenUpdate }) {
   const cat = CATEGORIES.find(c => c.id === tool.catId);
   const renderTool = () => {
     switch (tool.id) {
-      case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "deadline": return <DeadlineCountdown />; case "unit": return <UnitConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper />;
+      case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "deadline": return <DeadlineCountdown />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper />;
       default: if (AI_TOOLS.includes(tool.name)) return <AIToolPlaceholder name={tool.name} proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
       return <div style={{ textAlign:"center", padding:"30px 0", color:T.muted, fontFamily:"DM Sans, sans-serif" }}><div style={{ fontSize:36, marginBottom:10 }}>{tool.icon}</div><div style={{ fontSize:14 }}>Coming soon!</div></div>;
     }
