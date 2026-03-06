@@ -159,67 +159,62 @@ function DeadlineCountdown() {
 
 
 
+
 function TimezoneConverter() {
   const CITIES = [
-    // Americas
-    { label: "New York",      tz: "America/New_York",      flag: "🗽", region: "Americas" },
-    { label: "Los Angeles",   tz: "America/Los_Angeles",   flag: "🎬", region: "Americas" },
-    { label: "Chicago",       tz: "America/Chicago",       flag: "🏙", region: "Americas" },
-    { label: "Toronto",       tz: "America/Toronto",       flag: "🇨🇦", region: "Americas" },
-    { label: "Vancouver",     tz: "America/Vancouver",     flag: "🇨🇦", region: "Americas" },
-    { label: "Mexico City",   tz: "America/Mexico_City",   flag: "🇲🇽", region: "Americas" },
-    { label: "São Paulo",     tz: "America/Sao_Paulo",     flag: "🇧🇷", region: "Americas" },
-    { label: "Buenos Aires",  tz: "America/Argentina/Buenos_Aires", flag: "🇦🇷", region: "Americas" },
-    { label: "Bogotá",        tz: "America/Bogota",        flag: "🇨🇴", region: "Americas" },
-    { label: "Lima",          tz: "America/Lima",          flag: "🇵🇪", region: "Americas" },
-    { label: "Santiago",      tz: "America/Santiago",      flag: "🇨🇱", region: "Americas" },
-    // Europe
-    { label: "London",        tz: "Europe/London",         flag: "🇬🇧", region: "Europe" },
-    { label: "Paris",         tz: "Europe/Paris",          flag: "🗼", region: "Europe" },
-    { label: "Berlin",        tz: "Europe/Berlin",         flag: "🇩🇪", region: "Europe" },
-    { label: "Madrid",        tz: "Europe/Madrid",         flag: "🇪🇸", region: "Europe" },
-    { label: "Rome",          tz: "Europe/Rome",           flag: "🇮🇹", region: "Europe" },
-    { label: "Amsterdam",     tz: "Europe/Amsterdam",      flag: "🇳🇱", region: "Europe" },
-    { label: "Stockholm",     tz: "Europe/Stockholm",      flag: "🇸🇪", region: "Europe" },
-    { label: "Warsaw",        tz: "Europe/Warsaw",         flag: "🇵🇱", region: "Europe" },
-    { label: "Kyiv",          tz: "Europe/Kyiv",           flag: "🇺🇦", region: "Europe" },
-    { label: "Moscow",        tz: "Europe/Moscow",         flag: "🇷🇺", region: "Europe" },
-    { label: "Istanbul",      tz: "Europe/Istanbul",       flag: "🇹🇷", region: "Europe" },
-    { label: "Athens",        tz: "Europe/Athens",          flag: "🇬🇷", region: "Europe" },
-    // Middle East & Africa
-    { label: "Tel Aviv",      tz: "Asia/Jerusalem",        flag: "🇮🇱", region: "Middle East & Africa" },
-    { label: "Dubai",         tz: "Asia/Dubai",            flag: "🇦🇪", region: "Middle East & Africa" },
-    { label: "Riyadh",        tz: "Asia/Riyadh",           flag: "🇸🇦", region: "Middle East & Africa" },
-    { label: "Beirut",        tz: "Asia/Beirut",            flag: "🇱🇧", region: "Middle East & Africa" },
-    { label: "Cairo",         tz: "Africa/Cairo",          flag: "🇪🇬", region: "Middle East & Africa" },
-    { label: "Nairobi",       tz: "Africa/Nairobi",        flag: "🇰🇪", region: "Middle East & Africa" },
-    { label: "Lagos",         tz: "Africa/Lagos",          flag: "🇳🇬", region: "Middle East & Africa" },
-    { label: "Johannesburg",  tz: "Africa/Johannesburg",   flag: "🇿🇦", region: "Middle East & Africa" },
-    { label: "Casablanca",    tz: "Africa/Casablanca",     flag: "🇲🇦", region: "Middle East & Africa" },
-    // Asia
-    { label: "Mumbai",        tz: "Asia/Kolkata",          flag: "🇮🇳", region: "Asia" },
-    { label: "Delhi",         tz: "Asia/Kolkata",          flag: "🇮🇳", region: "Asia" },
-    { label: "Karachi",       tz: "Asia/Karachi",          flag: "🇵🇰", region: "Asia" },
-    { label: "Dhaka",         tz: "Asia/Dhaka",            flag: "🇧🇩", region: "Asia" },
-    { label: "Bangkok",       tz: "Asia/Bangkok",          flag: "🇹🇭", region: "Asia" },
-    { label: "Singapore",     tz: "Asia/Singapore",        flag: "🇸🇬", region: "Asia" },
-    { label: "Kuala Lumpur",  tz: "Asia/Kuala_Lumpur",     flag: "🇲🇾", region: "Asia" },
-    { label: "Jakarta",       tz: "Asia/Jakarta",          flag: "🇮🇩", region: "Asia" },
-    { label: "Manila",        tz: "Asia/Manila",           flag: "🇵🇭", region: "Asia" },
-    { label: "Hong Kong",     tz: "Asia/Hong_Kong",        flag: "🇭🇰", region: "Asia" },
-    { label: "Beijing",       tz: "Asia/Shanghai",         flag: "🇨🇳", region: "Asia" },
-    { label: "Shanghai",      tz: "Asia/Shanghai",         flag: "🇨🇳", region: "Asia" },
-    { label: "Tokyo",         tz: "Asia/Tokyo",            flag: "🇯🇵", region: "Asia" },
-    { label: "Seoul",         tz: "Asia/Seoul",            flag: "🇰🇷", region: "Asia" },
-    // Oceania
-    { label: "Sydney",        tz: "Australia/Sydney",      flag: "🇦🇺", region: "Oceania" },
-    { label: "Melbourne",     tz: "Australia/Melbourne",   flag: "🇦🇺", region: "Oceania" },
-    { label: "Brisbane",      tz: "Australia/Brisbane",    flag: "🇦🇺", region: "Oceania" },
-    { label: "Perth",         tz: "Australia/Perth",       flag: "🇦🇺", region: "Oceania" },
-    { label: "Auckland",      tz: "Pacific/Auckland",      flag: "🇳🇿", region: "Oceania" },
-    { label: "Wellington",    tz: "Pacific/Auckland",      flag: "🇳🇿", region: "Oceania" },
-    // UTC
-    { label: "UTC",           tz: "UTC",                   flag: "🌐", region: "UTC" },
+    { label: "New York",       tz: "America/New_York",                  region: "Americas" },
+    { label: "Los Angeles",    tz: "America/Los_Angeles",               region: "Americas" },
+    { label: "Chicago",        tz: "America/Chicago",                   region: "Americas" },
+    { label: "Toronto",        tz: "America/Toronto",                   region: "Americas" },
+    { label: "Vancouver",      tz: "America/Vancouver",                 region: "Americas" },
+    { label: "Mexico City",    tz: "America/Mexico_City",               region: "Americas" },
+    { label: "São Paulo",      tz: "America/Sao_Paulo",                 region: "Americas" },
+    { label: "Buenos Aires",   tz: "America/Argentina/Buenos_Aires",    region: "Americas" },
+    { label: "Bogotá",         tz: "America/Bogota",                    region: "Americas" },
+    { label: "Lima",           tz: "America/Lima",                      region: "Americas" },
+    { label: "Santiago",       tz: "America/Santiago",                  region: "Americas" },
+    { label: "London",         tz: "Europe/London",                     region: "Europe" },
+    { label: "Paris",          tz: "Europe/Paris",                      region: "Europe" },
+    { label: "Berlin",         tz: "Europe/Berlin",                     region: "Europe" },
+    { label: "Madrid",         tz: "Europe/Madrid",                     region: "Europe" },
+    { label: "Rome",           tz: "Europe/Rome",                       region: "Europe" },
+    { label: "Amsterdam",      tz: "Europe/Amsterdam",                  region: "Europe" },
+    { label: "Stockholm",      tz: "Europe/Stockholm",                  region: "Europe" },
+    { label: "Warsaw",         tz: "Europe/Warsaw",                     region: "Europe" },
+    { label: "Athens",         tz: "Europe/Athens",                     region: "Europe" },
+    { label: "Kyiv",           tz: "Europe/Kyiv",                       region: "Europe" },
+    { label: "Moscow",         tz: "Europe/Moscow",                     region: "Europe" },
+    { label: "Istanbul",       tz: "Europe/Istanbul",                   region: "Europe" },
+    { label: "Tel Aviv",       tz: "Asia/Jerusalem",                    region: "Middle East & Africa" },
+    { label: "Beirut",         tz: "Asia/Beirut",                       region: "Middle East & Africa" },
+    { label: "Dubai",          tz: "Asia/Dubai",                        region: "Middle East & Africa" },
+    { label: "Riyadh",         tz: "Asia/Riyadh",                       region: "Middle East & Africa" },
+    { label: "Cairo",          tz: "Africa/Cairo",                      region: "Middle East & Africa" },
+    { label: "Nairobi",        tz: "Africa/Nairobi",                    region: "Middle East & Africa" },
+    { label: "Lagos",          tz: "Africa/Lagos",                      region: "Middle East & Africa" },
+    { label: "Johannesburg",   tz: "Africa/Johannesburg",               region: "Middle East & Africa" },
+    { label: "Casablanca",     tz: "Africa/Casablanca",                 region: "Middle East & Africa" },
+    { label: "Mumbai",         tz: "Asia/Kolkata",                      region: "Asia" },
+    { label: "Delhi",          tz: "Asia/Kolkata",                      region: "Asia" },
+    { label: "Karachi",        tz: "Asia/Karachi",                      region: "Asia" },
+    { label: "Dhaka",          tz: "Asia/Dhaka",                        region: "Asia" },
+    { label: "Bangkok",        tz: "Asia/Bangkok",                      region: "Asia" },
+    { label: "Singapore",      tz: "Asia/Singapore",                    region: "Asia" },
+    { label: "Kuala Lumpur",   tz: "Asia/Kuala_Lumpur",                 region: "Asia" },
+    { label: "Jakarta",        tz: "Asia/Jakarta",                      region: "Asia" },
+    { label: "Manila",         tz: "Asia/Manila",                       region: "Asia" },
+    { label: "Hong Kong",      tz: "Asia/Hong_Kong",                    region: "Asia" },
+    { label: "Beijing",        tz: "Asia/Shanghai",                     region: "Asia" },
+    { label: "Shanghai",       tz: "Asia/Shanghai",                     region: "Asia" },
+    { label: "Tokyo",          tz: "Asia/Tokyo",                        region: "Asia" },
+    { label: "Seoul",          tz: "Asia/Seoul",                        region: "Asia" },
+    { label: "Sydney",         tz: "Australia/Sydney",                  region: "Oceania" },
+    { label: "Melbourne",      tz: "Australia/Melbourne",               region: "Oceania" },
+    { label: "Brisbane",       tz: "Australia/Brisbane",                region: "Oceania" },
+    { label: "Perth",          tz: "Australia/Perth",                   region: "Oceania" },
+    { label: "Auckland",       tz: "Pacific/Auckland",                  region: "Oceania" },
+    { label: "Wellington",     tz: "Pacific/Auckland",                  region: "Oceania" },
+    { label: "UTC",            tz: "UTC",                               region: "UTC" },
   ];
 
   const UTC_OFFSETS = [
@@ -266,15 +261,27 @@ function TimezoneConverter() {
   const REGIONS = ["Americas", "Europe", "Middle East & Africa", "Asia", "Oceania", "UTC"];
 
   const pad = n => String(n).padStart(2, "0");
-  const now = new Date();
-  const defaultTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  const getCurrentTimeInTz = (tz) => {
+    try {
+      const now = new Date();
+      const tzDate = new Date(now.toLocaleString("en-US", { timeZone: tz }));
+      return `${pad(tzDate.getHours())}:${pad(tzDate.getMinutes())}`;
+    } catch { return "00:00"; }
+  };
 
   const [tab, setTab] = useState("cities");
   const [fromZone, setFromZone] = useState("Europe/Berlin");
-  const [inputTime, setInputTime] = useState(defaultTime);
+  const [inputTime, setInputTime] = useState(() => getCurrentTimeInTz("Europe/Berlin"));
   const [use24, setUse24] = useState(false);
+  const [myUtcOffset, setMyUtcOffset] = useState(1);
 
-  const getOffset = (tz, date) => {
+  const handleFromZoneChange = (newTz) => {
+    setFromZone(newTz);
+    setInputTime(getCurrentTimeInTz(newTz));
+  };
+
+  const getOffsetMins = (tz, date) => {
     try {
       const utcDate = new Date(date.toLocaleString("en-US", { timeZone: "UTC" }));
       const tzDate = new Date(date.toLocaleString("en-US", { timeZone: tz }));
@@ -287,8 +294,8 @@ function TimezoneConverter() {
       const [h, m] = inputTime.split(":").map(Number);
       const baseDate = new Date();
       baseDate.setHours(h, m, 0, 0);
-      const fromOff = getOffset(fromZone, baseDate);
-      const toOff = getOffset(toTz, baseDate);
+      const fromOff = getOffsetMins(fromZone, baseDate);
+      const toOff = getOffsetMins(toTz, baseDate);
       const utcMs = baseDate.getTime() - fromOff * 60000;
       const targetMs = utcMs + toOff * 60000;
       const d = new Date(targetMs);
@@ -302,14 +309,20 @@ function TimezoneConverter() {
     } catch { return { time: "--:--", day: 0 }; }
   };
 
-  const fromCity = CITIES.find(z => z.tz === fromZone && z.label !== "UTC");
-  const fromLabel = fromCity?.label || "Selected";
+  const fromLabel = CITIES.find(z => z.tz === fromZone)?.label || "Selected";
+
+  const diffColor = (diff) => {
+    if (diff === 0) return T.teal;
+    if (Math.abs(diff) <= 3) return T.green;
+    if (Math.abs(diff) <= 6) return T.accent;
+    return "#dc2626";
+  };
 
   return (
     <div>
       {/* Tabs */}
       <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-        {[["cities", "🌆 City Converter"], ["utc", "🌐 UTC Table"]].map(([id, label]) => (
+        {[["cities", "🌆 City Converter"], ["utc", "🌐 UTC Differences"]].map(([id, label]) => (
           <button key={id} onClick={() => setTab(id)} style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: `1.5px solid ${tab === id ? T.teal : T.border}`, background: tab === id ? T.tealDim : "white", color: tab === id ? T.teal : T.muted, fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
             {label}
           </button>
@@ -319,11 +332,11 @@ function TimezoneConverter() {
       {tab === "cities" && (
         <div>
           <Row label="Your timezone">
-            <select value={fromZone} onChange={e => setFromZone(e.target.value)} style={inputStyle}>
+            <select value={fromZone} onChange={e => handleFromZoneChange(e.target.value)} style={inputStyle}>
               {REGIONS.map(region => (
                 <optgroup key={region} label={region}>
                   {CITIES.filter(z => z.region === region).map(z => (
-                    <option key={z.label} value={z.tz}>{z.flag} {z.label}</option>
+                    <option key={z.label} value={z.tz}>{z.label}</option>
                   ))}
                 </optgroup>
               ))}
@@ -341,9 +354,8 @@ function TimezoneConverter() {
             </div>
           </Row>
 
-          {/* Results grouped by region */}
           {REGIONS.map(region => {
-            const cities = CITIES.filter(z => z.region === region && z.tz !== fromZone);
+            const cities = CITIES.filter(z => z.region === region && !(z.tz === fromZone && z.label === fromLabel));
             if (!cities.length) return null;
             return (
               <div key={region} style={{ marginBottom: 14 }}>
@@ -366,22 +378,43 @@ function TimezoneConverter() {
               </div>
             );
           })}
-          <CopyButton text={CITIES.filter(z => z.tz !== fromZone).map(z => { const r = convert(z.tz); return `${z.label}: ${r.time}`; }).join("\n")} />
+          <CopyButton text={CITIES.filter(z => z.label !== fromLabel).map(z => { const r = convert(z.tz); return `${z.label}: ${r.time}`; }).join("\n")} />
         </div>
       )}
 
       {tab === "utc" && (
         <div>
-          <div style={{ fontSize: 12, color: T.muted, marginBottom: 12, fontFamily: "DM Sans, sans-serif", lineHeight: 1.5 }}>
-            All 38 standard UTC offsets. DST (daylight saving) may shift some regions by ±1 hour seasonally.
+          <Row label="Your UTC offset">
+            <select value={myUtcOffset} onChange={e => setMyUtcOffset(Number(e.target.value))} style={inputStyle}>
+              {UTC_OFFSETS.map(u => (
+                <option key={u.offset} value={u.offset}>{u.label} — {u.regions}</option>
+              ))}
+            </select>
+          </Row>
+
+          <div style={{ fontSize: 11, color: T.muted, marginBottom: 12, fontFamily: "DM Sans, sans-serif" }}>
+            Hour difference between you ({UTC_OFFSETS.find(u => u.offset === myUtcOffset)?.label}) and every other timezone:
           </div>
+
           <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-            {UTC_OFFSETS.map(u => (
-              <div key={u.offset} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 12px", borderRadius: 9, background: u.offset === 0 ? T.tealDim : "white", border: `1px solid ${u.offset === 0 ? T.teal : T.border}` }}>
-                <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 12, color: T.teal, minWidth: 76, paddingTop: 1 }}>{u.label}</span>
-                <span style={{ fontFamily: "DM Sans, sans-serif", fontSize: 11, color: T.muted, lineHeight: 1.5 }}>{u.regions}</span>
-              </div>
-            ))}
+            {UTC_OFFSETS.filter(u => u.offset !== myUtcOffset).map(u => {
+              const diff = u.offset - myUtcOffset;
+              const sign = diff > 0 ? "+" : "";
+              const hrs = Math.floor(Math.abs(diff));
+              const mins = Math.round((Math.abs(diff) - hrs) * 60);
+              const diffStr = mins ? `${sign}${diff < 0 ? "-" : ""}${hrs}h ${mins}m` : `${sign}${diff}h`;
+              return (
+                <div key={u.offset} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "10px 13px", borderRadius: 9, background: "white", border: `1px solid ${T.border}` }}>
+                  <div>
+                    <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: T.ink, marginBottom: 2 }}>{u.label}</div>
+                    <div style={{ fontFamily: "DM Sans, sans-serif", fontSize: 11, color: T.muted }}>{u.regions}</div>
+                  </div>
+                  <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 14, color: diffColor(diff), minWidth: 52, textAlign: "right", paddingTop: 2 }}>
+                    {diffStr}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
