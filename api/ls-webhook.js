@@ -69,6 +69,7 @@ export default async function handler(req, res) {
     };
     await redis.set(`token:${token}`, tokenData, { ex: 60 * 60 * 24 * 365 });
     await redis.set(`order:${orderId}:token`, token, { ex: 60 * 60 * 24 * 365 });
+    if (email) await redis.set(`email:${email.toLowerCase()}:token`, token, { ex: 60 * 60 * 24 * 365 });
     console.log(`One-time token created for order ${orderId}`);
   }
 
@@ -88,6 +89,7 @@ export default async function handler(req, res) {
     await redis.set(`token:${token}`, tokenData, { ex: 60 * 60 * 24 * 400 });
     await redis.set(`sub:${subscriptionId}:token`, token, { ex: 60 * 60 * 24 * 400 });
     const orderId = String(event.data?.attributes?.order_id || '');
+    if (email) await redis.set(`email:${email.toLowerCase()}:token`, token, { ex: 60 * 60 * 24 * 400 });
     if (orderId) await redis.set(`order:${orderId}:token`, token, { ex: 60 * 60 * 24 * 400 });
     console.log(`Pro token created for subscription ${subscriptionId}`);
   }
