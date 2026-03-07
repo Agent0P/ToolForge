@@ -510,7 +510,7 @@ function AIToolPlaceholder({ name, proToken, onNeedUpgrade, onTokenUpdate }) {
           <div style={{ fontSize:10, color:mode==="groq"?T.green:T.muted, marginTop:2 }}>{groqAtLimit?"Limit reached today":`${groqCount}/3 used today`}</div>
         </div>
         <div onClick={() => { if (!hasClaude) onNeedUpgrade(); else setMode("claude"); }} style={{ flex:1, padding:"10px 12px", borderRadius:10, border:`1.5px solid ${mode==="claude"?T.gold:T.border}`, background:mode==="claude"?T.goldDim:"white", cursor:"pointer", textAlign:"center" }}>
-          <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:mode==="claude"?T.gold:T.muted }}>✦ Premium (Claude AI)</div>
+          <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:mode==="claude"?T.gold:T.muted }}>✦ Premium (Claude Sonnet AI)</div>
           <div style={{ fontSize:10, color:mode==="claude"?T.gold:T.muted, marginTop:2 }}>{proToken && proToken.generations_left === 0 ? "Out of generations" : hasClaude ? `${proToken.generations_left} left` : "Unlock from $2.99"}</div>
         </div>
       </div>
@@ -524,7 +524,7 @@ function AIToolPlaceholder({ name, proToken, onNeedUpgrade, onTokenUpdate }) {
       {mode==="groq" && groqAtLimit && <div style={{ marginBottom:10, padding:"8px 12px", borderRadius:8, background:T.accentDim, border:`1px solid ${T.accent}44`, fontSize:11, color:T.accent, fontFamily:"DM Sans, sans-serif" }}>Daily free limit reached. Resets at midnight — or unlock Premium Claude now.</div>}
       <textarea value={input} onChange={e => setInput(e.target.value)} placeholder={mode==="claude"?"Describe in detail for best Claude results...":"Describe what you need..."} disabled={mode==="groq"&&groqAtLimit} style={{ ...inputStyle, width:"100%", height:90, resize:"vertical", boxSizing:"border-box", fontFamily:"DM Sans, sans-serif", opacity:(mode==="groq"&&groqAtLimit)?0.5:1 }} />
       <button onClick={() => mode==="claude"?generateClaude():generateGroq()} disabled={!canGenerate} style={{ width:"100%", padding:"11px 0", borderRadius:10, border:"none", background:!canGenerate?T.border:mode==="claude"?T.gold:T.green, color:!canGenerate?T.muted:"white", fontSize:13, fontFamily:"Syne, sans-serif", fontWeight:700, cursor:canGenerate?"pointer":"default", marginTop:8, letterSpacing:0.5 }}>
-        {loading?"Generating…":mode==="claude"?"✦ Generate with Claude AI":"Generate with Groq AI"}
+        {loading?"Generating…":mode==="claude"?"✦ Generate with Claude Sonnet AI":"Generate with Groq AI"}
       </button>
       {error && <div style={{ marginTop:10, padding:"9px 12px", borderRadius:8, background:"#fee2e2", border:"1px solid #fca5a5", fontSize:12, color:"#dc2626", fontFamily:"DM Sans, sans-serif" }}>{error}</div>}
       {output && <><div style={{ marginTop:14, padding:14, borderRadius:10, background:T.bg, border:`1px solid ${T.border}`, fontSize:13, lineHeight:1.7, color:T.ink, whiteSpace:"pre-wrap", fontFamily:"DM Sans, sans-serif" }}>{output}</div><CopyButton text={output} /></>}
@@ -539,7 +539,7 @@ function UpgradeModal({ onClose }) {
     <div style={{ position:"fixed", inset:0, background:"rgba(15,15,13,0.6)", zIndex:1000, display:"flex", alignItems:"flex-end", justifyContent:"center", padding:16 }} onClick={e => { if (e.target===e.currentTarget) onClose(); }}>
       <div style={{ background:T.card, borderRadius:20, padding:24, width:"100%", maxWidth:440, boxShadow:"0 -8px 40px rgba(0,0,0,0.15)" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-          <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.ink }}>Unlock Claude AI ✦</div>
+          <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.ink }}>Unlock Claude Sonnet AI ✦</div>
           <button onClick={onClose} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer", color:T.muted }}>✕</button>
         </div>
         <div style={{ fontSize:13, color:T.muted, marginBottom:16, fontFamily:"DM Sans, sans-serif", lineHeight:1.6 }}>Claude produces noticeably better cover letters, proposals, and emails — polished enough to send to real clients.</div>
@@ -601,7 +601,7 @@ function SuccessPage({ orderId, onDone }) {
             <div>✓ To use on another device, click <strong>"Restore access"</strong> on the homepage and paste your token</div>
             <div>✗ Clearing your browser data will remove the token from this device</div>
           </div>
-          <button onClick={onDone} style={{ width:"100%", padding:"12px 0", borderRadius:10, border:"none", background:T.accent, color:"white", fontSize:14, fontFamily:"Syne, sans-serif", fontWeight:700, cursor:"pointer" }}>Start Using Claude AI →</button>
+          <button onClick={onDone} style={{ width:"100%", padding:"12px 0", borderRadius:10, border:"none", background:T.accent, color:"white", fontSize:14, fontFamily:"Syne, sans-serif", fontWeight:700, cursor:"pointer" }}>Start Using Claude Sonnet AI →</button>
         </>}
         {status==="error" && <>
           <div style={{ fontSize:40, marginBottom:16 }}>⚠️</div>
@@ -693,7 +693,7 @@ export default function ToolForge() {
         <div style={{ padding:16 }}>
           {search && <div style={{ fontSize:12, color:T.muted, marginBottom:12 }}>{filtered.length} result{filtered.length!==1?"s":""} for "{search}"</div>}
           {!search && activeCat==="all" ? CATEGORIES.map(cat => <div key={cat.id} style={{ marginBottom:24 }}><div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}><div style={{ width:28, height:28, borderRadius:8, background:cat.colorDim, display:"flex", alignItems:"center", justifyContent:"center", fontSize:15 }}>{cat.icon}</div><span style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:14, color:T.ink }}>{cat.label}</span></div><div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>{cat.tools.map(tool => <ToolCard key={tool.id} tool={{ ...tool, catId:cat.id, catColor:cat.color, catColorDim:cat.colorDim }} onClick={() => setActiveTool({ ...tool, catId:cat.id, catColor:cat.color, catColorDim:cat.colorDim })} />)}</div></div>) : <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>{filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}</div>}
-          {!proToken && <div onClick={() => setShowUpgrade(true)} style={{ marginTop:10, padding:16, borderRadius:14, background:`linear-gradient(135deg,${T.goldDim},${T.accentDim})`, border:`1px solid ${T.border}`, textAlign:"center", cursor:"pointer" }}><div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.ink, marginBottom:4 }}>✦ Unlock Claude AI from $2.99</div><div style={{ fontSize:12, color:T.muted }}>Better cover letters, proposals & emails. No subscription required.</div></div>}
+          {!proToken && <div onClick={() => setShowUpgrade(true)} style={{ marginTop:10, padding:16, borderRadius:14, background:`linear-gradient(135deg,${T.goldDim},${T.accentDim})`, border:`1px solid ${T.border}`, textAlign:"center", cursor:"pointer" }}><div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.ink, marginBottom:4 }}>✦ Unlock Claude Sonnet AI from $2.99</div><div style={{ fontSize:12, color:T.muted }}>Better cover letters, proposals & emails. No subscription required.</div></div>}
           <div style={{ marginTop:10, padding:16, borderRadius:14, background:`linear-gradient(135deg,${T.accentDim},${T.blueDim})`, border:`1px solid ${T.border}`, textAlign:"center" }}><div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.ink, marginBottom:4 }}>✦ More tools dropping weekly</div><div style={{ fontSize:12, color:T.muted }}>Debt payoff · Resume bullets · Pricing guide · and 20+ more</div></div>
         </div>
       </div>
