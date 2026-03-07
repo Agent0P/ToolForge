@@ -906,7 +906,7 @@ export default function ToolForge() {
           ))}
         </div>
 
-        {/* Tool grid */}
+        {/* Tool grid */} 
         <div style={{ padding: 16 }}>
           {search ? (
             <>
