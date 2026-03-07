@@ -1097,7 +1097,7 @@ export default function ToolForge() {
     setDlPinned(true);
     addWidget("deadline", { toolId: "deadline", icon: "🗓", color: T.purple, colorDim: T.purpleDim, type: "deadline", label: dlLabel, targetDate: dlTarget });
   };
-  const dlUnpin = () => { setDlPinned(false); dlStopCountdown(); removeWidget("deadline"); };
+  const dlUnpin = () => { setDlPinned(false); removeWidget("deadline"); }; // countdown keeps running
   const dlHandlePin = () => { if (dlPinned) dlUnpin(); else dlPin(); };
   // keep widget in sync when label/target change while pinned
   useEffect(() => {
@@ -1109,8 +1109,8 @@ export default function ToolForge() {
   removeWidgetRef.current = (id) => {
     setWidgets(w => { const n = { ...w }; delete n[id]; return n; });
     setActivePill(p => p === id ? null : p);
-    if (id === "deadline") { setDlPinned(false); setDlRunning(false); if (dlTickRef.current) clearInterval(dlTickRef.current); }
-    if (id === "pomodoro") { setPomoPinned(false); }
+    if (id === "deadline") { setDlPinned(false); } // countdown keeps running
+    if (id === "pomodoro") { setPomoPinned(false); } // timer keeps running
   };
 
   const openTool = (toolId) => { const tool = ALL_TOOLS.find(t => t.id === toolId); if (tool) setActiveTool(tool); };
