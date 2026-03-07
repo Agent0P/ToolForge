@@ -117,16 +117,40 @@ function RestoreToken({ onRestore }) {
 }
 
 
+const CURRENCIES = [
+  { code: "USD", symbol: "$",   label: "$ USD" },
+  { code: "EUR", symbol: "€",   label: "€ EUR" },
+  { code: "GBP", symbol: "£",   label: "£ GBP" },
+  { code: "JPY", symbol: "¥",   label: "¥ JPY" },
+  { code: "ILS", symbol: "₪",   label: "₪ ILS" },
+  { code: "CAD", symbol: "C$",  label: "C$ CAD" },
+  { code: "AUD", symbol: "A$",  label: "A$ AUD" },
+  { code: "CHF", symbol: "Fr",  label: "Fr CHF" },
+  { code: "INR", symbol: "₹",   label: "₹ INR" },
+  { code: "BRL", symbol: "R$",  label: "R$ BRL" },
+];
+function CurrencyPicker({ value, onChange }) {
+  return (
+    <select value={value} onChange={e => onChange(e.target.value)} style={{ ...inputStyle, marginBottom: 14, fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: T.accent, borderColor: T.accent }}>
+      {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.label}</option>)}
+    </select>
+  );
+}
+
 function RateCalc() {
+  const [currency, setCurrency] = useState("USD");
+  const sym = CURRENCIES.find(c => c.code === currency)?.symbol || "$";
   const [expenses, setExpenses] = useState(2000); const [salary, setSalary] = useState(4000); const [hours, setHours] = useState(160); const [buffer, setBuffer] = useState(20);
   const rate = ((Number(expenses) + Number(salary)) / Number(hours) * (1 + Number(buffer) / 100)).toFixed(2);
-  return <div><Row label="Monthly Expenses ($)"><NumInput val={expenses} set={setExpenses} /></Row><Row label="Desired Monthly Take-home ($)"><NumInput val={salary} set={setSalary} /></Row><Row label="Billable Hours / Month"><NumInput val={hours} set={setHours} /></Row><Row label="Buffer / Profit (%)"><NumInput val={buffer} set={setBuffer} /></Row><Result label="Your Minimum Hourly Rate" value={`$${rate}/hr`} /><CopyButton text={`My minimum hourly rate is $${rate}/hr — ToolForge`} /><Tip>Going below this rate means you're losing money. Add 20–40% more for growth.</Tip></div>;
+  return <div><CurrencyPicker value={currency} onChange={setCurrency} /><Row label={`Monthly Expenses (${sym})`}><NumInput val={expenses} set={setExpenses} /></Row><Row label={`Desired Monthly Take-home (${sym})`}><NumInput val={salary} set={setSalary} /></Row><Row label="Billable Hours / Month"><NumInput val={hours} set={setHours} /></Row><Row label="Buffer / Profit (%)"><NumInput val={buffer} set={setBuffer} /></Row><Result label="Your Minimum Hourly Rate" value={`${sym}${rate}/hr`} /><CopyButton text={`My minimum hourly rate is ${sym}${rate}/hr — ToolForge`} /><Tip>Going below this rate means you're losing money. Add 20–40% more for growth.</Tip></div>;
 }
 
 function ProjectEstimator() {
+  const [currency, setCurrency] = useState("USD");
+  const sym = CURRENCIES.find(c => c.code === currency)?.symbol || "$";
   const [tasks, setTasks] = useState([{ name: "Design", hours: 5 }, { name: "Development", hours: 15 }]); const [rate, setRate] = useState(75);
   const total = tasks.reduce((s, t) => s + Number(t.hours), 0); const price = (total * Number(rate) * 1.15).toFixed(0);
-  return <div>{tasks.map((t, i) => <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}><input value={t.name} onChange={e => setTasks(ts => ts.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} style={inputStyle} placeholder="Task name" /><input type="number" value={t.hours} onChange={e => setTasks(ts => ts.map((x, j) => j === i ? { ...x, hours: e.target.value } : x))} style={{ ...inputStyle, width: 80 }} placeholder="hrs" /></div>)}<button onClick={() => setTasks(ts => [...ts, { name: "", hours: 0 }])} style={addBtnStyle}>+ Add Task</button><Row label="Your Hourly Rate ($)"><NumInput val={rate} set={setRate} /></Row><Result label="Recommended Project Price (incl. 15% buffer)" value={`$${Number(price).toLocaleString()}`} /><CopyButton text={`Project price: $${Number(price).toLocaleString()} for ${total} hours — ToolForge`} /><Tip>{total} hours estimated. Always add a buffer for revisions.</Tip></div>;
+  return <div><CurrencyPicker value={currency} onChange={setCurrency} />{tasks.map((t, i) => <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}><input value={t.name} onChange={e => setTasks(ts => ts.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} style={inputStyle} placeholder="Task name" /><input type="number" value={t.hours} onChange={e => setTasks(ts => ts.map((x, j) => j === i ? { ...x, hours: e.target.value } : x))} style={{ ...inputStyle, width: 80 }} placeholder="hrs" /></div>)}<button onClick={() => setTasks(ts => [...ts, { name: "", hours: 0 }])} style={addBtnStyle}>+ Add Task</button><Row label={`Your Hourly Rate (${sym})`}><NumInput val={rate} set={setRate} /></Row><Result label="Recommended Project Price (incl. 15% buffer)" value={`${sym}${Number(price).toLocaleString()}`} /><CopyButton text={`Project price: ${sym}${Number(price).toLocaleString()} for ${total} hours — ToolForge`} /><Tip>{total} hours estimated. Always add a buffer for revisions.</Tip></div>;
 }
 
 function GPACalc() {
@@ -138,57 +162,48 @@ function GPACalc() {
 }
 
 function TipSplitter() {
+  const [currency, setCurrency] = useState("USD");
+  const sym = CURRENCIES.find(c => c.code === currency)?.symbol || "$";
   const [bill, setBill] = useState(80); const [tip, setTip] = useState(18); const [people, setPeople] = useState(4);
   const tipAmt = (bill * tip / 100).toFixed(2); const total = (Number(bill) + Number(tipAmt)).toFixed(2); const perPerson = (total / people).toFixed(2);
-  return <div><Row label="Bill Total ($)"><NumInput val={bill} set={setBill} /></Row><Row label="Tip (%)"><div style={{ display: "flex", gap: 6 }}>{[10,15,18,20,25].map(p => <button key={p} onClick={() => setTip(p)} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: `1px solid ${tip===p?T.accent:T.border}`, background: tip===p?T.accentDim:"white", cursor: "pointer", fontSize: 12, fontFamily: "DM Sans, sans-serif", color: tip===p?T.accent:T.muted }}>{p}%</button>)}</div></Row><Row label="Number of People"><NumInput val={people} set={setPeople} /></Row><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}><MiniResult label="Tip Amount" value={`$${tipAmt}`} /><MiniResult label="Total Bill" value={`$${total}`} /></div><Result label="Each Person Pays" value={`$${perPerson}`} /><CopyButton text={`Bill split: $${perPerson} each — ToolForge`} /></div>;
+  return <div><CurrencyPicker value={currency} onChange={setCurrency} /><Row label={`Bill Total (${sym})`}><NumInput val={bill} set={setBill} /></Row><Row label="Tip (%)"><div style={{ display: "flex", gap: 6 }}>{[10,15,18,20,25].map(p => <button key={p} onClick={() => setTip(p)} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: `1px solid ${tip===p?T.accent:T.border}`, background: tip===p?T.accentDim:"white", cursor: "pointer", fontSize: 12, fontFamily: "DM Sans, sans-serif", color: tip===p?T.accent:T.muted }}>{p}%</button>)}</div></Row><Row label="Number of People"><NumInput val={people} set={setPeople} /></Row><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}><MiniResult label="Tip Amount" value={`${sym}${tipAmt}`} /><MiniResult label="Total Bill" value={`${sym}${total}`} /></div><Result label="Each Person Pays" value={`${sym}${perPerson}`} /><CopyButton text={`Bill split: ${sym}${perPerson} each — ToolForge`} /></div>;
 }
 
 function SavingsCalc() {
+  const [currency, setCurrency] = useState("USD");
+  const sym = CURRENCIES.find(c => c.code === currency)?.symbol || "$";
   const [goal, setGoal] = useState(5000); const [saved, setSaved] = useState(500); const [monthly, setMonthly] = useState(200);
   const months = monthly > 0 ? Math.ceil(Math.max(0, goal - saved) / monthly) : "∞";
   const date = typeof months === "number" ? new Date(Date.now() + months * 30.5 * 864e5).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "Never";
-  return <div><Row label="Savings Goal ($)"><NumInput val={goal} set={setGoal} /></Row><Row label="Already Saved ($)"><NumInput val={saved} set={setSaved} /></Row><Row label="Monthly Contribution ($)"><NumInput val={monthly} set={setMonthly} /></Row><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}><MiniResult label="Months Needed" value={months} /><MiniResult label="Years" value={typeof months === "number" ? (months/12).toFixed(1) : "∞"} /></div><Result label="Goal Reached By" value={date} /><CopyButton text={`I'll reach my $${goal} goal by ${date} — ToolForge`} /></div>;
+  return <div><CurrencyPicker value={currency} onChange={setCurrency} /><Row label={`Savings Goal (${sym})`}><NumInput val={goal} set={setGoal} /></Row><Row label={`Already Saved (${sym})`}><NumInput val={saved} set={setSaved} /></Row><Row label={`Monthly Contribution (${sym})`}><NumInput val={monthly} set={setMonthly} /></Row><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}><MiniResult label="Months Needed" value={months} /><MiniResult label="Years" value={typeof months === "number" ? (months/12).toFixed(1) : "∞"} /></div><Result label="Goal Reached By" value={date} /><CopyButton text={`I'll reach my ${sym}${goal} goal by ${date} — ToolForge`} /></div>;
 }
 
 function MarginCalc() {
+  const [currency, setCurrency] = useState("USD");
+  const sym = CURRENCIES.find(c => c.code === currency)?.symbol || "$";
   const [cost, setCost] = useState(30); const [price, setPrice] = useState(75);
   const profit = (price - cost).toFixed(2); const margin = price > 0 ? ((profit / price) * 100).toFixed(1) : 0; const markup = cost > 0 ? (((price - cost) / cost) * 100).toFixed(1) : 0;
-  return <div><Row label="Cost Price ($)"><NumInput val={cost} set={setCost} /></Row><Row label="Selling Price ($)"><NumInput val={price} set={setPrice} /></Row><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}><MiniResult label="Profit" value={`$${profit}`} /><MiniResult label="Markup %" value={`${markup}%`} /></div><Result label="Profit Margin" value={`${margin}%`} color={margin >= 40 ? T.green : margin >= 20 ? T.accent : "#dc2626"} /><CopyButton text={`Profit margin: ${margin}% — ToolForge`} /><Tip>{margin >= 40 ? "Excellent margin!" : margin >= 20 ? "Decent margin." : "Low margin — review your pricing."}</Tip></div>;
+  return <div><CurrencyPicker value={currency} onChange={setCurrency} /><Row label={`Cost Price (${sym})`}><NumInput val={cost} set={setCost} /></Row><Row label={`Selling Price (${sym})`}><NumInput val={price} set={setPrice} /></Row><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}><MiniResult label="Profit" value={`${sym}${profit}`} /><MiniResult label="Markup %" value={`${markup}%`} /></div><Result label="Profit Margin" value={`${margin}%`} color={margin >= 40 ? T.green : margin >= 20 ? T.accent : "#dc2626"} /><CopyButton text={`Profit margin: ${margin}% — ToolForge`} /><Tip>{margin >= 40 ? "Excellent margin!" : margin >= 20 ? "Decent margin." : "Low margin — review your pricing."}</Tip></div>;
 }
 
 function BreakEvenCalc() {
+  const [currency, setCurrency] = useState("USD");
+  const sym = CURRENCIES.find(c => c.code === currency)?.symbol || "$";
   const [fixed, setFixed] = useState(3000); const [varCost, setVarCost] = useState(20); const [sellPrice, setSellPrice] = useState(50);
   const contrib = sellPrice - varCost; const units = contrib > 0 ? Math.ceil(fixed / contrib) : "∞"; const revenue = typeof units === "number" ? (units * sellPrice).toFixed(0) : "∞";
-  return <div><Row label="Monthly Fixed Costs ($)"><NumInput val={fixed} set={setFixed} /></Row><Row label="Variable Cost per Unit ($)"><NumInput val={varCost} set={setVarCost} /></Row><Row label="Selling Price per Unit ($)"><NumInput val={sellPrice} set={setSellPrice} /></Row><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}><MiniResult label="Contribution Margin" value={`$${contrib}`} /><MiniResult label="Break-Even Revenue" value={`$${Number(revenue).toLocaleString()}`} /></div><Result label="Units to Break Even" value={typeof units === "number" ? units.toLocaleString() : "∞"} /><CopyButton text={`Break-even: ${units} units — ToolForge`} /><Tip>Sell more than {units} units per month and you're profitable.</Tip></div>;
+  return <div><CurrencyPicker value={currency} onChange={setCurrency} /><Row label={`Monthly Fixed Costs (${sym})`}><NumInput val={fixed} set={setFixed} /></Row><Row label={`Variable Cost per Unit (${sym})`}><NumInput val={varCost} set={setVarCost} /></Row><Row label={`Selling Price per Unit (${sym})`}><NumInput val={sellPrice} set={setSellPrice} /></Row><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}><MiniResult label="Contribution Margin" value={`${sym}${contrib}`} /><MiniResult label="Break-Even Revenue" value={`${sym}${Number(revenue).toLocaleString()}`} /></div><Result label="Units to Break Even" value={typeof units === "number" ? units.toLocaleString() : "∞"} /><CopyButton text={`Break-even: ${units} units — ToolForge`} /><Tip>Sell more than {units} units per month and you're profitable.</Tip></div>;
 }
 
-function DeadlineCountdown({ addWidget, removeWidget }) {
-  const [target, setTarget] = useState(() => { const d = new Date(); d.setMonth(d.getMonth() + 1); return d.toISOString().split("T")[0]; });
-  const [label, setLabel] = useState("Project deadline");
+function DeadlineCountdown({ label, setLabel, target, setTarget, pinned, onTogglePin }) {
   const [running, setRunning] = useState(false);
-  const [pinned, setPinned] = useState(false);
   const [, forceUpdate] = useState(0);
   const tickRef = useRef(null);
 
   const getDiff = () => new Date(target) - new Date();
   const fmt = () => { const diff = getDiff(); if (diff <= 0) return "Past due!"; const d = Math.floor(diff/864e5); const h = Math.floor((diff%864e5)/36e5); const m = Math.floor((diff%36e5)/6e4); return `${d}d ${h}h ${m}m`; };
 
-  const startCountdown = () => {
-    setRunning(true);
-    tickRef.current = setInterval(() => forceUpdate(n => n + 1), 1000);
-  };
-  const stopCountdown = () => {
-    setRunning(false);
-    if (tickRef.current) clearInterval(tickRef.current);
-  };
-  const handlePin = () => {
-    if (pinned) { setPinned(false); removeWidget("deadline"); return; }
-    setPinned(true);
-    addWidget("deadline", { toolId: "deadline", icon: "🗓", color: T.purple, colorDim: T.purpleDim, type: "deadline", label, targetDate: target });
-  };
-  useEffect(() => {
-    if (pinned) addWidget("deadline", { toolId: "deadline", icon: "🗓", color: T.purple, colorDim: T.purpleDim, type: "deadline", label, targetDate: target });
-  }, [label, target]);
+  const startCountdown = () => { setRunning(true); tickRef.current = setInterval(() => forceUpdate(n => n + 1), 1000); };
+  const stopCountdown = () => { setRunning(false); if (tickRef.current) clearInterval(tickRef.current); };
   useEffect(() => () => { if (tickRef.current) clearInterval(tickRef.current); }, []);
 
   const diff = getDiff();
@@ -213,7 +228,7 @@ function DeadlineCountdown({ addWidget, removeWidget }) {
           <button onClick={running ? stopCountdown : startCountdown} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: running ? "#fee2e2" : T.purple, color: running ? "#dc2626" : "white", fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
             {running ? "⏹ Stop" : "▶ Start Countdown"}
           </button>
-          <button onClick={handlePin} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: `1.5px solid ${pinned ? T.purple : T.border}`, background: pinned ? T.purple : "white", color: pinned ? "white" : T.muted, fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
+          <button onClick={onTogglePin} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: `1.5px solid ${pinned ? T.purple : T.border}`, background: pinned ? T.purple : "white", color: pinned ? "white" : T.muted, fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
             {pinned ? "📌 Pinned" : "📌 Pin"}
           </button>
         </div>
@@ -222,69 +237,18 @@ function DeadlineCountdown({ addWidget, removeWidget }) {
   );
 }
 
-function PomodoroTimer({ addWidget, removeWidget }) {
-  const MODES = [
-    { id: "focus",  label: "Focus",       icon: "🍅", mins: 25, color: T.accent,  colorDim: T.accentDim },
-    { id: "short",  label: "Short Break", icon: "☕", mins: 5,  color: T.green,   colorDim: T.greenDim },
-    { id: "long",   label: "Long Break",  icon: "🌿", mins: 15, color: T.teal,    colorDim: T.tealDim },
-  ];
-  const [modeId, setModeId] = useState("focus");
-  const [secondsLeft, setSecondsLeft] = useState(25 * 60);
-  const [running, setRunning] = useState(false);
-  const [pinned, setPinned] = useState(false);
-  const [sessions, setSessions] = useState(0);
-  const [pausedRemaining, setPausedRemaining] = useState(null);
-  const intervalRef = useRef(null);
-  const mode = MODES.find(m => m.id === modeId);
+function PomodoroTimer({ modes, modeId, secondsLeft, running, pinned, sessions, paused, onStart, onPause, onReset, onSwitchMode, onTogglePin }) {
+  const mode = modes.find(m => m.id === modeId);
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
   const total = mode.mins * 60;
   const progress = 1 - secondsLeft / total;
   const circumference = 2 * Math.PI * 54;
-  const clearTick = () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-
-  const doPin = (secs, paused) => {
-    setPinned(true);
-    addWidget("pomodoro", { toolId: "pomodoro", icon: mode.icon, color: mode.color, colorDim: mode.colorDim, type: "pomodoro", sessionLabel: mode.label, secondsLeft: secs, paused });
-  };
-  const doUnpin = () => { setPinned(false); removeWidget("pomodoro"); };
-
-  const start = () => {
-    const remaining = pausedRemaining !== null ? pausedRemaining : secondsLeft;
-    setPausedRemaining(null); setRunning(true);
-    // auto-pin on start
-    if (!pinned) doPin(remaining, false);
-    clearTick();
-    intervalRef.current = setInterval(() => {
-      setSecondsLeft(prev => {
-        const next = prev - 1;
-        if (next <= 0) { clearTick(); setRunning(false); setSessions(s => modeId === "focus" ? s + 1 : s); doUnpin(); return 0; }
-        if (pinned || true) addWidget("pomodoro", { toolId: "pomodoro", icon: mode.icon, color: mode.color, colorDim: mode.colorDim, type: "pomodoro", sessionLabel: mode.label, secondsLeft: next, paused: false });
-        return next;
-      });
-    }, 1000);
-  };
-
-  const pause = () => {
-    clearTick(); setRunning(false); setPausedRemaining(secondsLeft);
-    addWidget("pomodoro", { toolId: "pomodoro", icon: mode.icon, color: mode.color, colorDim: mode.colorDim, type: "pomodoro", sessionLabel: mode.label, secondsLeft, paused: true });
-  };
-
-  const reset = () => { clearTick(); setRunning(false); setSecondsLeft(mode.mins * 60); setPausedRemaining(null); doUnpin(); };
-
-  const switchMode = (id) => {
-    clearTick(); setRunning(false); setModeId(id);
-    const m = MODES.find(x => x.id === id);
-    setSecondsLeft(m.mins * 60); setPausedRemaining(null); doUnpin();
-  };
-
-  const handlePinBtn = () => { if (pinned) doUnpin(); else doPin(secondsLeft, !running); };
-  useEffect(() => () => clearTick(), []);
 
   return (
     <div style={{ maxWidth: 360, margin: "0 auto" }}>
       <div style={{ display: "flex", gap: 6, marginBottom: 24 }}>
-        {MODES.map(m => (
-          <button key={m.id} onClick={() => switchMode(m.id)} style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1.5px solid ${modeId === m.id ? m.color : T.border}`, background: modeId === m.id ? m.colorDim : "white", color: modeId === m.id ? m.color : T.muted, fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer", transition: "all 0.15s" }}>
+        {modes.map(m => (
+          <button key={m.id} onClick={() => onSwitchMode(m.id)} style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1.5px solid ${modeId === m.id ? m.color : T.border}`, background: modeId === m.id ? m.colorDim : "white", color: modeId === m.id ? m.color : T.muted, fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer", transition: "all 0.15s" }}>
             {m.icon} {m.label}
           </button>
         ))}
@@ -304,16 +268,14 @@ function PomodoroTimer({ addWidget, removeWidget }) {
       </div>
       <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
         {!running ? (
-          <button onClick={start} style={{ flex: 1, padding: "13px 0", background: mode.color, color: "white", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 800, fontFamily: "Syne, sans-serif", cursor: "pointer" }}>
-            {pausedRemaining !== null ? "▶ Resume" : "▶ Start"}
+          <button onClick={onStart} style={{ flex: 1, padding: "13px 0", background: mode.color, color: "white", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 800, fontFamily: "Syne, sans-serif", cursor: "pointer" }}>
+            {paused ? "▶ Resume" : "▶ Start"}
           </button>
         ) : (
-          <button onClick={pause} style={{ flex: 1, padding: "13px 0", background: mode.colorDim, color: mode.color, border: `2px solid ${mode.color}`, borderRadius: 12, fontSize: 15, fontWeight: 800, fontFamily: "Syne, sans-serif", cursor: "pointer" }}>⏸ Pause</button>
+          <button onClick={onPause} style={{ flex: 1, padding: "13px 0", background: mode.colorDim, color: mode.color, border: `2px solid ${mode.color}`, borderRadius: 12, fontSize: 15, fontWeight: 800, fontFamily: "Syne, sans-serif", cursor: "pointer" }}>⏸ Pause</button>
         )}
-        <button onClick={reset} style={{ padding: "13px 18px", background: "white", color: T.muted, border: `1.5px solid ${T.border}`, borderRadius: 12, fontSize: 13, fontFamily: "DM Sans, sans-serif", cursor: "pointer" }}>↺ Reset</button>
-        <button onClick={handlePinBtn} style={{ padding: "13px 14px", background: pinned ? mode.colorDim : "white", color: pinned ? mode.color : T.muted, border: `1.5px solid ${pinned ? mode.color : T.border}`, borderRadius: 12, fontSize: 13, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
-          {pinned ? "📌" : "📌"}
-        </button>
+        <button onClick={onReset} style={{ padding: "13px 18px", background: "white", color: T.muted, border: `1.5px solid ${T.border}`, borderRadius: 12, fontSize: 13, fontFamily: "DM Sans, sans-serif", cursor: "pointer" }}>↺ Reset</button>
+        <button onClick={onTogglePin} style={{ padding: "13px 14px", background: pinned ? mode.colorDim : "white", color: pinned ? mode.color : T.muted, border: `1.5px solid ${pinned ? mode.color : T.border}`, borderRadius: 12, fontSize: 13, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>📌</button>
       </div>
       {running && <div style={{ padding: "9px 12px", borderRadius: 9, background: mode.colorDim, border: `1px solid ${mode.color}33`, fontSize: 12, color: mode.color, fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>← Go back — timer keeps running in the widget</div>}
     </div>
@@ -693,9 +655,11 @@ function CitationFormatter() {
 }
 
 function SalaryHelper() {
+  const [currency, setCurrency] = useState("USD");
+  const sym = CURRENCIES.find(c => c.code === currency)?.symbol || "$";
   const [role, setRole] = useState("Software Engineer"); const [current, setCurrent] = useState(70000); const [experience, setExp] = useState(3); const [location, setLocation] = useState("New York");
   const target = Math.round(current * 1.15 / 1000) * 1000; const stretch = Math.round(current * 1.25 / 1000) * 1000;
-  return <div><Row label="Job Title"><input value={role} onChange={e=>setRole(e.target.value)} style={inputStyle} /></Row><Row label="Current / Offered Salary ($)"><NumInput val={current} set={setCurrent} /></Row><Row label="Years of Experience"><NumInput val={experience} set={setExp} /></Row><Row label="Location"><input value={location} onChange={e=>setLocation(e.target.value)} style={inputStyle} /></Row><div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:12 }}><MiniResult label="Target Ask" value={`$${target.toLocaleString()}`} /><MiniResult label="Stretch Goal" value={`$${stretch.toLocaleString()}`} /></div><Result label="Negotiation Range" value={`$${target.toLocaleString()} – $${stretch.toLocaleString()}`} color={T.blue} /><CopyButton text={`Salary range for ${role}: $${target.toLocaleString()} – $${stretch.toLocaleString()} — ToolForge`} /><Tip>Always ask for 15–25% above your target. Companies expect negotiation.</Tip></div>;
+  return <div><CurrencyPicker value={currency} onChange={setCurrency} /><Row label="Job Title"><input value={role} onChange={e=>setRole(e.target.value)} style={inputStyle} /></Row><Row label={`Current / Offered Salary (${sym})`}><NumInput val={current} set={setCurrent} /></Row><Row label="Years of Experience"><NumInput val={experience} set={setExp} /></Row><Row label="Location"><input value={location} onChange={e=>setLocation(e.target.value)} style={inputStyle} /></Row><div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:12 }}><MiniResult label="Target Ask" value={`${sym}${target.toLocaleString()}`} /><MiniResult label="Stretch Goal" value={`${sym}${stretch.toLocaleString()}`} /></div><Result label="Negotiation Range" value={`${sym}${target.toLocaleString()} – ${sym}${stretch.toLocaleString()}`} color={T.blue} /><CopyButton text={`Salary range for ${role}: ${sym}${target.toLocaleString()} – ${sym}${stretch.toLocaleString()} — ToolForge`} /><Tip>Always ask for 15–25% above your target. Companies expect negotiation.</Tip></div>;
 }
 
 const GROQ_PROMPTS = {
@@ -1015,13 +979,13 @@ function SuccessPage({ orderId, onDone }) {
   );
 }
 
-function ToolView({ tool, onBack, proToken, onNeedUpgrade, onTokenUpdate, addWidget, removeWidget }) {
+function ToolView({ tool, onBack, proToken, onNeedUpgrade, onTokenUpdate, addWidget, removeWidget, pomoProps, dlProps }) {
   const cat = CATEGORIES.find(c => c.id === tool.catId);
   const renderTool = () => {
     switch (tool.id) {
       case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper />; case "word-counter": return <WordCounter />; case "bmi": return <BMICalculator />; case "qr-generator": return <QRGenerator />;
-      case "deadline": return <DeadlineCountdown addWidget={addWidget} removeWidget={removeWidget} />;
-      case "pomodoro": return <PomodoroTimer addWidget={addWidget} removeWidget={removeWidget} />;
+      case "deadline": return <DeadlineCountdown {...dlProps} />;
+      case "pomodoro": return <PomodoroTimer {...pomoProps} />;
       default: if (AI_TOOLS.includes(tool.name)) return <AIToolPlaceholder name={tool.name} proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
       return <div style={{ textAlign:"center", padding:"30px 0", color:T.muted, fontFamily:"DM Sans, sans-serif" }}><div style={{ fontSize:36, marginBottom:10 }}>{tool.icon}</div><div style={{ fontSize:14 }}>Coming soon!</div></div>;
     }
@@ -1062,7 +1026,77 @@ export default function ToolForge() {
   const removeWidget = (id) => { setWidgets(w => { const n = { ...w }; delete n[id]; return n; }); setActivePill(p => p === id ? null : p); };
   const [proToken, setProToken] = useState(() => { try { const s = localStorage.getItem("tf_pro_token"); return s ? JSON.parse(s) : null; } catch { return null; } });
 
-  const handleTokenUpdate = (t) => { setProToken(t); localStorage.setItem("tf_pro_token", JSON.stringify(t)); };
+  // ── Lifted Pomodoro state — survives navigation ──
+  const POMO_MODES = [
+    { id: "focus",  label: "Focus",       icon: "🍅", mins: 25, color: T.accent,  colorDim: T.accentDim },
+    { id: "short",  label: "Short Break", icon: "☕", mins: 5,  color: T.green,   colorDim: T.greenDim },
+    { id: "long",   label: "Long Break",  icon: "🌿", mins: 15, color: T.teal,    colorDim: T.tealDim },
+  ];
+  const [pomoModeId, setPomoModeId] = useState("focus");
+  const [pomoSeconds, setPomoSeconds] = useState(25 * 60);
+  const [pomoRunning, setPomoRunning] = useState(false);
+  const [pomoPinned, setPomoPinned] = useState(false);
+  const [pomoSessions, setPomoSessions] = useState(0);
+  const [pomoPaused, setPomoPaused] = useState(false);
+  const pomoIntervalRef = useRef(null);
+
+  const clearPomoTick = () => { if (pomoIntervalRef.current) clearInterval(pomoIntervalRef.current); };
+  const pomoMode = POMO_MODES.find(m => m.id === pomoModeId);
+
+  const pomoDoPin = (secs, paused) => {
+    setPomoPinned(true);
+    addWidget("pomodoro", { toolId: "pomodoro", icon: pomoMode.icon, color: pomoMode.color, colorDim: pomoMode.colorDim, type: "pomodoro", sessionLabel: pomoMode.label, secondsLeft: secs, paused });
+  };
+  const pomoDoUnpin = () => { setPomoPinned(false); removeWidget("pomodoro"); };
+
+  const pomoStart = () => {
+    clearPomoTick();
+    setPomoRunning(true); setPomoPaused(false);
+    if (!pomoPinned) pomoDoPin(pomoSeconds, false);
+    pomoIntervalRef.current = setInterval(() => {
+      setPomoSeconds(prev => {
+        const next = prev - 1;
+        if (next <= 0) {
+          clearPomoTick(); setPomoRunning(false); setPomoPaused(false);
+          setPomoSessions(s => pomoModeId === "focus" ? s + 1 : s);
+          pomoDoUnpin(); return 0;
+        }
+        addWidget("pomodoro", { toolId: "pomodoro", icon: pomoMode.icon, color: pomoMode.color, colorDim: pomoMode.colorDim, type: "pomodoro", sessionLabel: pomoMode.label, secondsLeft: next, paused: false });
+        return next;
+      });
+    }, 1000);
+  };
+  const pomocPause = () => {
+    clearPomoTick(); setPomoRunning(false); setPomoPaused(true);
+    addWidget("pomodoro", { toolId: "pomodoro", icon: pomoMode.icon, color: pomoMode.color, colorDim: pomoMode.colorDim, type: "pomodoro", sessionLabel: pomoMode.label, secondsLeft: pomoSeconds, paused: true });
+  };
+  const pomoReset = () => {
+    clearPomoTick(); setPomoRunning(false); setPomoPaused(false);
+    setPomoSeconds(pomoMode.mins * 60); pomoDoUnpin();
+  };
+  const pomoSwitchMode = (id) => {
+    clearPomoTick(); setPomoRunning(false); setPomoPaused(false);
+    setPomoModeId(id); setPomoSeconds(POMO_MODES.find(m => m.id === id).mins * 60); pomoDoUnpin();
+  };
+  const pomoTogglePin = () => { if (pomoPinned) pomoDoUnpin(); else pomoDoPin(pomoSeconds, !pomoRunning); };
+  useEffect(() => () => clearPomoTick(), []);
+
+  // ── Lifted Deadline state — survives navigation ──
+  const [dlPinned, setDlPinned] = useState(false);
+  const [dlLabel, setDlLabel] = useState("Project deadline");
+  const dlDefaultTarget = () => { const d = new Date(); d.setMonth(d.getMonth() + 1); return d.toISOString().split("T")[0]; };
+  const [dlTarget, setDlTarget] = useState(dlDefaultTarget);
+
+  const dlPin = () => {
+    setDlPinned(true);
+    addWidget("deadline", { toolId: "deadline", icon: "🗓", color: T.purple, colorDim: T.purpleDim, type: "deadline", label: dlLabel, targetDate: dlTarget });
+  };
+  const dlUnpin = () => { setDlPinned(false); removeWidget("deadline"); };
+  const dlHandlePin = () => { if (dlPinned) dlUnpin(); else dlPin(); };
+  // keep widget in sync when label/target change while pinned
+  useEffect(() => {
+    if (dlPinned) addWidget("deadline", { toolId: "deadline", icon: "🗓", color: T.purple, colorDim: T.purpleDim, type: "deadline", label: dlLabel, targetDate: dlTarget });
+  }, [dlLabel, dlTarget, dlPinned]);
   useEffect(() => { injectFonts(); }, []);
 
   const openTool = (toolId) => { const tool = ALL_TOOLS.find(t => t.id === toolId); if (tool) setActiveTool(tool); };
@@ -1093,7 +1127,7 @@ export default function ToolForge() {
       <style>{responsiveGrid}</style>
       <div style={{ maxWidth: 480, margin: "0 auto", padding: 20, background: T.bg, minHeight: "100vh" }}>
         <div style={{ background: T.card, borderRadius: 16, padding: 20, border: `1px solid ${T.border}`, boxShadow: "0 2px 24px #0f0f0d0a" }}>
-          <ToolView tool={activeTool} onBack={() => setActiveTool(null)} proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} addWidget={addWidget} removeWidget={removeWidget} />
+          <ToolView tool={activeTool} onBack={() => setActiveTool(null)} proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} addWidget={addWidget} removeWidget={removeWidget} pomoProps={{ modes: POMO_MODES, modeId: pomoModeId, secondsLeft: pomoSeconds, running: pomoRunning, pinned: pomoPinned, sessions: pomoSessions, paused: pomoPaused, onStart: pomoStart, onPause: pomocPause, onReset: pomoReset, onSwitchMode: pomoSwitchMode, onTogglePin: pomoTogglePin }} dlProps={{ label: dlLabel, setLabel: setDlLabel, target: dlTarget, setTarget: setDlTarget, pinned: dlPinned, onTogglePin: dlHandlePin }} />
         </div>
         {proToken && proToken.generations_left > 0 && (
           <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: T.goldDim, border: `1px solid ${T.gold}44`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
