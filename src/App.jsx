@@ -72,13 +72,11 @@ function CopyButton({ text }) {
 
 function RestoreToken({ onRestore }) {
   const [show, setShow] = useState(false);
-  const [mode, setMode] = useState("email"); // "email" or "token"
   const [email, setEmail] = useState("");
-  const [val, setVal] = useState("");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const restoreByEmail = async () => {
+  const restore = async () => {
     if (!email.trim()) return;
     setLoading(true); setErr("");
     try {
@@ -101,52 +99,20 @@ function RestoreToken({ onRestore }) {
     setLoading(false);
   };
 
-  const restoreByToken = async () => {
-    if (!val.trim()) return;
-    setLoading(true); setErr("");
-    try {
-      const res = await fetch(`/api/get-token?token=${val.trim()}`);
-      if (res.ok) {
-        const data = await res.json();
-        const tokenData = { ...data, token: val.trim() };
-        localStorage.setItem("tf_pro_token", JSON.stringify(tokenData));
-        onRestore(tokenData);
-        setShow(false);
-      } else { setErr("Token not found. Check your receipt email and try again."); }
-    } catch { setErr("Could not verify token. Please try again."); }
-    setLoading(false);
-  };
-
   if (!show) return <button onClick={() => setShow(true)} style={{ background: "none", border: "none", fontSize: 11, color: T.muted, cursor: "pointer", fontFamily: "DM Sans, sans-serif", textDecoration: "underline", padding: 0, marginTop: 6, display: "block" }}>Already purchased? Restore access →</button>;
 
   return (
     <div style={{ marginTop: 8, padding: 14, borderRadius: 10, background: "white", border: `1px solid ${T.border}` }}>
-      <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-        {[["email", "📧 By Email"], ["token", "🔑 By Token"]].map(([m, label]) => (
-          <button key={m} onClick={() => { setMode(m); setErr(""); }} style={{ flex: 1, padding: "6px 0", borderRadius: 7, border: `1.5px solid ${mode === m ? T.accent : T.border}`, background: mode === m ? T.accentDim : "white", color: mode === m ? T.accent : T.muted, fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>{label}</button>
-        ))}
+      <div style={{ fontSize: 11, color: T.muted, marginBottom: 6, fontFamily: "DM Sans, sans-serif" }}>Enter the email you used to purchase:</div>
+      <div style={{ display: "flex", gap: 6 }}>
+        <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && restore()} placeholder="your@email.com" style={{ ...inputStyle, fontSize: 12 }} />
+        <button onClick={restore} disabled={loading || !email.trim()} style={{ padding: "8px 12px", borderRadius: 8, border: "none", background: T.accent, color: "white", fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>{loading ? "…" : "Restore"}</button>
       </div>
-      {mode === "email" ? (
-        <>
-          <div style={{ fontSize: 11, color: T.muted, marginBottom: 6, fontFamily: "DM Sans, sans-serif" }}>Enter the email you used to purchase:</div>
-          <div style={{ display: "flex", gap: 6 }}>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && restoreByEmail()} placeholder="your@email.com" style={{ ...inputStyle, fontSize: 12 }} />
-            <button onClick={restoreByEmail} disabled={loading || !email.trim()} style={{ padding: "8px 12px", borderRadius: 8, border: "none", background: T.accent, color: "white", fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>{loading ? "…" : "Restore"}</button>
-          </div>
-        </>
-      ) : (
-        <>
-          <div style={{ fontSize: 11, color: T.muted, marginBottom: 6, fontFamily: "DM Sans, sans-serif" }}>Paste your access token from your receipt email:</div>
-          <div style={{ display: "flex", gap: 6 }}>
-            <input value={val} onChange={e => setVal(e.target.value)} placeholder="Paste token here..." style={{ ...inputStyle, fontSize: 11 }} />
-            <button onClick={restoreByToken} disabled={loading || !val.trim()} style={{ padding: "8px 12px", borderRadius: 8, border: "none", background: T.accent, color: "white", fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>{loading ? "…" : "Restore"}</button>
-          </div>
-        </>
-      )}
       {err && <div style={{ fontSize: 11, color: "#dc2626", marginTop: 6, fontFamily: "DM Sans, sans-serif" }}>{err}</div>}
     </div>
   );
 }
+
 
 function RateCalc() {
   const [expenses, setExpenses] = useState(2000); const [salary, setSalary] = useState(4000); const [hours, setHours] = useState(160); const [buffer, setBuffer] = useState(20);
