@@ -194,17 +194,9 @@ function BreakEvenCalc() {
   return <div><CurrencyPicker value={currency} onChange={setCurrency} /><Row label={`Monthly Fixed Costs (${sym})`}><NumInput val={fixed} set={setFixed} /></Row><Row label={`Variable Cost per Unit (${sym})`}><NumInput val={varCost} set={setVarCost} /></Row><Row label={`Selling Price per Unit (${sym})`}><NumInput val={sellPrice} set={setSellPrice} /></Row><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}><MiniResult label="Contribution Margin" value={`${sym}${contrib}`} /><MiniResult label="Break-Even Revenue" value={`${sym}${Number(revenue).toLocaleString()}`} /></div><Result label="Units to Break Even" value={typeof units === "number" ? units.toLocaleString() : "∞"} /><CopyButton text={`Break-even: ${units} units — ToolForge`} /><Tip>Sell more than {units} units per month and you're profitable.</Tip></div>;
 }
 
-function DeadlineCountdown({ label, setLabel, target, setTarget, pinned, onTogglePin }) {
-  const [running, setRunning] = useState(false);
-  const [, forceUpdate] = useState(0);
-  const tickRef = useRef(null);
-
+function DeadlineCountdown({ label, setLabel, target, setTarget, pinned, onTogglePin, running, onStart, onStop }) {
   const getDiff = () => new Date(target) - new Date();
   const fmt = () => { const diff = getDiff(); if (diff <= 0) return "Past due!"; const d = Math.floor(diff/864e5); const h = Math.floor((diff%864e5)/36e5); const m = Math.floor((diff%36e5)/6e4); return `${d}d ${h}h ${m}m`; };
-
-  const startCountdown = () => { setRunning(true); tickRef.current = setInterval(() => forceUpdate(n => n + 1), 1000); };
-  const stopCountdown = () => { setRunning(false); if (tickRef.current) clearInterval(tickRef.current); };
-  useEffect(() => () => { if (tickRef.current) clearInterval(tickRef.current); }, []);
 
   const diff = getDiff();
   const days = diff > 0 ? Math.floor(diff/864e5) : 0;
@@ -225,7 +217,7 @@ function DeadlineCountdown({ label, setLabel, target, setTarget, pinned, onToggl
         {!running && <><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 12 }}><MiniResult label="Days" value={days} /><MiniResult label="Hours" value={hours} /><MiniResult label="Minutes" value={mins} /></div><Result label={`Until: ${label}`} value={`${days}d ${hours}h ${mins}m`} /></>}
         <CopyButton text={`${days} days until ${label} — ToolForge`} />
         <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-          <button onClick={running ? stopCountdown : startCountdown} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: running ? "#fee2e2" : T.purple, color: running ? "#dc2626" : "white", fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
+          <button onClick={running ? onStop : onStart} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: running ? "#fee2e2" : T.purple, color: running ? "#dc2626" : "white", fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
             {running ? "⏹ Stop" : "▶ Start Countdown"}
           </button>
           <button onClick={onTogglePin} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: `1.5px solid ${pinned ? T.purple : T.border}`, background: pinned ? T.purple : "white", color: pinned ? "white" : T.muted, fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
@@ -1023,7 +1015,8 @@ export default function ToolForge() {
   const [widgets, setWidgets] = useState({});
   const [activePill, setActivePill] = useState(null);
   const addWidget = (id, data) => setWidgets(w => ({ ...w, [id]: data }));
-  const removeWidget = (id) => { setWidgets(w => { const n = { ...w }; delete n[id]; return n; }); setActivePill(p => p === id ? null : p); };
+  const removeWidgetRef = useRef(null);
+  const removeWidget = (id) => { if (removeWidgetRef.current) removeWidgetRef.current(id); };
   const [proToken, setProToken] = useState(() => { try { const s = localStorage.getItem("tf_pro_token"); return s ? JSON.parse(s) : null; } catch { return null; } });
   const handleTokenUpdate = (t) => { setProToken(t); localStorage.setItem("tf_pro_token", JSON.stringify(t)); };
 
@@ -1084,21 +1077,41 @@ export default function ToolForge() {
 
   // ── Lifted Deadline state — survives navigation ──
   const [dlPinned, setDlPinned] = useState(false);
+  const [dlRunning, setDlRunning] = useState(false);
   const [dlLabel, setDlLabel] = useState("Project deadline");
   const dlDefaultTarget = () => { const d = new Date(); d.setMonth(d.getMonth() + 1); return d.toISOString().split("T")[0]; };
   const [dlTarget, setDlTarget] = useState(dlDefaultTarget);
+  const dlTickRef = useRef(null);
+
+  const dlClearTick = () => { if (dlTickRef.current) clearInterval(dlTickRef.current); };
+  const dlStartCountdown = () => {
+    setDlRunning(true);
+    dlTickRef.current = setInterval(() => {
+      // force widget to re-read targetDate every second (deadline is date-based so just re-set widget)
+      setWidgets(w => w.deadline ? { ...w, deadline: { ...w.deadline, _tick: Date.now() } } : w);
+    }, 1000);
+  };
+  const dlStopCountdown = () => { setDlRunning(false); dlClearTick(); };
 
   const dlPin = () => {
     setDlPinned(true);
     addWidget("deadline", { toolId: "deadline", icon: "🗓", color: T.purple, colorDim: T.purpleDim, type: "deadline", label: dlLabel, targetDate: dlTarget });
   };
-  const dlUnpin = () => { setDlPinned(false); removeWidget("deadline"); };
+  const dlUnpin = () => { setDlPinned(false); dlStopCountdown(); removeWidget("deadline"); };
   const dlHandlePin = () => { if (dlPinned) dlUnpin(); else dlPin(); };
   // keep widget in sync when label/target change while pinned
   useEffect(() => {
     if (dlPinned) addWidget("deadline", { toolId: "deadline", icon: "🗓", color: T.purple, colorDim: T.purpleDim, type: "deadline", label: dlLabel, targetDate: dlTarget });
   }, [dlLabel, dlTarget, dlPinned]);
-  useEffect(() => { injectFonts(); }, []);
+  useEffect(() => () => dlClearTick(), []);
+
+  // Wire removeWidget after all state setters are defined
+  removeWidgetRef.current = (id) => {
+    setWidgets(w => { const n = { ...w }; delete n[id]; return n; });
+    setActivePill(p => p === id ? null : p);
+    if (id === "deadline") { setDlPinned(false); setDlRunning(false); if (dlTickRef.current) clearInterval(dlTickRef.current); }
+    if (id === "pomodoro") { setPomoPinned(false); }
+  };
 
   const openTool = (toolId) => { const tool = ALL_TOOLS.find(t => t.id === toolId); if (tool) setActiveTool(tool); };
 
@@ -1128,7 +1141,7 @@ export default function ToolForge() {
       <style>{responsiveGrid}</style>
       <div style={{ maxWidth: 480, margin: "0 auto", padding: 20, background: T.bg, minHeight: "100vh" }}>
         <div style={{ background: T.card, borderRadius: 16, padding: 20, border: `1px solid ${T.border}`, boxShadow: "0 2px 24px #0f0f0d0a" }}>
-          <ToolView tool={activeTool} onBack={() => setActiveTool(null)} proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} addWidget={addWidget} removeWidget={removeWidget} pomoProps={{ modes: POMO_MODES, modeId: pomoModeId, secondsLeft: pomoSeconds, running: pomoRunning, pinned: pomoPinned, sessions: pomoSessions, paused: pomoPaused, onStart: pomoStart, onPause: pomocPause, onReset: pomoReset, onSwitchMode: pomoSwitchMode, onTogglePin: pomoTogglePin }} dlProps={{ label: dlLabel, setLabel: setDlLabel, target: dlTarget, setTarget: setDlTarget, pinned: dlPinned, onTogglePin: dlHandlePin }} />
+          <ToolView tool={activeTool} onBack={() => setActiveTool(null)} proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} addWidget={addWidget} removeWidget={removeWidget} pomoProps={{ modes: POMO_MODES, modeId: pomoModeId, secondsLeft: pomoSeconds, running: pomoRunning, pinned: pomoPinned, sessions: pomoSessions, paused: pomoPaused, onStart: pomoStart, onPause: pomocPause, onReset: pomoReset, onSwitchMode: pomoSwitchMode, onTogglePin: pomoTogglePin }} dlProps={{ label: dlLabel, setLabel: setDlLabel, target: dlTarget, setTarget: setDlTarget, pinned: dlPinned, onTogglePin: dlHandlePin, running: dlRunning, onStart: dlStartCountdown, onStop: dlStopCountdown }} />
         </div>
         {proToken && proToken.generations_left > 0 && (
           <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: T.goldDim, border: `1px solid ${T.gold}44`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
