@@ -23,6 +23,19 @@ export default async function handler(req, res) {
   const { token, toolName, userInput } = req.body;
   if (!token || !toolName || !userInput) return res.status(400).json({ error: 'Missing required fields' });
 
+  // ── Rate limiting — max 20 requests per token per hour ──────────────
+  const rateLimitKey = `ratelimit:${token}`;
+  const requests = await redis.incr(rateLimitKey);
+  if (requests === 1) await redis.expire(rateLimitKey, 3600);
+  if (requests > 20) {
+    return res.status(429).json({ error: 'Too many requests. Please wait a moment before trying again.' });
+  }
+
+  // ── Input size limit ─────────────────────────────────────────────────
+  if (userInput.length > 3000) {
+    return res.status(400).json({ error: 'Input too long. Please keep it under 3000 characters.' });
+  }
+
   // ── Verify token ────────────────────────────────────────────────────
   const tokenData = await redis.get(`token:${token}`);
   if (!tokenData) return res.status(401).json({ error: 'Invalid token. Please check your access or purchase again.' });
