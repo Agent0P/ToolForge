@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import QRCodeLib from "qrcode";
 
 /* ── Google Fonts ── */
 const injectFonts = () => {
@@ -39,6 +40,7 @@ const CATEGORIES = [
     { id: "salary", icon: "📊", name: "Salary Negotiation Helper", desc: "Know your worth, negotiate better" },
     { id: "tip", icon: "🍽", name: "Tip & Bill Splitter", desc: "Split any bill instantly" },
     { id: "savings", icon: "🏦", name: "Savings Goal Calculator", desc: "Plan your way to any goal" },
+    { id: "bmi", icon: "⚖️", name: "BMI Calculator", desc: "Calculate your Body Mass Index and health range" },
   ]},
   { id: "planning", label: "Planning & Time", icon: "📅", color: T.purple, colorDim: T.purpleDim, tools: [
     { id: "deadline", icon: "🗓", name: "Deadline Countdown", desc: "Days, hours, minutes to any date" },
@@ -48,6 +50,8 @@ const CATEGORIES = [
   { id: "utilities", label: "Utilities", icon: "🛠", color: T.teal, colorDim: T.tealDim, tools: [
     { id: "unit", icon: "📏", name: "Unit Converter", desc: "Length, weight, temp & more" },
     { id: "timezone", icon: "🌍", name: "Timezone Converter", desc: "Convert times across the world instantly" },
+    { id: "word-counter", icon: "📝", name: "Word Counter", desc: "Words, characters, sentences & reading time" },
+    { id: "qr-generator", icon: "📱", name: "QR Code Generator", desc: "Generate a scannable QR code for any link or text" },
   ]},
 ];
 
@@ -530,6 +534,169 @@ function AIToolPlaceholder({ name, proToken, onNeedUpgrade, onTokenUpdate }) {
   );
 }
 
+function WordCounter() {
+  const [text, setText] = useState("");
+  const words = text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
+  const chars = text.length;
+  const charsNoSpaces = text.replace(/\s/g, "").length;
+  const sentences = text.trim() === "" ? 0 : (text.match(/[.!?]+/g) || []).length;
+  const paragraphs = text.trim() === "" ? 0 : text.split(/\n\s*\n/).filter(p => p.trim()).length;
+  const readingTime = Math.max(1, Math.ceil(words / 200));
+  const stats = [
+    { label: "Words", value: words.toLocaleString(), color: T.accent },
+    { label: "Characters", value: chars.toLocaleString(), color: T.blue },
+    { label: "No Spaces", value: charsNoSpaces.toLocaleString(), color: T.purple },
+    { label: "Sentences", value: sentences.toLocaleString(), color: T.teal },
+    { label: "Paragraphs", value: paragraphs.toLocaleString(), color: T.gold },
+    { label: "Reading Time", value: `~${readingTime}min`, color: "#dc2626" },
+  ];
+  return (
+    <div>
+      <textarea
+        value={text}
+        onChange={e => setText(e.target.value)}
+        placeholder="Paste or type your text here…"
+        style={{ width: "100%", minHeight: 200, padding: "13px 14px", border: `1.5px solid ${T.border}`, borderRadius: 10, fontSize: 14, fontFamily: "DM Sans, sans-serif", color: T.ink, background: "#fdfcfb", resize: "vertical", outline: "none", boxSizing: "border-box", lineHeight: 1.6 }}
+        onFocus={e => (e.target.style.borderColor = T.accent)}
+        onBlur={e => (e.target.style.borderColor = T.border)}
+      />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginTop: 14 }}>
+        {stats.map(s => (
+          <div key={s.label} style={{ background: T.card, border: `1.5px solid ${T.border}`, borderRadius: 10, padding: "12px 10px", textAlign: "center" }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: s.color, fontFamily: "Syne, sans-serif", lineHeight: 1.1 }}>{s.value}</div>
+            <div style={{ fontSize: 10, color: T.muted, marginTop: 3, fontFamily: "DM Sans, sans-serif" }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+      {text.length > 0 && (
+        <button onClick={() => setText("")} style={{ marginTop: 10, padding: "7px 16px", background: "transparent", border: `1px solid ${T.border}`, borderRadius: 8, cursor: "pointer", fontSize: 12, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>Clear</button>
+      )}
+    </div>
+  );
+}
+
+function BMICalculator() {
+  const [unit, setUnit] = useState("metric");
+  const [height, setHeight] = useState("");
+  const [weight, setWeight] = useState("");
+  const [heightFt, setHeightFt] = useState("");
+  const [heightIn, setHeightIn] = useState("");
+  const [bmi, setBmi] = useState(null);
+  const getCategory = (b) => {
+    if (b < 18.5) return { label: "Underweight", color: T.blue, bg: T.blueDim };
+    if (b < 25)   return { label: "Healthy Weight", color: T.green, bg: T.greenDim };
+    if (b < 30)   return { label: "Overweight", color: T.gold, bg: T.goldDim };
+    return           { label: "Obese", color: "#dc2626", bg: "#fee2e2" };
+  };
+  const calculate = () => {
+    let val;
+    if (unit === "metric") {
+      const h = parseFloat(height) / 100; const w = parseFloat(weight);
+      if (!h || !w || h <= 0 || w <= 0) return;
+      val = w / (h * h);
+    } else {
+      const inches = parseFloat(heightFt) * 12 + parseFloat(heightIn || 0); const w = parseFloat(weight);
+      if (!inches || !w) return;
+      val = (w / (inches * inches)) * 703;
+    }
+    setBmi(Math.round(val * 10) / 10);
+  };
+  const cat = bmi ? getCategory(bmi) : null;
+  const iStyle = { ...inputStyle, fontSize: 14, padding: "10px 12px" };
+  return (
+    <div>
+      <div style={{ display: "flex", background: T.bg, borderRadius: 10, padding: 3, marginBottom: 18, width: "fit-content" }}>
+        {["metric","imperial"].map(u => (
+          <button key={u} onClick={() => { setUnit(u); setBmi(null); }} style={{ padding: "7px 18px", borderRadius: 8, border: "none", cursor: "pointer", fontFamily: "DM Sans, sans-serif", fontSize: 12, fontWeight: 600, background: unit === u ? T.accent : "transparent", color: unit === u ? "white" : T.muted, transition: "all 0.15s" }}>
+            {u === "metric" ? "Metric (kg/cm)" : "Imperial (lb/ft)"}
+          </button>
+        ))}
+      </div>
+      {unit === "metric" ? (
+        <>
+          <Row label="Height (cm)"><input type="number" placeholder="e.g. 175" value={height} onChange={e => setHeight(e.target.value)} style={iStyle} /></Row>
+          <Row label="Weight (kg)"><input type="number" placeholder="e.g. 70" value={weight} onChange={e => setWeight(e.target.value)} style={iStyle} /></Row>
+        </>
+      ) : (
+        <>
+          <Row label="Height"><div style={{ display: "flex", gap: 8 }}><input type="number" placeholder="ft" value={heightFt} onChange={e => setHeightFt(e.target.value)} style={{ ...iStyle, flex: 1 }} /><input type="number" placeholder="in" value={heightIn} onChange={e => setHeightIn(e.target.value)} style={{ ...iStyle, flex: 1 }} /></div></Row>
+          <Row label="Weight (lbs)"><input type="number" placeholder="e.g. 154" value={weight} onChange={e => setWeight(e.target.value)} style={iStyle} /></Row>
+        </>
+      )}
+      <button onClick={calculate} style={{ width: "100%", marginTop: 6, padding: "12px 0", background: T.accent, color: "white", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: "Syne, sans-serif", cursor: "pointer" }}>Calculate BMI</button>
+      {bmi && cat && (
+        <div style={{ marginTop: 20, background: cat.bg, border: `1.5px solid ${cat.color}44`, borderRadius: 12, padding: 20, textAlign: "center" }}>
+          <div style={{ fontSize: 48, fontWeight: 800, color: cat.color, fontFamily: "Syne, sans-serif", lineHeight: 1 }}>{bmi}</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: cat.color, marginTop: 6, fontFamily: "Syne, sans-serif" }}>{cat.label}</div>
+          <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", height: 8, marginTop: 16, marginBottom: 4 }}>
+            {[{ c: "#93c5fd", w: 25 }, { c: "#4ade80", w: 33 }, { c: "#fbbf24", w: 25 }, { c: "#f87171", w: 17 }].map((s, i) => (
+              <div key={i} style={{ flex: s.w, background: s.c }} />
+            ))}
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>
+            <span>Under</span><span>Healthy</span><span>Over</span><span>Obese</span>
+          </div>
+          <div style={{ fontSize: 11, color: T.muted, marginTop: 12, fontFamily: "DM Sans, sans-serif" }}>BMI is a screening tool, not a medical diagnosis.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QRGenerator() {
+  const [input, setInput] = useState("");
+  const [qrUrl, setQrUrl] = useState("");
+  const [size, setSize] = useState(256);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const generate = async () => {
+    if (!input.trim()) return;
+    setLoading(true); setError("");
+    try {
+      const url = await QRCodeLib.toDataURL(input.trim(), {
+        width: size, margin: 2,
+        color: { dark: "#0f0f0d", light: "#ffffff" },
+        errorCorrectionLevel: "M",
+      });
+      setQrUrl(url);
+    } catch { setError("Failed to generate. Please try again."); }
+    setLoading(false);
+  };
+
+  const download = () => {
+    const a = document.createElement("a");
+    a.download = "qrcode.png"; a.href = qrUrl; a.click();
+  };
+
+  return (
+    <div>
+      <Row label="URL or Text">
+        <input type="text" placeholder="https://yoursite.com or any text…" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && generate()} style={{ ...inputStyle, fontSize: 14, padding: "10px 12px" }} onFocus={e => (e.target.style.borderColor = T.accent)} onBlur={e => (e.target.style.borderColor = T.border)} />
+      </Row>
+      <Row label="Size">
+        <div style={{ display: "flex", gap: 8 }}>
+          {[{ label: "Small", val: 128 }, { label: "Medium", val: 256 }, { label: "Large", val: 512 }].map(s => (
+            <button key={s.val} onClick={() => setSize(s.val)} style={{ flex: 1, padding: "7px 0", border: `1.5px solid ${size === s.val ? T.teal : T.border}`, borderRadius: 8, cursor: "pointer", fontFamily: "DM Sans, sans-serif", fontSize: 12, fontWeight: size === s.val ? 700 : 400, background: size === s.val ? T.tealDim : "white", color: size === s.val ? T.teal : T.muted, transition: "all 0.15s" }}>
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </Row>
+      <button onClick={generate} disabled={!input.trim() || loading} style={{ width: "100%", marginTop: 4, padding: "12px 0", background: input.trim() ? T.accent : T.border, color: "white", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: "Syne, sans-serif", cursor: input.trim() ? "pointer" : "not-allowed", transition: "background 0.2s" }}>
+        {loading ? "Generating…" : "Generate QR Code"}
+      </button>
+      {error && <div style={{ marginTop: 10, padding: "9px 12px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, color: "#dc2626", fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{error}</div>}
+      {qrUrl && (
+        <div style={{ marginTop: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 14, padding: 20, background: T.card, border: `1px solid ${T.border}`, borderRadius: 12 }}>
+          <img src={qrUrl} alt="QR Code" style={{ borderRadius: 8, boxShadow: "0 2px 16px #0f0f0d14", maxWidth: "100%" }} />
+          <button onClick={download} style={{ padding: "9px 24px", background: T.ink, color: "white", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif", cursor: "pointer" }}>⬇️ Download PNG</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function UpgradeModal({ onClose }) {
   const onetimeUrl = import.meta.env.VITE_LS_ONETIME_URL || "#";
   const proUrl = import.meta.env.VITE_LS_PRO_URL || "#";
@@ -616,7 +783,7 @@ function ToolView({ tool, onBack, proToken, onNeedUpgrade, onTokenUpdate }) {
   const cat = CATEGORIES.find(c => c.id === tool.catId);
   const renderTool = () => {
     switch (tool.id) {
-      case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "deadline": return <DeadlineCountdown />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper />;
+      case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "deadline": return <DeadlineCountdown />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper />; case "word-counter": return <WordCounter />; case "bmi": return <BMICalculator />; case "qr-generator": return <QRGenerator />;
       default: if (AI_TOOLS.includes(tool.name)) return <AIToolPlaceholder name={tool.name} proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
       return <div style={{ textAlign:"center", padding:"30px 0", color:T.muted, fontFamily:"DM Sans, sans-serif" }}><div style={{ fontSize:36, marginBottom:10 }}>{tool.icon}</div><div style={{ fontSize:14 }}>Coming soon!</div></div>;
     }
