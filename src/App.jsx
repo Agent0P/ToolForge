@@ -20,34 +20,32 @@ const T = {
 };
 
 const CATEGORIES = [
-  { id: "freelance", label: "Freelancers", icon: "💼", color: T.accent, colorDim: T.accentDim, tools: [
-    { id: "rate", icon: "💰", name: "Hourly Rate Calculator", desc: "Know exactly what to charge" },
-    { id: "project", icon: "📅", name: "Project Price Estimator", desc: "Quote any project confidently" },
-    { id: "invoice", icon: "🧾", name: "Invoice Text Generator", desc: "AI-written professional invoices" },
-    { id: "proposal", icon: "✍️", name: "Client Proposal Writer", desc: "Win more clients with AI proposals" },
-  ]},
-  { id: "career", label: "Job Seekers", icon: "🎯", color: T.blue, colorDim: T.blueDim, tools: [
+  { id: "writing", label: "Writing & AI", icon: "✍️", color: T.accent, colorDim: T.accentDim, tools: [
     { id: "cover", icon: "📄", name: "Cover Letter Generator", desc: "Tailored AI cover letters in seconds" },
-    { id: "salary", icon: "📊", name: "Salary Negotiation Helper", desc: "Know your worth, negotiate better" },
     { id: "linkedin", icon: "🔗", name: "LinkedIn Bio Writer", desc: "Stand out with an AI-crafted bio" },
     { id: "cold", icon: "📧", name: "Cold Email Generator", desc: "Outreach emails that get replies" },
-  ]},
-  { id: "student", label: "Students", icon: "🎓", color: T.purple, colorDim: T.purpleDim, tools: [
-    { id: "gpa", icon: "📐", name: "GPA Calculator", desc: "Track and project your GPA" },
+    { id: "proposal", icon: "✍️", name: "Client Proposal Writer", desc: "Win more clients with AI proposals" },
+    { id: "invoice", icon: "🧾", name: "Invoice Text Generator", desc: "AI-written professional invoices" },
+    { id: "tagline", icon: "✨", name: "Business Tagline Generator", desc: "AI slogans that stick" },
     { id: "essay", icon: "📝", name: "Essay Outline Generator", desc: "AI-structured essay plans" },
+    { id: "email", icon: "💌", name: "Marketing Email Writer", desc: "Convert with AI-written emails" },
+  ]},
+  { id: "calculators", label: "Calculators", icon: "🧮", color: T.blue, colorDim: T.blueDim, tools: [
+    { id: "rate", icon: "💰", name: "Hourly Rate Calculator", desc: "Know exactly what to charge" },
+    { id: "project", icon: "📅", name: "Project Price Estimator", desc: "Quote any project confidently" },
+    { id: "margin", icon: "📈", name: "Profit Margin Calculator", desc: "Price products for profit" },
+    { id: "breakeven", icon: "⚖️", name: "Break-Even Calculator", desc: "Find your break-even point fast" },
+    { id: "gpa", icon: "📐", name: "GPA Calculator", desc: "Track and project your GPA" },
+    { id: "salary", icon: "📊", name: "Salary Negotiation Helper", desc: "Know your worth, negotiate better" },
+    { id: "tip", icon: "🍽", name: "Tip & Bill Splitter", desc: "Split any bill instantly" },
+    { id: "savings", icon: "🏦", name: "Savings Goal Calculator", desc: "Plan your way to any goal" },
+  ]},
+  { id: "planning", label: "Planning & Time", icon: "📅", color: T.purple, colorDim: T.purpleDim, tools: [
+    { id: "deadline", icon: "🗓", name: "Deadline Countdown", desc: "Days, hours, minutes to any date" },
     { id: "study", icon: "⏱", name: "Study Session Planner", desc: "Optimise your revision time" },
     { id: "citation", icon: "📚", name: "Citation Formatter", desc: "APA, MLA, Chicago in one click" },
   ]},
-  { id: "business", label: "Small Business", icon: "🏪", color: T.teal, colorDim: T.tealDim, tools: [
-    { id: "margin", icon: "📈", name: "Profit Margin Calculator", desc: "Price products for profit" },
-    { id: "breakeven", icon: "⚖️", name: "Break-Even Calculator", desc: "Find your break-even point fast" },
-    { id: "tagline", icon: "✨", name: "Business Tagline Generator", desc: "AI slogans that stick" },
-    { id: "email", icon: "💌", name: "Marketing Email Writer", desc: "Convert with AI-written emails" },
-  ]},
-  { id: "life", label: "Life Utilities", icon: "🛠", color: T.green, colorDim: T.greenDim, tools: [
-    { id: "tip", icon: "🍽", name: "Tip & Bill Splitter", desc: "Split any bill instantly" },
-    { id: "savings", icon: "🏦", name: "Savings Goal Calculator", desc: "Plan your way to any goal" },
-    { id: "deadline", icon: "🗓", name: "Deadline Countdown", desc: "Days, hours, minutes to any date" },
+  { id: "utilities", label: "Utilities", icon: "🛠", color: T.teal, colorDim: T.tealDim, tools: [
     { id: "unit", icon: "📏", name: "Unit Converter", desc: "Length, weight, temp & more" },
     { id: "timezone", icon: "🌍", name: "Timezone Converter", desc: "Convert times across the world instantly" },
   ]},
@@ -648,23 +646,50 @@ function ToolCard({ tool, onClick }) {
 }
 
 export default function ToolForge() {
-  const [activeCat, setActiveCat] = useState("all"); const [activeTool, setActiveTool] = useState(null); const [search, setSearch] = useState(""); const [showUpgrade, setShowUpgrade] = useState(false);
+  const [activeCat, setActiveCat] = useState("all");
+  const [activeTool, setActiveTool] = useState(null);
+  const [search, setSearch] = useState("");
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [collapsed, setCollapsed] = useState({});
   const [proToken, setProToken] = useState(() => { try { const s = localStorage.getItem("tf_pro_token"); return s ? JSON.parse(s) : null; } catch { return null; } });
+
   const handleTokenUpdate = (t) => { setProToken(t); localStorage.setItem("tf_pro_token", JSON.stringify(t)); };
   useEffect(() => { injectFonts(); }, []);
 
-  const params = new URLSearchParams(window.location.search); const orderId = params.get("order_id");
+  const params = new URLSearchParams(window.location.search);
+  const orderId = params.get("order_id");
   if (orderId) return <SuccessPage orderId={orderId} onDone={() => { window.history.replaceState({}, "", "/"); try { const s = localStorage.getItem("tf_pro_token"); if (s) setProToken(JSON.parse(s)); } catch {} window.location.reload(); }} />;
 
-  const filtered = ALL_TOOLS.filter(t => (activeCat==="all"||t.catId===activeCat) && (t.name.toLowerCase().includes(search.toLowerCase())||t.desc.toLowerCase().includes(search.toLowerCase())));
+  const toggleCollapse = (id) => setCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const filtered = ALL_TOOLS.filter(t =>
+    (activeCat === "all" || t.catId === activeCat) &&
+    (t.name.toLowerCase().includes(search.toLowerCase()) || t.desc.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  const gridStyle = {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gap: 8,
+  };
+
+  const responsiveGrid = `
+    @media (max-width: 400px) { .tf-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+  `;
 
   if (activeTool) return (
     <>
-      <div style={{ maxWidth:480, margin:"0 auto", padding:20, background:T.bg, minHeight:"100vh" }}>
-        <div style={{ background:T.card, borderRadius:16, padding:20, border:`1px solid ${T.border}`, boxShadow:"0 2px 24px #0f0f0d0a" }}>
+      <style>{responsiveGrid}</style>
+      <div style={{ maxWidth: 480, margin: "0 auto", padding: 20, background: T.bg, minHeight: "100vh" }}>
+        <div style={{ background: T.card, borderRadius: 16, padding: 20, border: `1px solid ${T.border}`, boxShadow: "0 2px 24px #0f0f0d0a" }}>
           <ToolView tool={activeTool} onBack={() => setActiveTool(null)} proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} />
         </div>
-        {proToken && proToken.generations_left > 0 && <div style={{ marginTop:12, padding:"10px 14px", borderRadius:10, background:T.goldDim, border:`1px solid ${T.gold}44`, display:"flex", alignItems:"center", justifyContent:"space-between" }}><div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:11, color:T.gold }}>✦ {proToken.type==="pro"?"Pro Active":"Pack Active"}</div><div style={{ fontSize:11, color:T.gold, fontFamily:"DM Sans, sans-serif" }}>{proToken.generations_left} Claude generations left</div></div>}
+        {proToken && proToken.generations_left > 0 && (
+          <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: T.goldDim, border: `1px solid ${T.gold}44`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 11, color: T.gold }}>✦ {proToken.type === "pro" ? "Pro Active" : "Pack Active"}</div>
+            <div style={{ fontSize: 11, color: T.gold, fontFamily: "DM Sans, sans-serif" }}>{proToken.generations_left} Claude generations left</div>
+          </div>
+        )}
       </div>
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
     </>
@@ -672,29 +697,88 @@ export default function ToolForge() {
 
   return (
     <>
-      <div style={{ maxWidth:480, margin:"0 auto", minHeight:"100vh", background:T.bg, fontFamily:"DM Sans, sans-serif" }}>
-        <div style={{ padding:"28px 20px 20px", borderBottom:`1px solid ${T.border}`, background:T.card }}>
-          <div style={{ display:"flex", alignItems:"baseline", gap:8, marginBottom:4 }}>
-            <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:26, color:T.ink, letterSpacing:-0.5 }}>Tool</span>
-            <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:26, color:T.accent, letterSpacing:-0.5 }}>Forge</span>
-            <span style={{ fontSize:11, color:T.muted, marginLeft:4, fontWeight:400, letterSpacing:1 }}>{ALL_TOOLS.length} FREE TOOLS</span>
+      <style>{responsiveGrid}</style>
+
+      {/* Sticky upgrade banner */}
+      {!proToken && (
+        <div onClick={() => setShowUpgrade(true)} style={{ position: "sticky", top: 0, zIndex: 100, background: `linear-gradient(90deg, ${T.gold}, ${T.accent})`, padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}>
+          <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "white" }}>✦ Unlock Claude Sonnet AI — from $2.99</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontFamily: "DM Sans, sans-serif", whiteSpace: "nowrap" }}>Better outputs →</div>
+        </div>
+      )}
+
+      <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh", background: T.bg, fontFamily: "DM Sans, sans-serif" }}>
+
+        {/* Header */}
+        <div style={{ padding: "24px 20px 16px", borderBottom: `1px solid ${T.border}`, background: T.card }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+            <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 26, color: T.ink, letterSpacing: -0.5 }}>Tool</span>
+            <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 26, color: T.accent, letterSpacing: -0.5 }}>Forge</span>
+            <span style={{ fontSize: 11, color: T.muted, marginLeft: 4, fontWeight: 400, letterSpacing: 1 }}>{ALL_TOOLS.length} FREE TOOLS</span>
           </div>
-          <div style={{ fontSize:13, color:T.muted, marginBottom:12 }}>Every tool you need — freelance, career, student, business & life.</div>
-          {proToken && proToken.generations_left > 0 && <div style={{ marginBottom:10, padding:"6px 12px", borderRadius:99, background:T.goldDim, border:`1px solid ${T.gold}44`, display:"inline-flex", alignItems:"center", gap:6 }}><span style={{ fontSize:10, fontFamily:"Syne, sans-serif", fontWeight:700, color:T.gold }}>✦ {proToken.type==="pro"?"PRO":"PACK"}</span><span style={{ fontSize:10, color:T.gold, fontFamily:"DM Sans, sans-serif" }}>{proToken.generations_left} Claude uses left</span></div>}
+          <div style={{ fontSize: 13, color: T.muted, marginBottom: 10 }}>Every tool you need — writing, calculators, planning & more.</div>
+          {proToken && proToken.generations_left > 0 && (
+            <div style={{ marginBottom: 10, padding: "6px 12px", borderRadius: 99, background: T.goldDim, border: `1px solid ${T.gold}44`, display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 10, fontFamily: "Syne, sans-serif", fontWeight: 700, color: T.gold }}>✦ {proToken.type === "pro" ? "PRO" : "PACK"}</span>
+              <span style={{ fontSize: 10, color: T.gold, fontFamily: "DM Sans, sans-serif" }}>{proToken.generations_left} Claude uses left</span>
+            </div>
+          )}
           {!proToken && <RestoreToken onRestore={handleTokenUpdate} />}
-          <div style={{ position:"relative", marginTop:12 }}>
-            <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", fontSize:14, color:T.muted }}>🔍</span>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tools..." style={{ ...inputStyle, paddingLeft:36, width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}` }} />
+          <div style={{ position: "relative", marginTop: 12 }}>
+            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: T.muted }}>🔍</span>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tools..." style={{ ...inputStyle, paddingLeft: 36, width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}` }} />
           </div>
         </div>
-        <div style={{ padding:"12px 16px", display:"flex", gap:7, overflowX:"auto", borderBottom:`1px solid ${T.border}`, background:T.card }}>
-          {[{ id:"all", label:"All", icon:"✦", color:T.accent }, ...CATEGORIES].map(c => <button key={c.id} onClick={() => setActiveCat(c.id)} style={{ flexShrink:0, display:"flex", alignItems:"center", gap:5, padding:"6px 13px", borderRadius:99, border:`1px solid ${activeCat===c.id?c.color:T.border}`, background:activeCat===c.id?c.colorDim||T.accentDim:"white", color:activeCat===c.id?c.color:T.muted, fontSize:12, fontFamily:"Syne, sans-serif", fontWeight:600, cursor:"pointer", whiteSpace:"nowrap", transition:"all 0.15s" }}>{c.icon} {c.label}</button>)}
+
+        {/* Category filter tabs */}
+        <div style={{ padding: "10px 16px", display: "flex", gap: 7, overflowX: "auto", borderBottom: `1px solid ${T.border}`, background: T.card }}>
+          {[{ id: "all", label: "All", icon: "✦", color: T.accent, colorDim: T.accentDim }, ...CATEGORIES].map(c => (
+            <button key={c.id} onClick={() => setActiveCat(c.id)} style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 99, border: `1px solid ${activeCat === c.id ? c.color : T.border}`, background: activeCat === c.id ? c.colorDim || T.accentDim : "white", color: activeCat === c.id ? c.color : T.muted, fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s" }}>
+              {c.icon} {c.label}
+            </button>
+          ))}
         </div>
-        <div style={{ padding:16 }}>
-          {search && <div style={{ fontSize:12, color:T.muted, marginBottom:12 }}>{filtered.length} result{filtered.length!==1?"s":""} for "{search}"</div>}
-          {!search && activeCat==="all" ? CATEGORIES.map(cat => <div key={cat.id} style={{ marginBottom:24 }}><div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}><div style={{ width:28, height:28, borderRadius:8, background:cat.colorDim, display:"flex", alignItems:"center", justifyContent:"center", fontSize:15 }}>{cat.icon}</div><span style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:14, color:T.ink }}>{cat.label}</span></div><div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>{cat.tools.map(tool => <ToolCard key={tool.id} tool={{ ...tool, catId:cat.id, catColor:cat.color, catColorDim:cat.colorDim }} onClick={() => setActiveTool({ ...tool, catId:cat.id, catColor:cat.color, catColorDim:cat.colorDim })} />)}</div></div>) : <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>{filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}</div>}
-          {!proToken && <div onClick={() => setShowUpgrade(true)} style={{ marginTop:10, padding:16, borderRadius:14, background:`linear-gradient(135deg,${T.goldDim},${T.accentDim})`, border:`1px solid ${T.border}`, textAlign:"center", cursor:"pointer" }}><div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.ink, marginBottom:4 }}>✦ Unlock Claude Sonnet AI from $2.99</div><div style={{ fontSize:12, color:T.muted }}>Better cover letters, proposals & emails. No subscription required.</div></div>}
-          <div style={{ marginTop:10, padding:16, borderRadius:14, background:`linear-gradient(135deg,${T.accentDim},${T.blueDim})`, border:`1px solid ${T.border}`, textAlign:"center" }}><div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.ink, marginBottom:4 }}>✦ More tools dropping weekly</div><div style={{ fontSize:12, color:T.muted }}>Debt payoff · Resume bullets · Pricing guide · and 20+ more</div></div>
+
+        {/* Tool grid */}
+        <div style={{ padding: 16 }}>
+          {search ? (
+            <>
+              <div style={{ fontSize: 12, color: T.muted, marginBottom: 12 }}>{filtered.length} result{filtered.length !== 1 ? "s" : ""} for "{search}"</div>
+              <div className="tf-grid" style={gridStyle}>
+                {filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}
+              </div>
+            </>
+          ) : activeCat !== "all" ? (
+            <div className="tf-grid" style={gridStyle}>
+              {filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}
+            </div>
+          ) : (
+            CATEGORIES.map(cat => (
+              <div key={cat.id} style={{ marginBottom: 20 }}>
+                {/* Category header */}
+                <div onClick={() => toggleCollapse(cat.id)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: collapsed[cat.id] ? 0 : 10, cursor: "pointer", padding: "6px 0" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: cat.colorDim, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}>{cat.icon}</div>
+                    <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: T.ink }}>{cat.label}</span>
+                    <span style={{ fontSize: 10, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>{cat.tools.length} tools</span>
+                  </div>
+                  <span style={{ fontSize: 14, color: T.muted, transform: collapsed[cat.id] ? "rotate(-90deg)" : "rotate(0deg)", transition: "transform 0.2s", display: "inline-block" }}>▾</span>
+                </div>
+                {!collapsed[cat.id] && (
+                  <div className="tf-grid" style={gridStyle}>
+                    {cat.tools.map(tool => (
+                      <ToolCard key={tool.id} tool={{ ...tool, catId: cat.id, catColor: cat.color, catColorDim: cat.colorDim }} onClick={() => setActiveTool({ ...tool, catId: cat.id, catColor: cat.color, catColorDim: cat.colorDim })} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+
+          <div style={{ marginTop: 10, padding: 16, borderRadius: 14, background: `linear-gradient(135deg,${T.accentDim},${T.blueDim})`, border: `1px solid ${T.border}`, textAlign: "center" }}>
+            <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: T.ink, marginBottom: 4 }}>✦ More tools dropping weekly</div>
+            <div style={{ fontSize: 12, color: T.muted }}>Debt payoff · Resume bullets · Pricing guide · and 20+ more</div>
+          </div>
         </div>
       </div>
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
