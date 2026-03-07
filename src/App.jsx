@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import QRCodeLib from "qrcode";
 
 /* ── Google Fonts ── */
@@ -43,6 +43,7 @@ const CATEGORIES = [
     { id: "bmi", icon: "⚖️", name: "BMI Calculator", desc: "Calculate your Body Mass Index and health range" },
   ]},
   { id: "planning", label: "Planning & Time", icon: "📅", color: T.purple, colorDim: T.purpleDim, tools: [
+    { id: "pomodoro", icon: "🍅", name: "Pomodoro Timer", desc: "Focus sessions with automatic break reminders" },
     { id: "deadline", icon: "🗓", name: "Deadline Countdown", desc: "Days, hours, minutes to any date" },
     { id: "study", icon: "⏱", name: "Study Session Planner", desc: "Optimise your revision time" },
     { id: "citation", icon: "📚", name: "Citation Formatter", desc: "APA, MLA, Chicago in one click" },
@@ -161,12 +162,247 @@ function BreakEvenCalc() {
   return <div><Row label="Monthly Fixed Costs ($)"><NumInput val={fixed} set={setFixed} /></Row><Row label="Variable Cost per Unit ($)"><NumInput val={varCost} set={setVarCost} /></Row><Row label="Selling Price per Unit ($)"><NumInput val={sellPrice} set={setSellPrice} /></Row><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}><MiniResult label="Contribution Margin" value={`$${contrib}`} /><MiniResult label="Break-Even Revenue" value={`$${Number(revenue).toLocaleString()}`} /></div><Result label="Units to Break Even" value={typeof units === "number" ? units.toLocaleString() : "∞"} /><CopyButton text={`Break-even: ${units} units — ToolForge`} /><Tip>Sell more than {units} units per month and you're profitable.</Tip></div>;
 }
 
-function DeadlineCountdown() {
+function DeadlineCountdown({ addWidget, removeWidget }) {
   const [target, setTarget] = useState(() => { const d = new Date(); d.setMonth(d.getMonth() + 1); return d.toISOString().split("T")[0]; });
   const [label, setLabel] = useState("Project deadline");
-  const diff = new Date(target) - new Date();
-  const days = diff > 0 ? Math.floor(diff / 864e5) : 0; const hours = diff > 0 ? Math.floor((diff % 864e5) / 36e5) : 0; const mins = diff > 0 ? Math.floor((diff % 36e5) / 6e4) : 0;
-  return <div><Row label="Event / Deadline Name"><input value={label} onChange={e => setLabel(e.target.value)} style={inputStyle} /></Row><Row label="Target Date"><input type="date" value={target} onChange={e => setTarget(e.target.value)} style={inputStyle} /></Row>{diff <= 0 ? <Result label={label} value="Past due!" color="#dc2626" /> : <><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 12 }}><MiniResult label="Days" value={days} /><MiniResult label="Hours" value={hours} /><MiniResult label="Minutes" value={mins} /></div><Result label={`Until: ${label}`} value={`${days}d ${hours}h ${mins}m`} /><CopyButton text={`${days} days until ${label} — ToolForge`} /></>}</div>;
+  const [running, setRunning] = useState(false);
+  const [pinned, setPinned] = useState(false);
+  const [, forceUpdate] = useState(0);
+  const tickRef = useRef(null);
+
+  const getDiff = () => new Date(target) - new Date();
+  const fmt = () => { const diff = getDiff(); if (diff <= 0) return "Past due!"; const d = Math.floor(diff/864e5); const h = Math.floor((diff%864e5)/36e5); const m = Math.floor((diff%36e5)/6e4); return `${d}d ${h}h ${m}m`; };
+
+  const startCountdown = () => {
+    setRunning(true);
+    tickRef.current = setInterval(() => forceUpdate(n => n + 1), 1000);
+  };
+  const stopCountdown = () => {
+    setRunning(false);
+    if (tickRef.current) clearInterval(tickRef.current);
+  };
+  const handlePin = () => {
+    if (pinned) { setPinned(false); removeWidget("deadline"); return; }
+    setPinned(true);
+    addWidget("deadline", { toolId: "deadline", icon: "🗓", color: T.purple, colorDim: T.purpleDim, type: "deadline", label, targetDate: target });
+  };
+  useEffect(() => {
+    if (pinned) addWidget("deadline", { toolId: "deadline", icon: "🗓", color: T.purple, colorDim: T.purpleDim, type: "deadline", label, targetDate: target });
+  }, [label, target]);
+  useEffect(() => () => { if (tickRef.current) clearInterval(tickRef.current); }, []);
+
+  const diff = getDiff();
+  const days = diff > 0 ? Math.floor(diff/864e5) : 0;
+  const hours = diff > 0 ? Math.floor((diff%864e5)/36e5) : 0;
+  const mins = diff > 0 ? Math.floor((diff%36e5)/6e4) : 0;
+
+  return (
+    <div>
+      <Row label="Event / Deadline Name"><input value={label} onChange={e => setLabel(e.target.value)} style={inputStyle} /></Row>
+      <Row label="Target Date"><input type="date" value={target} onChange={e => setTarget(e.target.value)} style={inputStyle} /></Row>
+      {diff <= 0 ? <Result label={label} value="Past due!" color="#dc2626" /> : <>
+        {running && (
+          <div style={{ marginBottom: 12, padding: "12px 14px", background: T.purpleDim, borderRadius: 10, border: `1px solid ${T.purple}44` }}>
+            <div style={{ fontSize: 10, color: T.purple, fontFamily: "Syne, sans-serif", fontWeight: 700, marginBottom: 2 }}>COUNTING DOWN</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: T.purple, fontFamily: "Syne, sans-serif" }}>{fmt()}</div>
+          </div>
+        )}
+        {!running && <><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 12 }}><MiniResult label="Days" value={days} /><MiniResult label="Hours" value={hours} /><MiniResult label="Minutes" value={mins} /></div><Result label={`Until: ${label}`} value={`${days}d ${hours}h ${mins}m`} /></>}
+        <CopyButton text={`${days} days until ${label} — ToolForge`} />
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <button onClick={running ? stopCountdown : startCountdown} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: running ? "#fee2e2" : T.purple, color: running ? "#dc2626" : "white", fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
+            {running ? "⏹ Stop" : "▶ Start Countdown"}
+          </button>
+          <button onClick={handlePin} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: `1.5px solid ${pinned ? T.purple : T.border}`, background: pinned ? T.purple : "white", color: pinned ? "white" : T.muted, fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
+            {pinned ? "📌 Pinned" : "📌 Pin"}
+          </button>
+        </div>
+      </>}
+    </div>
+  );
+}
+
+function PomodoroTimer({ addWidget, removeWidget }) {
+  const MODES = [
+    { id: "focus",  label: "Focus",       icon: "🍅", mins: 25, color: T.accent,  colorDim: T.accentDim },
+    { id: "short",  label: "Short Break", icon: "☕", mins: 5,  color: T.green,   colorDim: T.greenDim },
+    { id: "long",   label: "Long Break",  icon: "🌿", mins: 15, color: T.teal,    colorDim: T.tealDim },
+  ];
+  const [modeId, setModeId] = useState("focus");
+  const [secondsLeft, setSecondsLeft] = useState(25 * 60);
+  const [running, setRunning] = useState(false);
+  const [pinned, setPinned] = useState(false);
+  const [sessions, setSessions] = useState(0);
+  const [pausedRemaining, setPausedRemaining] = useState(null);
+  const intervalRef = useRef(null);
+  const mode = MODES.find(m => m.id === modeId);
+  const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+  const total = mode.mins * 60;
+  const progress = 1 - secondsLeft / total;
+  const circumference = 2 * Math.PI * 54;
+  const clearTick = () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+
+  const doPin = (secs, paused) => {
+    setPinned(true);
+    addWidget("pomodoro", { toolId: "pomodoro", icon: mode.icon, color: mode.color, colorDim: mode.colorDim, type: "pomodoro", sessionLabel: mode.label, secondsLeft: secs, paused });
+  };
+  const doUnpin = () => { setPinned(false); removeWidget("pomodoro"); };
+
+  const start = () => {
+    const remaining = pausedRemaining !== null ? pausedRemaining : secondsLeft;
+    setPausedRemaining(null); setRunning(true);
+    // auto-pin on start
+    if (!pinned) doPin(remaining, false);
+    clearTick();
+    intervalRef.current = setInterval(() => {
+      setSecondsLeft(prev => {
+        const next = prev - 1;
+        if (next <= 0) { clearTick(); setRunning(false); setSessions(s => modeId === "focus" ? s + 1 : s); doUnpin(); return 0; }
+        if (pinned || true) addWidget("pomodoro", { toolId: "pomodoro", icon: mode.icon, color: mode.color, colorDim: mode.colorDim, type: "pomodoro", sessionLabel: mode.label, secondsLeft: next, paused: false });
+        return next;
+      });
+    }, 1000);
+  };
+
+  const pause = () => {
+    clearTick(); setRunning(false); setPausedRemaining(secondsLeft);
+    addWidget("pomodoro", { toolId: "pomodoro", icon: mode.icon, color: mode.color, colorDim: mode.colorDim, type: "pomodoro", sessionLabel: mode.label, secondsLeft, paused: true });
+  };
+
+  const reset = () => { clearTick(); setRunning(false); setSecondsLeft(mode.mins * 60); setPausedRemaining(null); doUnpin(); };
+
+  const switchMode = (id) => {
+    clearTick(); setRunning(false); setModeId(id);
+    const m = MODES.find(x => x.id === id);
+    setSecondsLeft(m.mins * 60); setPausedRemaining(null); doUnpin();
+  };
+
+  const handlePinBtn = () => { if (pinned) doUnpin(); else doPin(secondsLeft, !running); };
+  useEffect(() => () => clearTick(), []);
+
+  return (
+    <div style={{ maxWidth: 360, margin: "0 auto" }}>
+      <div style={{ display: "flex", gap: 6, marginBottom: 24 }}>
+        {MODES.map(m => (
+          <button key={m.id} onClick={() => switchMode(m.id)} style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: `1.5px solid ${modeId === m.id ? m.color : T.border}`, background: modeId === m.id ? m.colorDim : "white", color: modeId === m.id ? m.color : T.muted, fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer", transition: "all 0.15s" }}>
+            {m.icon} {m.label}
+          </button>
+        ))}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 24 }}>
+        <div style={{ position: "relative", width: 140, height: 140 }}>
+          <svg width="140" height="140" style={{ transform: "rotate(-90deg)" }}>
+            <circle cx="70" cy="70" r="54" fill="none" stroke={T.border} strokeWidth="8" />
+            <circle cx="70" cy="70" r="54" fill="none" stroke={mode.color} strokeWidth="8" strokeDasharray={circumference} strokeDashoffset={circumference * (1 - progress)} strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.8s ease" }} />
+          </svg>
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ fontSize: 32, fontWeight: 800, fontFamily: "Syne, sans-serif", color: mode.color, lineHeight: 1 }}>{fmt(secondsLeft)}</div>
+            <div style={{ fontSize: 11, color: T.muted, marginTop: 4, fontFamily: "DM Sans, sans-serif" }}>{mode.label}</div>
+          </div>
+        </div>
+        {sessions > 0 && <div style={{ marginTop: 10, display: "flex", gap: 4 }}>{Array.from({ length: sessions }).map((_, i) => <span key={i} style={{ fontSize: 14 }}>🍅</span>)}</div>}
+      </div>
+      <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+        {!running ? (
+          <button onClick={start} style={{ flex: 1, padding: "13px 0", background: mode.color, color: "white", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 800, fontFamily: "Syne, sans-serif", cursor: "pointer" }}>
+            {pausedRemaining !== null ? "▶ Resume" : "▶ Start"}
+          </button>
+        ) : (
+          <button onClick={pause} style={{ flex: 1, padding: "13px 0", background: mode.colorDim, color: mode.color, border: `2px solid ${mode.color}`, borderRadius: 12, fontSize: 15, fontWeight: 800, fontFamily: "Syne, sans-serif", cursor: "pointer" }}>⏸ Pause</button>
+        )}
+        <button onClick={reset} style={{ padding: "13px 18px", background: "white", color: T.muted, border: `1.5px solid ${T.border}`, borderRadius: 12, fontSize: 13, fontFamily: "DM Sans, sans-serif", cursor: "pointer" }}>↺ Reset</button>
+        <button onClick={handlePinBtn} style={{ padding: "13px 14px", background: pinned ? mode.colorDim : "white", color: pinned ? mode.color : T.muted, border: `1.5px solid ${pinned ? mode.color : T.border}`, borderRadius: 12, fontSize: 13, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
+          {pinned ? "📌" : "📌"}
+        </button>
+      </div>
+      {running && <div style={{ padding: "9px 12px", borderRadius: 9, background: mode.colorDim, border: `1px solid ${mode.color}33`, fontSize: 12, color: mode.color, fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>← Go back — timer keeps running in the widget</div>}
+    </div>
+  );
+}
+
+function FloatingWidget({ widgets, removeWidget, activePill, setActivePill, onOpenTool }) {
+  const [expanded, setExpanded] = useState(true);
+  const [, forceUpdate] = useState(0);
+  const tickRef = useRef(null);
+
+  const keys = Object.keys(widgets);
+
+  useEffect(() => {
+    tickRef.current = setInterval(() => forceUpdate(n => n + 1), 1000);
+    return () => clearInterval(tickRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (keys.length > 0 && (!activePill || !widgets[activePill])) setActivePill(keys[0]);
+  }, [widgets]);
+
+  if (keys.length === 0) return null;
+
+  const getDisplay = (w) => {
+    if (w.type === "pomodoro") {
+      const s = w.secondsLeft || 0;
+      return (w.paused ? "⏸ " : "") + String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
+    }
+    if (w.type === "deadline") {
+      const diff = new Date(w.targetDate) - new Date();
+      if (diff <= 0) return "Past due!";
+      return `${Math.floor(diff/864e5)}d ${Math.floor((diff%864e5)/36e5)}h ${Math.floor((diff%36e5)/6e4)}m`;
+    }
+    return "";
+  };
+
+  const active = widgets[activePill] || widgets[keys[0]];
+  const activeId = widgets[activePill] ? activePill : keys[0];
+
+  return (
+    <div style={{ position: "fixed", bottom: 16, left: "50%", transform: "translateX(-50%)", zIndex: 200, maxWidth: 440, width: "calc(100% - 32px)", background: "white", borderRadius: 16, border: `1px solid ${T.border}`, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", padding: "10px 12px" }}>
+      {/* Pills row */}
+      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        {keys.map(id => {
+          const w = widgets[id];
+          const isActive = id === activeId;
+          const display = getDisplay(w);
+          return (
+            <div key={id} onClick={() => { setActivePill(id); onOpenTool(id); }}
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 99, cursor: "pointer", border: `1.5px solid ${isActive ? w.color : T.border}`, background: isActive ? w.colorDim : T.bg, flex: isActive ? 1 : "0 0 auto", transition: "all 0.2s", minWidth: 0 }}>
+              <span style={{ fontSize: 16, flexShrink: 0 }}>{w.icon}</span>
+              {isActive && <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+                <div style={{ fontSize: 10, color: w.color, fontFamily: "DM Sans, sans-serif", opacity: 0.8, whiteSpace: "nowrap" }}>{w.sessionLabel || w.label || "Active"}</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: w.color, fontFamily: "Syne, sans-serif", whiteSpace: "nowrap" }}>{display}</div>
+              </div>}
+              {!isActive && <div style={{ fontSize: 12, fontWeight: 700, color: T.muted, fontFamily: "Syne, sans-serif", whiteSpace: "nowrap" }}>{display}</div>}
+            </div>
+          );
+        })}
+        {/* Right controls */}
+        <div style={{ marginLeft: "auto", display: "flex", gap: 4, flexShrink: 0 }}>
+          {keys.length > 1 && (
+            <button onClick={() => setExpanded(e => !e)} style={{ background: "none", border: "none", fontSize: 11, color: T.muted, cursor: "pointer", fontFamily: "DM Sans, sans-serif", padding: "4px 6px", borderRadius: 6, whiteSpace: "nowrap" }}>
+              {expanded ? "less ▴" : `+${keys.length - 1} more ▾`}
+            </button>
+          )}
+          <button onClick={() => { keys.forEach(id => removeWidget(id)); }} style={{ background: T.bg, border: "none", borderRadius: 8, color: T.muted, fontSize: 13, width: 26, height: 26, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+        </div>
+      </div>
+
+      {/* Expanded list — only when 2+ widgets */}
+      {keys.length > 1 && expanded && (
+        <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${T.border}` }}>
+          {keys.map(id => {
+            const w = widgets[id];
+            return (
+              <div key={id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0" }}>
+                <span style={{ fontSize: 14 }}>{w.icon}</span>
+                <div style={{ flex: 1, fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: w.color }}>{w.sessionLabel || w.label || w.toolId}</div>
+                <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 14, color: w.color }}>{getDisplay(w)}</div>
+                <button onClick={() => removeWidget(id)} style={{ background: "none", border: "none", cursor: "pointer", color: T.muted, fontSize: 13, padding: "0 4px" }}>✕</button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 
@@ -779,11 +1015,13 @@ function SuccessPage({ orderId, onDone }) {
   );
 }
 
-function ToolView({ tool, onBack, proToken, onNeedUpgrade, onTokenUpdate }) {
+function ToolView({ tool, onBack, proToken, onNeedUpgrade, onTokenUpdate, addWidget, removeWidget }) {
   const cat = CATEGORIES.find(c => c.id === tool.catId);
   const renderTool = () => {
     switch (tool.id) {
-      case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "deadline": return <DeadlineCountdown />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper />; case "word-counter": return <WordCounter />; case "bmi": return <BMICalculator />; case "qr-generator": return <QRGenerator />;
+      case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper />; case "word-counter": return <WordCounter />; case "bmi": return <BMICalculator />; case "qr-generator": return <QRGenerator />;
+      case "deadline": return <DeadlineCountdown addWidget={addWidget} removeWidget={removeWidget} />;
+      case "pomodoro": return <PomodoroTimer addWidget={addWidget} removeWidget={removeWidget} />;
       default: if (AI_TOOLS.includes(tool.name)) return <AIToolPlaceholder name={tool.name} proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
       return <div style={{ textAlign:"center", padding:"30px 0", color:T.muted, fontFamily:"DM Sans, sans-serif" }}><div style={{ fontSize:36, marginBottom:10 }}>{tool.icon}</div><div style={{ fontSize:14 }}>Coming soon!</div></div>;
     }
@@ -818,10 +1056,16 @@ export default function ToolForge() {
   const [search, setSearch] = useState("");
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [collapsed, setCollapsed] = useState({});
+  const [widgets, setWidgets] = useState({});
+  const [activePill, setActivePill] = useState(null);
+  const addWidget = (id, data) => setWidgets(w => ({ ...w, [id]: data }));
+  const removeWidget = (id) => { setWidgets(w => { const n = { ...w }; delete n[id]; return n; }); setActivePill(p => p === id ? null : p); };
   const [proToken, setProToken] = useState(() => { try { const s = localStorage.getItem("tf_pro_token"); return s ? JSON.parse(s) : null; } catch { return null; } });
 
   const handleTokenUpdate = (t) => { setProToken(t); localStorage.setItem("tf_pro_token", JSON.stringify(t)); };
   useEffect(() => { injectFonts(); }, []);
+
+  const openTool = (toolId) => { const tool = ALL_TOOLS.find(t => t.id === toolId); if (tool) setActiveTool(tool); };
 
   const params = new URLSearchParams(window.location.search);
   const orderId = params.get("order_id");
@@ -849,7 +1093,7 @@ export default function ToolForge() {
       <style>{responsiveGrid}</style>
       <div style={{ maxWidth: 480, margin: "0 auto", padding: 20, background: T.bg, minHeight: "100vh" }}>
         <div style={{ background: T.card, borderRadius: 16, padding: 20, border: `1px solid ${T.border}`, boxShadow: "0 2px 24px #0f0f0d0a" }}>
-          <ToolView tool={activeTool} onBack={() => setActiveTool(null)} proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} />
+          <ToolView tool={activeTool} onBack={() => setActiveTool(null)} proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} addWidget={addWidget} removeWidget={removeWidget} />
         </div>
         {proToken && proToken.generations_left > 0 && (
           <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: T.goldDim, border: `1px solid ${T.gold}44`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -858,6 +1102,7 @@ export default function ToolForge() {
           </div>
         )}
       </div>
+      <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={openTool} />
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
     </>
   );
@@ -949,6 +1194,7 @@ export default function ToolForge() {
         </div>
       </div>
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
+      <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={(toolId) => { openTool(toolId); }} />
     </>
   );
 }
