@@ -44,6 +44,7 @@ const CATEGORIES = [
     { id: "deadline", icon: "🗓", name: "Deadline Countdown", desc: "Days, hours, minutes to any date" },
     { id: "study", icon: "⏱", name: "Study Session Planner", desc: "Optimise your revision time" },
     { id: "citation", icon: "📚", name: "Citation Formatter", desc: "APA, MLA, Chicago in one click" },
+    { id: "pomodoro", icon: "🍅", name: "Pomodoro Timer", desc: "Stay focused with timed work sessions" },
   ]},
   { id: "utilities", label: "Utilities", icon: "🛠", color: T.teal, colorDim: T.tealDim, tools: [
     { id: "unit", icon: "📏", name: "Unit Converter", desc: "Length, weight, temp & more" },
@@ -440,10 +441,156 @@ function UnitConverter() {
 }
 
 function StudyPlanner() {
+  const [tab, setTab] = useState("planner");
+  // Planner
   const [subject, setSubject] = useState("Calculus"); const [hours, setHours] = useState(10); const [days, setDays] = useState(5); const [technique, setTech] = useState("pomodoro");
-  const techniques = { pomodoro:{label:"Pomodoro (25min on / 5min break)",mins:30}, deep:{label:"Deep Work (90min blocks)",mins:90}, spaced:{label:"Spaced Repetition (30min review)",mins:30} };
-  const t = techniques[technique]; const sessions = Math.ceil((hours * 60) / t.mins); const perDay = Math.ceil(sessions / days);
-  return <div><Row label="Subject / Topic"><input value={subject} onChange={e=>setSubject(e.target.value)} style={inputStyle} /></Row><Row label="Total Study Hours Needed"><NumInput val={hours} set={setHours} /></Row><Row label="Days Available"><NumInput val={days} set={setDays} /></Row><Row label="Study Technique">{Object.entries(techniques).map(([k,v]) => <div key={k} onClick={()=>setTech(k)} style={{ padding:"9px 12px", borderRadius:8, marginBottom:6, border:`1px solid ${technique===k?T.purple:T.border}`, background:technique===k?T.purpleDim:"white", cursor:"pointer", fontSize:12, color:technique===k?T.purple:T.muted, fontFamily:"DM Sans, sans-serif" }}>{v.label}</div>)}</Row><div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:8 }}><MiniResult label="Sessions Needed" value={sessions} /><MiniResult label="Per Day" value={perDay} /></div><Result label={`Daily Plan for ${subject}`} value={`${perDay} × ${t.mins}min`} color={T.purple} /><CopyButton text={`Study plan: ${perDay} sessions/day for ${subject} — ToolForge`} /><Tip>Consistency beats cramming.</Tip></div>;
+  const techniques = { pomodoro:{label:"Pomodoro (25min on / 5min break)",work:25,brk:5}, deep:{label:"Deep Work (90min blocks)",work:90,brk:15}, spaced:{label:"Spaced Repetition (30min review)",work:30,brk:5} };
+  const t = techniques[technique]; const sessions = Math.ceil((hours * 60) / t.work); const perDay = Math.ceil(sessions / days);
+  // Timer
+  const [isWork, setIsWork] = useState(true);
+  const [timeLeft, setTimeLeft] = useState(t.work * 60);
+  const [running, setRunning] = useState(false);
+  const [sessionsLeft, setSessionsLeft] = useState(perDay);
+  useEffect(() => { setTimeLeft((isWork ? t.work : t.brk) * 60); }, [technique, isWork]);
+  useEffect(() => {
+    if (!running) return;
+    const interval = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          if (isWork) { setIsWork(false); return t.brk * 60; }
+          else { setIsWork(true); setSessionsLeft(s => Math.max(0, s-1)); return t.work * 60; }
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [running, isWork, t]);
+  const fmt = (s) => `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+  const reset = () => { setRunning(false); setIsWork(true); setTimeLeft(t.work * 60); setSessionsLeft(perDay); };
+  const pct = isWork ? (1 - timeLeft/(t.work*60)) : (1 - timeLeft/(t.brk*60));
+  const r = 54; const circ = 2 * Math.PI * r;
+
+  return (
+    <div>
+      <div style={{ display:"flex", gap:6, marginBottom:16 }}>
+        {["planner","timer"].map(tp => <button key={tp} onClick={()=>setTab(tp)} style={{ flex:1, padding:"8px 0", borderRadius:9, border:`1px solid ${tab===tp?T.purple:T.border}`, background:tab===tp?T.purpleDim:"white", color:tab===tp?T.purple:T.muted, fontSize:12, fontFamily:"Syne, sans-serif", fontWeight:700, cursor:"pointer" }}>{tp==="planner"?"📋 Planner":"⏱ Timer"}</button>)}
+      </div>
+
+      {tab==="planner" && <>
+        <Row label="Subject / Topic"><input value={subject} onChange={e=>setSubject(e.target.value)} style={inputStyle} /></Row>
+        <Row label="Total Study Hours Needed"><NumInput val={hours} set={setHours} /></Row>
+        <Row label="Days Available"><NumInput val={days} set={setDays} /></Row>
+        <Row label="Study Technique">{Object.entries(techniques).map(([k,v]) => <div key={k} onClick={()=>setTech(k)} style={{ padding:"9px 12px", borderRadius:8, marginBottom:6, border:`1px solid ${technique===k?T.purple:T.border}`, background:technique===k?T.purpleDim:"white", cursor:"pointer", fontSize:12, color:technique===k?T.purple:T.muted, fontFamily:"DM Sans, sans-serif" }}>{v.label}</div>)}</Row>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:8 }}>
+          <MiniResult label="Sessions Needed" value={sessions} />
+          <MiniResult label="Per Day" value={perDay} />
+        </div>
+        <Result label={`Daily Plan for ${subject}`} value={`${perDay} × ${t.work}min`} color={T.purple} />
+        <CopyButton text={`Study plan: ${perDay} sessions/day for ${subject} — ToolForge`} />
+        <Tip>Consistency beats cramming. Switch to Timer tab to start a session!</Tip>
+      </>}
+
+      {tab==="timer" && <>
+        <div style={{ textAlign:"center", padding:"10px 0 20px" }}>
+          <div style={{ fontSize:11, fontFamily:"Syne, sans-serif", fontWeight:700, color:isWork?T.purple:T.green, letterSpacing:1, marginBottom:16 }}>
+            {isWork ? "🧠 FOCUS TIME" : "☕ BREAK TIME"}
+          </div>
+          <svg width={130} height={130} style={{ display:"block", margin:"0 auto" }}>
+            <circle cx={65} cy={65} r={r} fill="none" stroke={T.border} strokeWidth={8} />
+            <circle cx={65} cy={65} r={r} fill="none" stroke={isWork?T.purple:T.green} strokeWidth={8}
+              strokeDasharray={circ} strokeDashoffset={circ * (1 - pct)}
+              strokeLinecap="round" transform="rotate(-90 65 65)" style={{ transition:"stroke-dashoffset 0.5s" }} />
+            <text x={65} y={60} textAnchor="middle" fontFamily="Syne, sans-serif" fontWeight={800} fontSize={24} fill={T.ink}>{fmt(timeLeft)}</text>
+            <text x={65} y={78} textAnchor="middle" fontFamily="DM Sans, sans-serif" fontSize={11} fill={T.muted}>{isWork?`${t.work} min focus`:`${t.brk} min break`}</text>
+          </svg>
+          <div style={{ marginTop:16, fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>{sessionsLeft} sessions remaining today</div>
+          <div style={{ display:"flex", gap:10, justifyContent:"center", marginTop:16 }}>
+            <button onClick={()=>setRunning(r=>!r)} style={{ padding:"10px 28px", borderRadius:10, border:"none", background:running?T.accentDim:T.purple, color:running?T.accent:"white", fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:14, cursor:"pointer" }}>
+              {running?"⏸ Pause":"▶ Start"}
+            </button>
+            <button onClick={reset} style={{ padding:"10px 18px", borderRadius:10, border:`1px solid ${T.border}`, background:"white", color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:14, cursor:"pointer" }}>↺</button>
+          </div>
+        </div>
+        <Row label="Study Technique">{Object.entries(techniques).map(([k,v]) => <div key={k} onClick={()=>{ if(!running){setTech(k); setIsWork(true); setTimeLeft(techniques[k].work*60); }}} style={{ padding:"9px 12px", borderRadius:8, marginBottom:6, border:`1px solid ${technique===k?T.purple:T.border}`, background:technique===k?T.purpleDim:"white", cursor:running?"not-allowed":"pointer", fontSize:12, color:technique===k?T.purple:T.muted, fontFamily:"DM Sans, sans-serif", opacity:running?0.6:1 }}>{v.label}</div>)}</Row>
+        <Tip>Stop the timer before switching techniques.</Tip>
+      </>}
+    </div>
+  );
+}
+
+function PomodoroTimer() {
+  const MODES = { work: { label: "Focus", duration: 25 * 60, color: T.accent, bg: T.accentDim }, short: { label: "Short Break", duration: 5 * 60, color: T.green, bg: T.greenDim }, long: { label: "Long Break", duration: 15 * 60, color: T.blue, bg: T.blueDim } };
+  const [mode, setMode] = useState("work");
+  const [timeLeft, setTimeLeft] = useState(MODES.work.duration);
+  const [running, setRunning] = useState(false);
+  const [sessions, setSessions] = useState(0);
+  const [customWork, setCustomWork] = useState(25);
+
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => {
+      setTimeLeft(t => {
+        if (t <= 1) {
+          setRunning(false);
+          if (mode === "work") setSessions(s => s + 1);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [running, mode]);
+
+  const switchMode = (m) => { setMode(m); setRunning(false); setTimeLeft(m === "work" ? customWork * 60 : MODES[m].duration); };
+  const reset = () => { setRunning(false); setTimeLeft(mode === "work" ? customWork * 60 : MODES[mode].duration); };
+  const mins = String(Math.floor(timeLeft / 60)).padStart(2, "0");
+  const secs = String(timeLeft % 60).padStart(2, "0");
+  const total = mode === "work" ? customWork * 60 : MODES[mode].duration;
+  const progress = ((total - timeLeft) / total) * 100;
+  const m = MODES[mode];
+
+  return (
+    <div>
+      {/* Mode tabs */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+        {Object.entries(MODES).map(([key, val]) => (
+          <button key={key} onClick={() => switchMode(key)} style={{ flex: 1, padding: "7px 0", borderRadius: 8, border: `1px solid ${mode === key ? val.color : T.border}`, background: mode === key ? val.bg : "white", color: mode === key ? val.color : T.muted, fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>{val.label}</button>
+        ))}
+      </div>
+
+      {/* Timer display */}
+      <div style={{ textAlign: "center", padding: "28px 0 20px", borderRadius: 16, background: m.bg, border: `1px solid ${m.color}33`, marginBottom: 16 }}>
+        <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 56, color: m.color, letterSpacing: 2, lineHeight: 1 }}>{mins}:{secs}</div>
+        <div style={{ fontSize: 12, color: m.color, fontFamily: "DM Sans, sans-serif", marginTop: 6, opacity: 0.8 }}>{m.label}</div>
+        {/* Progress bar */}
+        <div style={{ margin: "14px 24px 0", height: 4, borderRadius: 99, background: `${m.color}22` }}>
+          <div style={{ height: "100%", borderRadius: 99, background: m.color, width: `${progress}%`, transition: "width 1s linear" }} />
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        <button onClick={() => setRunning(r => !r)} style={{ flex: 2, padding: "12px 0", borderRadius: 10, border: "none", background: m.color, color: "white", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+          {running ? "⏸ Pause" : timeLeft === 0 ? "✓ Done!" : "▶ Start"}
+        </button>
+        <button onClick={reset} style={{ flex: 1, padding: "12px 0", borderRadius: 10, border: `1px solid ${T.border}`, background: "white", color: T.muted, fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>↺ Reset</button>
+      </div>
+
+      {/* Custom work duration */}
+      {mode === "work" && (
+        <Row label="Custom Focus Duration (minutes)">
+          <div style={{ display: "flex", gap: 6 }}>
+            {[15, 25, 30, 45, 60].map(n => (
+              <button key={n} onClick={() => { setCustomWork(n); setRunning(false); setTimeLeft(n * 60); }} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: `1px solid ${customWork === n ? T.accent : T.border}`, background: customWork === n ? T.accentDim : "white", color: customWork === n ? T.accent : T.muted, fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 600, cursor: "pointer" }}>{n}m</button>
+            ))}
+          </div>
+        </Row>
+      )}
+
+      {/* Session count */}
+      {sessions > 0 && <Tip>🍅 {sessions} focus session{sessions > 1 ? "s" : ""} completed today. {sessions >= 4 ? "Great work — take a long break!" : `${4 - sessions} more until a long break.`}</Tip>}
+    </div>
+  );
 }
 
 function CitationFormatter() {
@@ -560,7 +707,7 @@ function UpgradeModal({ onClose }) {
           </div>
         </a>
         <div style={{ marginBottom:12, padding:"10px 12px", borderRadius:8, background:"#f0f9ff", border:"1px solid #bae6fd", fontSize:11, color:"#0369a1", fontFamily:"DM Sans, sans-serif", lineHeight:1.6 }}>
-          ⚠️ <strong>Important:</strong> Your access token is saved in this browser and emailed in your receipt. Save it somewhere safe to restore access on any device.
+          💡 <strong>How to restore access:</strong> After purchase, go to ToolForge → click "Restore Access" → enter your purchase email. Works on any device, anytime.
         </div>
         <div style={{ textAlign:"center", fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>Secure payment via Lemon Squeezy · Token activated instantly after purchase</div>
       </div>
@@ -621,7 +768,7 @@ function ToolView({ tool, onBack, proToken, onNeedUpgrade, onTokenUpdate }) {
   const cat = CATEGORIES.find(c => c.id === tool.catId);
   const renderTool = () => {
     switch (tool.id) {
-      case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "deadline": return <DeadlineCountdown />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper />;
+      case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "deadline": return <DeadlineCountdown />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper />; case "pomodoro": return <PomodoroTimer />;
       default: if (AI_TOOLS.includes(tool.name)) return <AIToolPlaceholder name={tool.name} proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
       return <div style={{ textAlign:"center", padding:"30px 0", color:T.muted, fontFamily:"DM Sans, sans-serif" }}><div style={{ fontSize:36, marginBottom:10 }}>{tool.icon}</div><div style={{ fontSize:14 }}>Coming soon!</div></div>;
     }
@@ -650,12 +797,90 @@ function ToolCard({ tool, onClick }) {
   );
 }
 
+function Footer({ onFaq }) {
+  return (
+    <div style={{ borderTop:`1px solid ${T.border}`, padding:"20px 20px", background:T.card, textAlign:"center" }}>
+      <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:14, color:T.ink, marginBottom:6 }}>
+        Tool<span style={{ color:T.accent }}>Forge</span>
+      </div>
+      <div style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", marginBottom:12 }}>
+        Free tools for freelancers, students & small businesses.
+      </div>
+      <div style={{ display:"flex", justifyContent:"center", gap:20, flexWrap:"wrap" }}>
+        <span onClick={onFaq} style={{ fontSize:11, color:T.accent, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>FAQ & About</span>
+
+        <a href="https://toolforge.lemonsqueezy.com" target="_blank" rel="noreferrer" style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", textDecoration:"none" }}>Pricing</a>
+      </div>
+      <div style={{ fontSize:10, color:T.muted, fontFamily:"DM Sans, sans-serif", marginTop:14 }}>
+        © {new Date().getFullYear()} ToolForge · Made with ☕
+      </div>
+    </div>
+  );
+}
+
+const FAQ_ITEMS = [
+  { q:"What is ToolForge?", a:"ToolForge is a free collection of 21+ online tools designed for freelancers, students, job seekers and small businesses. No sign-up required — just open a tool and use it." },
+  { q:"Are the tools really free?", a:"Yes. All calculators and utilities are completely free, forever. AI-powered tools offer 3 free generations per day via Groq. For more generations and access to Claude Sonnet AI (higher quality), there's an affordable paid plan." },
+  { q:"What's the difference between Groq AI and Claude Sonnet AI?", a:"Groq (free) uses the Llama 3.3 model — fast and capable for most tasks. Claude Sonnet AI (paid) is Anthropic's Claude model — it produces noticeably better, more nuanced writing. Worth it if you rely on the AI tools regularly." },
+  { q:"What do I get with a paid plan?", a:"The One-Time Pack ($2.99) gives you 50 Claude Sonnet AI generations. The Pro Monthly ($7.99/mo) gives 400 generations per month and renews automatically. The Top-Up Pack ($2.99) adds 100 generations to your existing balance whenever you need more." },
+  { q:"How do I access my account on a new device?", a:"There are no accounts or passwords. Just go to ToolForge, click \"Restore Access\" and enter the email you used to purchase. Your access will be restored instantly on any device, any browser." },
+  { q:"I bought a plan but can't access Claude — what do I do?", a:"Click \"Restore Access\" on the homepage and enter your purchase email. Your access will be restored instantly on any device." },
+  { q:"Is my data private? Do you store my inputs?", a:"Your inputs are sent to the AI model to generate a response and are not stored on our servers. We don't sell data or show ads based on your inputs. Payments are handled entirely by Lemon Squeezy — we never see your card details." },
+  { q:"How many tools are there and will more be added?", a:"There are currently 21 tools and we add more every week. Upcoming tools include a BMI calculator, word counter, QR code generator, mortgage calculator and more. There's also a fun \"Take a Break\" games section coming soon." },
+  { q:"What payment methods are accepted?", a:"All major credit and debit cards are accepted via Lemon Squeezy, our payment provider. Payments are secure and encrypted." },
+  { q:"Can I cancel my Pro subscription?", a:"Yes, anytime. Log into your Lemon Squeezy customer portal (link in your receipt email) and cancel with one click. You keep access until the end of your billing period." },
+  { q:"Will there be ads on ToolForge?", a:"Not right now. The site is funded by the paid AI plans. If ads are ever introduced in the future, they'll be minimal and non-intrusive." },
+];
+
+function FAQPage({ onBack }) {
+  const [open, setOpen] = useState(null);
+  return (
+    <div style={{ maxWidth:480, margin:"0 auto", minHeight:"100vh", background:T.bg, fontFamily:"DM Sans, sans-serif" }}>
+      {/* Header */}
+      <div style={{ padding:"24px 20px 20px", borderBottom:`1px solid ${T.border}`, background:T.card }}>
+        <button onClick={onBack} style={{ background:"none", border:"none", color:T.accent, fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, cursor:"pointer", marginBottom:12, padding:0 }}>← Back to ToolForge</button>
+        <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:24, color:T.ink, marginBottom:6 }}>FAQ & About</div>
+        <div style={{ fontSize:13, color:T.muted }}>Everything you need to know about ToolForge.</div>
+      </div>
+
+      {/* About section */}
+      <div style={{ margin:16, padding:20, borderRadius:16, background:T.card, border:`1px solid ${T.border}` }}>
+        <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:T.ink, marginBottom:8 }}>✦ About ToolForge</div>
+        <div style={{ fontSize:13, color:T.muted, lineHeight:1.7 }}>
+          ToolForge was built to give freelancers, students, job seekers and small business owners access to powerful tools — for free. No accounts, no paywalls on the essentials, no bloat. Just open a tool and get things done.
+          <br /><br />
+          AI-powered tools use Groq (free, fast) or Claude Sonnet AI (premium, higher quality). New tools are added every week.
+        </div>
+      </div>
+
+      {/* FAQ items */}
+      <div style={{ padding:"0 16px 24px" }}>
+        <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:14, color:T.ink, marginBottom:12 }}>Frequently Asked Questions</div>
+        {FAQ_ITEMS.map((item, i) => (
+          <div key={i} onClick={() => setOpen(open === i ? null : i)} style={{ marginBottom:8, borderRadius:12, border:`1px solid ${open===i?T.accent:T.border}`, background:T.card, overflow:"hidden", cursor:"pointer", transition:"border 0.15s" }}>
+            <div style={{ padding:"13px 16px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:12 }}>
+              <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.ink, lineHeight:1.4 }}>{item.q}</div>
+              <span style={{ fontSize:14, color:T.muted, flexShrink:0, transform:open===i?"rotate(180deg)":"rotate(0deg)", transition:"transform 0.2s", display:"inline-block" }}>▾</span>
+            </div>
+            {open === i && (
+              <div style={{ padding:"0 16px 14px", fontSize:12, color:T.muted, lineHeight:1.7, borderTop:`1px solid ${T.border}`, paddingTop:12 }}>{item.a}</div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <Footer onFaq={() => {}} />
+    </div>
+  );
+}
+
 export default function ToolForge() {
   const [activeCat, setActiveCat] = useState("all");
   const [activeTool, setActiveTool] = useState(null);
   const [search, setSearch] = useState("");
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [collapsed, setCollapsed] = useState({});
+  const [showFaq, setShowFaq] = useState(window.location.pathname === "/faq");
   const [proToken, setProToken] = useState(() => { try { const s = localStorage.getItem("tf_pro_token"); return s ? JSON.parse(s) : null; } catch { return null; } });
 
   const handleTokenUpdate = (t) => { setProToken(t); localStorage.setItem("tf_pro_token", JSON.stringify(t)); };
@@ -664,6 +889,8 @@ export default function ToolForge() {
   const params = new URLSearchParams(window.location.search);
   const orderId = params.get("order_id");
   if (orderId) return <SuccessPage orderId={orderId} onDone={() => { window.history.replaceState({}, "", "/"); try { const s = localStorage.getItem("tf_pro_token"); if (s) setProToken(JSON.parse(s)); } catch {} window.location.reload(); }} />;
+
+  if (showFaq) return <FAQPage onBack={() => { setShowFaq(false); window.history.pushState({}, "", "/"); }} />;
 
   const toggleCollapse = (id) => setCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
 
@@ -785,6 +1012,9 @@ export default function ToolForge() {
             <div style={{ fontSize: 12, color: T.muted }}>Debt payoff · Resume bullets · Pricing guide · and 20+ more</div>
           </div>
         </div>
+      </div>
+      <div style={{ maxWidth:480, margin:"0 auto" }}>
+        <Footer onFaq={() => { setShowFaq(true); window.history.pushState({}, "", "/faq"); }} />
       </div>
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
     </>
