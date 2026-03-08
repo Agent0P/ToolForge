@@ -1704,7 +1704,7 @@ export default function ToolForge() {
               <div className="tf-grid" style={gridStyle}>
                 {filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}
               </div>
-            </>
+            </> 
           ) : activeCat !== "all" ? (
             <div className="tf-grid" style={gridStyle}>
               {filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}
