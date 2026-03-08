@@ -834,12 +834,25 @@ Be specific, direct and practical. No filler. Every section should feel personal
             <div style={{ marginTop: 14, padding: 16, borderRadius: 12, border: `2px solid ${T.gold}`, background: T.goldDim }}>
               <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 13, color: T.gold, marginBottom: 4 }}>✦ Full AI Negotiation Analysis</div>
               <div style={{ fontSize: 12, color: T.gold, fontFamily: "DM Sans, sans-serif", lineHeight: 1.6, marginBottom: 12 }}>
-                Get a personalised deep-dive: why this range fits your situation, a word-for-word negotiation script, red flags to watch out for, and what else to negotiate beyond base salary.
+                Get a personalised deep-dive: market rate context, timing tactics, a word-for-word script, compounding impact over 10 years, and what else to negotiate beyond base salary.
               </div>
               {analysisError && <div style={{ marginBottom: 10, padding: "8px 10px", borderRadius: 8, background: "#fee2e2", border: "1px solid #fca5a5", fontSize: 11, color: "#dc2626", fontFamily: "DM Sans, sans-serif" }}>{analysisError}</div>}
-              <button onClick={getFullAnalysis} disabled={loadingAnalysis} style={{ width: "100%", padding: "11px 0", borderRadius: 9, border: "none", background: loadingAnalysis ? T.border : T.gold, color: "white", fontSize: 13, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: loadingAnalysis ? "default" : "pointer" }}>
-                {loadingAnalysis ? "Analysing…" : hasClaude ? `✦ See Full Analysis · 2 tokens (${proToken.generations_left} left)` : "✦ Unlock Full Analysis — from $2.99"}
-              </button>
+              {loadingAnalysis ? (
+                <div style={{ padding: "18px 14px", borderRadius: 10, background: "rgba(255,255,255,0.6)", border: `1px solid ${T.gold}55`, textAlign: "center" }}>
+                  <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 10 }}>
+                    {[0,1,2].map(i => (
+                      <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: T.gold, animation: `tf-bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+                    ))}
+                  </div>
+                  <style>{`@keyframes tf-bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1.1);opacity:1} }`}</style>
+                  <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: T.gold, marginBottom: 4 }}>Claude is analysing your situation…</div>
+                  <div style={{ fontSize: 11, color: T.gold, fontFamily: "DM Sans, sans-serif", opacity: 0.8 }}>This takes 15–30 seconds. Please don't close this page.</div>
+                </div>
+              ) : (
+                <button onClick={getFullAnalysis} style={{ width: "100%", padding: "11px 0", borderRadius: 9, border: "none", background: T.gold, color: "white", fontSize: 13, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
+                  {hasClaude ? `✦ See Full Analysis · 2 tokens (${proToken.generations_left} left)` : "✦ Unlock Full Analysis — from $2.99"}
+                </button>
+              )}
             </div>
           )}
 
