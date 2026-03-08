@@ -169,13 +169,221 @@ function TipSplitter() {
   return <div><CurrencyPicker value={currency} onChange={setCurrency} /><Row label={`Bill Total (${sym})`}><NumInput val={bill} set={setBill} /></Row><Row label="Tip (%)"><div style={{ display: "flex", gap: 6 }}>{[10,15,18,20,25].map(p => <button key={p} onClick={() => setTip(p)} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: `1px solid ${tip===p?T.accent:T.border}`, background: tip===p?T.accentDim:"white", cursor: "pointer", fontSize: 12, fontFamily: "DM Sans, sans-serif", color: tip===p?T.accent:T.muted }}>{p}%</button>)}</div></Row><Row label="Number of People"><NumInput val={people} set={setPeople} /></Row><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}><MiniResult label="Tip Amount" value={`${sym}${tipAmt}`} /><MiniResult label="Total Bill" value={`${sym}${total}`} /></div><Result label="Each Person Pays" value={`${sym}${perPerson}`} /><CopyButton text={`Bill split: ${sym}${perPerson} each — ToolForge`} /></div>;
 }
 
-function SavingsCalc() {
+function SavingsCalc({ proToken, onNeedUpgrade, onTokenUpdate }) {
   const [currency, setCurrency] = useState("USD");
   const sym = CURRENCIES.find(c => c.code === currency)?.symbol || "$";
-  const [goal, setGoal] = useState(5000); const [saved, setSaved] = useState(500); const [monthly, setMonthly] = useState(200);
-  const months = monthly > 0 ? Math.ceil(Math.max(0, goal - saved) / monthly) : "∞";
-  const date = typeof months === "number" ? new Date(Date.now() + months * 30.5 * 864e5).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "Never";
-  return <div><CurrencyPicker value={currency} onChange={setCurrency} /><Row label={`Savings Goal (${sym})`}><NumInput val={goal} set={setGoal} /></Row><Row label={`Already Saved (${sym})`}><NumInput val={saved} set={setSaved} /></Row><Row label={`Monthly Contribution (${sym})`}><NumInput val={monthly} set={setMonthly} /></Row><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}><MiniResult label="Months Needed" value={months} /><MiniResult label="Years" value={typeof months === "number" ? (months/12).toFixed(1) : "∞"} /></div><Result label="Goal Reached By" value={date} /><CopyButton text={`I'll reach my ${sym}${goal} goal by ${date} — ToolForge`} /></div>;
+  const [goal, setGoal] = useState(10000);
+  const [saved, setSaved] = useState(1000);
+  const [monthly, setMonthly] = useState(300);
+  const [investType, setInvestType] = useState("sp500");
+
+  const [analysis, setAnalysis] = useState("");
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
+  const [analysisError, setAnalysisError] = useState("");
+
+  const hasClaude = proToken && proToken.generations_left >= 1;
+
+  const INVEST_OPTIONS = [
+    { id: "cash",    label: "💵 Cash / Savings",  rate: 0.04, desc: "~4% (HYSA)"         },
+    { id: "bonds",   label: "📄 Bonds / GICs",    rate: 0.05, desc: "~5% annually"        },
+    { id: "sp500",   label: "📈 S&P 500 Index",   rate: 0.10, desc: "~10% historical avg" },
+    { id: "growth",  label: "🚀 Growth ETF",      rate: 0.12, desc: "~12% historical avg" },
+    { id: "custom",  label: "⚙️ Custom",          rate: null, desc: "Set your own %"      },
+  ];
+  const [customRate, setCustomRate] = useState(8);
+  const selected = INVEST_OPTIONS.find(o => o.id === investType);
+  const annualRate = investType === "custom" ? Number(customRate) / 100 : selected.rate;
+  const monthlyRate = annualRate / 12;
+
+  // Cash (no interest) timeline
+  const remaining = Math.max(0, goal - saved);
+  const cashMonths = monthly > 0 ? Math.ceil(remaining / monthly) : Infinity;
+
+  // Invested timeline — months to reach goal with compound interest
+  let investMonths = 0;
+  if (monthly > 0 || saved > 0) {
+    if (monthlyRate === 0) {
+      investMonths = cashMonths;
+    } else {
+      // Solve numerically: find month where balance >= goal
+      let balance = Number(saved);
+      investMonths = 0;
+      while (balance < Number(goal) && investMonths < 1200) {
+        balance = balance * (1 + monthlyRate) + Number(monthly);
+        investMonths++;
+      }
+      if (investMonths >= 1200) investMonths = Infinity;
+    }
+  }
+
+  // Final balance at cash months (if invested instead)
+  const investedBalanceAtCashDate = (() => {
+    if (!isFinite(cashMonths)) return 0;
+    let b = Number(saved);
+    for (let i = 0; i < cashMonths; i++) b = b * (1 + monthlyRate) + Number(monthly);
+    return Math.round(b);
+  })();
+
+  const extraGained = investedBalanceAtCashDate - Number(goal);
+  const monthsSaved = isFinite(cashMonths) && isFinite(investMonths) ? cashMonths - investMonths : 0;
+
+  const toDate = (months) => {
+    if (!isFinite(months)) return "Never";
+    return new Date(Date.now() + months * 30.5 * 864e5).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  };
+
+  // Milestones
+  const milestones = [25, 50, 75, 100].map(pct => {
+    const target = Number(goal) * pct / 100;
+    const alreadyThere = Number(saved) >= target;
+    if (alreadyThere) return { pct, date: "Already there ✓", months: 0 };
+    let b = Number(saved), m = 0;
+    if (monthlyRate > 0) {
+      while (b < target && m < 1200) { b = b * (1 + monthlyRate) + Number(monthly); m++; }
+    } else {
+      m = monthly > 0 ? Math.ceil((target - Number(saved)) / monthly) : Infinity;
+    }
+    return { pct, date: toDate(m), months: m };
+  });
+
+  const getAIAnalysis = async () => {
+    if (!hasClaude) { onNeedUpgrade(); return; }
+    setLoadingAnalysis(true); setAnalysisError("");
+    const prompt = `You are a friendly but realistic personal finance advisor. A user wants advice on their savings goal.
+
+Their numbers:
+- Goal: ${sym}${Number(goal).toLocaleString()}
+- Already saved: ${sym}${Number(saved).toLocaleString()}
+- Monthly contribution: ${sym}${Number(monthly).toLocaleString()}
+- Chosen investment approach: ${selected?.label} (${(annualRate * 100).toFixed(1)}% annual return assumption)
+- Without investing (cash): reaches goal in ${isFinite(cashMonths) ? cashMonths + " months (" + toDate(cashMonths) + ")" : "never"}
+- With investing: reaches goal in ${isFinite(investMonths) ? investMonths + " months (" + toDate(investMonths) + ")" : "never"}
+
+Write a personalised savings strategy with these sections:
+
+1. **Reality Check** – Is this goal realistic given their numbers? Be honest. If their monthly contribution is too low, say so clearly with specific numbers.
+
+2. **Investment Approach Assessment** – Is their chosen approach (${selected?.label}) suitable for their timeline and goal size? What are the real risks they should know about?
+
+3. **How to Reach It Faster** – 2–3 specific, actionable things they could do to hit this goal sooner. Include numbers where possible.
+
+4. **What Could Go Wrong** – Honest risks: market downturns, life events, inflation eroding the goal value, etc. Don't sugarcoat.
+
+5. **One Smart Move to Make This Week** – One concrete action they can take right now.
+
+⚠️ IMPORTANT: End every section and the overall response with a clear disclaimer: "This is not financial advice. Past returns do not guarantee future results. Consider consulting a licensed financial advisor before making investment decisions."
+
+Be direct, specific to their numbers, and practical. No generic filler.`;
+
+    try {
+      const res = await fetch("/api/generate-claude", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: proToken.token, toolName: "Savings Goal Calculator", userInput: prompt, tokensToDeduct: 1 }) });
+      const data = await res.json();
+      if (!res.ok) { setAnalysisError(data.error || "Generation failed."); setLoadingAnalysis(false); return; }
+      setAnalysis(data.result);
+      onTokenUpdate({ ...proToken, generations_left: data.generations_left });
+    } catch { setAnalysisError("Server error. Please try again."); }
+    setLoadingAnalysis(false);
+  };
+
+  return (
+    <div>
+      <CurrencyPicker value={currency} onChange={setCurrency} />
+      <Row label={`Savings Goal (${sym})`}><NumInput val={goal} set={setGoal} /></Row>
+      <Row label={`Already Saved (${sym})`}><NumInput val={saved} set={setSaved} /></Row>
+      <Row label={`Monthly Contribution (${sym})`}><NumInput val={monthly} set={setMonthly} /></Row>
+
+      {/* Investment type picker */}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 11, color: T.muted, marginBottom: 6, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.3 }}>Investment approach</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {INVEST_OPTIONS.map(o => (
+              <button key={o.id} onClick={() => setInvestType(o.id)} style={{ padding: "7px 10px", borderRadius: 9, border: `1.5px solid ${investType === o.id ? T.green : T.border}`, background: investType === o.id ? T.greenDim : "white", color: investType === o.id ? T.green : T.muted, fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>{o.label}</button>
+            ))}
+          </div>
+          {investType === "custom" ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
+              <input type="number" value={customRate} onChange={e => setCustomRate(e.target.value)} style={{ ...inputStyle, width: 80 }} />
+              <span style={{ fontSize: 12, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>% annual return</span>
+            </div>
+          ) : (
+            <div style={{ fontSize: 11, color: T.green, fontFamily: "DM Sans, sans-serif" }}>{selected?.desc} · {(annualRate * 100).toFixed(0)}% annual return used for projection</div>
+          )}
+        </div>
+      </div>
+
+      {/* Side-by-side comparison */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+        <div style={{ padding: 12, borderRadius: 12, background: T.bg, border: `1px solid ${T.border}`, textAlign: "center" }}>
+          <div style={{ fontSize: 10, color: T.muted, marginBottom: 4, fontFamily: "DM Sans, sans-serif" }}>💵 Saving only</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: T.ink, fontFamily: "Syne, sans-serif" }}>{isFinite(cashMonths) ? cashMonths + " mo" : "Never"}</div>
+          <div style={{ fontSize: 11, color: T.muted, fontFamily: "DM Sans, sans-serif", marginTop: 2 }}>{toDate(cashMonths)}</div>
+        </div>
+        <div style={{ padding: 12, borderRadius: 12, background: T.greenDim, border: `1.5px solid ${T.green}`, textAlign: "center" }}>
+          <div style={{ fontSize: 10, color: T.green, marginBottom: 4, fontFamily: "DM Sans, sans-serif" }}>📈 Invested ({(annualRate*100).toFixed(0)}%)</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: T.green, fontFamily: "Syne, sans-serif" }}>{isFinite(investMonths) ? investMonths + " mo" : "Never"}</div>
+          <div style={{ fontSize: 11, color: T.green, fontFamily: "DM Sans, sans-serif", marginTop: 2 }}>{toDate(investMonths)}</div>
+        </div>
+      </div>
+
+      {/* Benefit callout */}
+      {isFinite(monthsSaved) && monthsSaved > 0 && (
+        <div style={{ marginBottom: 10, padding: "10px 14px", borderRadius: 10, background: T.greenDim, border: `1px solid ${T.green}44`, fontSize: 12, color: T.green, fontFamily: "DM Sans, sans-serif", lineHeight: 1.6 }}>
+          🎯 Investing gets you there <strong>{monthsSaved} months sooner</strong>
+          {extraGained > 0 && <> · and you'd have <strong>{sym}{extraGained.toLocaleString()}</strong> extra by the original cash deadline</>}
+        </div>
+      )}
+
+      {/* Milestone timeline */}
+      <div style={{ marginBottom: 14, padding: "12px 14px", borderRadius: 12, background: T.bg, border: `1px solid ${T.border}` }}>
+        <div style={{ fontSize: 10, color: T.muted, marginBottom: 10, letterSpacing: 0.3, fontFamily: "DM Sans, sans-serif" }}>MILESTONE TRACKER</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          {milestones.map(m => (
+            <div key={m.pct} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 10px", borderRadius: 8, background: m.months === 0 ? T.greenDim : "white", border: `1px solid ${m.months === 0 ? T.green : T.border}` }}>
+              <span style={{ fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, color: m.months === 0 ? T.green : T.ink }}>{m.pct}%</span>
+              <span style={{ fontSize: 10, color: m.months === 0 ? T.green : T.muted, fontFamily: "DM Sans, sans-serif" }}>{m.date}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Result label="Goal Reached By (Invested)" value={toDate(investMonths)} color={T.green} />
+      <CopyButton text={`My ${sym}${Number(goal).toLocaleString()} savings goal: reached by ${toDate(investMonths)} investing at ${(annualRate*100).toFixed(0)}% vs ${toDate(cashMonths)} saving only — ToolForge`} />
+
+      {/* Pro AI analysis */}
+      {!analysis && (
+        <div style={{ marginTop: 14, padding: 16, borderRadius: 12, border: `2px solid ${T.gold}`, background: T.goldDim }}>
+          <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 13, color: T.gold, marginBottom: 4 }}>✦ AI Savings Strategy</div>
+          <div style={{ fontSize: 12, color: T.gold, fontFamily: "DM Sans, sans-serif", lineHeight: 1.6, marginBottom: 12 }}>
+            Get a personalised reality check on your plan — is it realistic, what could go wrong, how to reach it faster, and one smart move to make this week.
+          </div>
+          {analysisError && <div style={{ marginBottom: 10, padding: "8px 10px", borderRadius: 8, background: "#fee2e2", border: "1px solid #fca5a5", fontSize: 11, color: "#dc2626", fontFamily: "DM Sans, sans-serif" }}>{analysisError}</div>}
+          {loadingAnalysis ? (
+            <div style={{ padding: "18px 14px", borderRadius: 10, background: "rgba(255,255,255,0.6)", border: `1px solid ${T.gold}55`, textAlign: "center" }}>
+              <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 10 }}>
+                {[0,1,2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: T.gold, animation: `tf-bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
+              </div>
+              <style>{`@keyframes tf-bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1.1);opacity:1} }`}</style>
+              <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: T.gold, marginBottom: 4 }}>Claude is building your strategy…</div>
+              <div style={{ fontSize: 11, color: T.gold, fontFamily: "DM Sans, sans-serif", opacity: 0.8 }}>This takes 15–20 seconds. Please don't close this page.</div>
+            </div>
+          ) : (
+            <button onClick={getAIAnalysis} style={{ width: "100%", padding: "11px 0", borderRadius: 9, border: "none", background: T.gold, color: "white", fontSize: 13, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
+              {hasClaude ? `✦ Get AI Strategy · 1 token (${proToken.generations_left} left)` : "✦ Unlock AI Strategy — from $2.99"}
+            </button>
+          )}
+        </div>
+      )}
+
+      {analysis && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ fontSize: 10, color: T.gold, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.5, marginBottom: 8, fontWeight: 700 }}>✦ AI SAVINGS STRATEGY</div>
+          <div style={{ padding: 14, borderRadius: 10, background: T.bg, border: `1px solid ${T.border}`, fontSize: 13, lineHeight: 1.8, color: T.ink, whiteSpace: "pre-wrap", fontFamily: "DM Sans, sans-serif" }}>{analysis}</div>
+          <CopyButton text={analysis} />
+        </div>
+      )}
+    </div>
+  );
 }
 
 function MarginCalc() {
@@ -1261,7 +1469,7 @@ function ToolView({ tool, onBack, proToken, onNeedUpgrade, onTokenUpdate, addWid
   const cat = CATEGORIES.find(c => c.id === tool.catId);
   const renderTool = () => {
     switch (tool.id) {
-      case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />; case "word-counter": return <WordCounter />; case "bmi": return <BMICalculator />; case "qr-generator": return <QRGenerator />;
+      case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />; case "word-counter": return <WordCounter />; case "bmi": return <BMICalculator />; case "qr-generator": return <QRGenerator />;
       case "deadline": return <DeadlineCountdown {...dlProps} />;
       case "pomodoro": return <PomodoroTimer {...pomoProps} />;
       default: if (AI_TOOLS.includes(tool.name)) return <AIToolPlaceholder name={tool.name} proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
