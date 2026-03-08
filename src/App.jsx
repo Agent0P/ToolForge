@@ -58,7 +58,7 @@ const CATEGORIES = [
 ];
 
 const ALL_TOOLS = CATEGORIES.flatMap(c => c.tools.map(t => ({ ...t, catId: c.id, catColor: c.color, catColorDim: c.colorDim })));
-const AI_TOOLS = ["Cover Letter Generator","LinkedIn Bio Writer","Cold Email Generator","Business Tagline Generator","Essay Outline Generator","Client Proposal Writer","Invoice Text Generator","Marketing Email Writer"];
+const AI_TOOLS = ["Cover Letter Generator","LinkedIn Bio Writer","Cold Email Generator","Business Tagline Generator","Essay Outline Generator","Client Proposal Writer","Invoice Text Generator","Marketing Email Writer","Resume Reviewer","Salary Negotiation Helper","Savings Goal Calculator"];
 
 const inputStyle = { flex: 1, padding: "9px 12px", borderRadius: 9, border: `1px solid ${T.border}`, fontSize: 13, fontFamily: "DM Sans, sans-serif", color: T.ink, background: "white", outline: "none", width: "100%", boxSizing: "border-box" };
 const addBtnStyle = { padding: "7px 14px", borderRadius: 8, border: `1px dashed ${T.border}`, background: "transparent", color: T.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", cursor: "pointer", marginBottom: 12, width: "100%" };
@@ -1168,12 +1168,52 @@ Be specific, reference their actual CV content, and don't soften feedback that n
     setLoadingFull(false);
   };
 
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError(""); setUploading(true);
+    const ext = file.name.split(".").pop().toLowerCase();
+    try {
+      if (ext === "txt") {
+        const text = await file.text();
+        setCvText(text);
+      } else if (ext === "docx" || ext === "doc") {
+        const mammoth = await import("mammoth");
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        setCvText(result.value);
+      } else {
+        setUploadError("Unsupported file type. Please upload a .txt or .docx file, or paste your CV text directly.");
+      }
+    } catch { setUploadError("Couldn't read the file. Try pasting your CV text directly instead."); }
+    setUploading(false);
+    e.target.value = "";
+  };
+
   return (
     <div>
       <Row label="Target Role (optional)">
         <input value={targetRole} onChange={e => setTargetRole(e.target.value)} placeholder="e.g. Senior Product Manager, UX Designer" style={inputStyle} />
       </Row>
-      <Row label="Paste your CV / Resume">
+
+      {/* File upload */}
+      <div style={{ marginBottom: 10 }}>
+        <div style={{ fontSize: 11, color: T.muted, marginBottom: 6, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.3 }}>Upload your CV</div>
+        <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, border: `1.5px dashed ${T.border}`, background: T.bg, cursor: "pointer" }}>
+          <span style={{ fontSize: 18 }}>{uploading ? "⏳" : "📎"}</span>
+          <div>
+            <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: T.ink }}>{uploading ? "Reading file…" : "Upload .txt or .doc / .docx"}</div>
+            <div style={{ fontSize: 11, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>or paste your CV text below</div>
+          </div>
+          <input type="file" accept=".txt,.doc,.docx" onChange={handleFileUpload} style={{ display: "none" }} disabled={uploading} />
+        </label>
+        {uploadError && <div style={{ marginTop: 6, fontSize: 11, color: "#dc2626", fontFamily: "DM Sans, sans-serif", padding: "8px 10px", borderRadius: 8, background: "#fee2e2", border: "1px solid #fca5a5" }}>{uploadError}</div>}
+      </div>
+
+      <Row label="Or paste your CV / Resume">
         <textarea value={cvText} onChange={e => setCvText(e.target.value)} placeholder="Paste the full text of your CV here — work experience, skills, education, everything..." style={{ ...inputStyle, width: "100%", height: 160, resize: "vertical", boxSizing: "border-box", fontFamily: "DM Sans, sans-serif" }} />
       </Row>
       {cvText.trim().length > 0 && cvText.trim().length < 100 && (
