@@ -646,12 +646,215 @@ function CitationFormatter() {
   return <div><Row label="Citation Style"><div style={{ display:"flex", gap:6 }}>{["APA","MLA","Chicago"].map(s => <button key={s} onClick={()=>setStyle(s)} style={{ flex:1, padding:"7px 0", borderRadius:8, border:`1px solid ${style===s?T.purple:T.border}`, background:style===s?T.purpleDim:"white", color:style===s?T.purple:T.muted, fontSize:12, fontFamily:"Syne, sans-serif", fontWeight:600, cursor:"pointer" }}>{s}</button>)}</div></Row><Row label="Source Type"><div style={{ display:"flex", gap:6 }}>{["book","website"].map(tp => <button key={tp} onClick={()=>setType(tp)} style={{ flex:1, padding:"7px 0", borderRadius:8, border:`1px solid ${type===tp?T.purple:T.border}`, background:type===tp?T.purpleDim:"white", color:type===tp?T.purple:T.muted, fontSize:12, fontFamily:"DM Sans, sans-serif", cursor:"pointer" }}>{tp.charAt(0).toUpperCase()+tp.slice(1)}</button>)}</div></Row><Row label="Author (Last, F.)"><input value={author} onChange={e=>setAuthor(e.target.value)} style={inputStyle} /></Row><Row label="Title"><input value={title} onChange={e=>setTitle(e.target.value)} style={inputStyle} /></Row><Row label="Year"><input value={year} onChange={e=>setYear(e.target.value)} style={inputStyle} /></Row>{type==="book"&&<Row label="Publisher"><input value={publisher} onChange={e=>setPub(e.target.value)} style={inputStyle} /></Row>}{type==="website"&&<Row label="URL"><input value={url} onChange={e=>setUrl(e.target.value)} style={inputStyle} placeholder="https://..." /></Row>}<div style={{ marginTop:14, padding:14, borderRadius:10, background:T.purpleDim, border:`1px solid ${T.purple}33`, fontSize:13, color:T.ink, fontFamily:"DM Sans, sans-serif", lineHeight:1.6 }}>{cite()}</div><CopyButton text={cite()} /></div>;
 }
 
-function SalaryHelper() {
+function SalaryHelper({ proToken, onNeedUpgrade, onTokenUpdate }) {
   const [currency, setCurrency] = useState("USD");
   const sym = CURRENCIES.find(c => c.code === currency)?.symbol || "$";
-  const [role, setRole] = useState("Software Engineer"); const [current, setCurrent] = useState(70000); const [experience, setExp] = useState(3); const [location, setLocation] = useState("New York");
-  const target = Math.round(current * 1.15 / 1000) * 1000; const stretch = Math.round(current * 1.25 / 1000) * 1000;
-  return <div><CurrencyPicker value={currency} onChange={setCurrency} /><Row label="Job Title"><input value={role} onChange={e=>setRole(e.target.value)} style={inputStyle} /></Row><Row label={`Current / Offered Salary (${sym})`}><NumInput val={current} set={setCurrent} /></Row><Row label="Years of Experience"><NumInput val={experience} set={setExp} /></Row><Row label="Location"><input value={location} onChange={e=>setLocation(e.target.value)} style={inputStyle} /></Row><div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:12 }}><MiniResult label="Target Ask" value={`${sym}${target.toLocaleString()}`} /><MiniResult label="Stretch Goal" value={`${sym}${stretch.toLocaleString()}`} /></div><Result label="Negotiation Range" value={`${sym}${target.toLocaleString()} – ${sym}${stretch.toLocaleString()}`} color={T.blue} /><CopyButton text={`Salary range for ${role}: ${sym}${target.toLocaleString()} – ${sym}${stretch.toLocaleString()} — ToolForge`} /><Tip>Always ask for 15–25% above your target. Companies expect negotiation.</Tip></div>;
+
+  // Questionnaire fields
+  const [role, setRole] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [location, setLocation] = useState("");
+  const [situation, setSituation] = useState("new_offer");
+  const [current, setCurrent] = useState("");
+  const [experience, setExp] = useState("");
+  const [competing, setCompeting] = useState("no");
+  const [topSkills, setTopSkills] = useState("");
+  const [companySize, setCompanySize] = useState("");
+  const [employed, setEmployed] = useState("");
+
+  // Result state
+  const [result, setResult] = useState(null);
+  const [analysis, setAnalysis] = useState("");
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
+  const [analysisError, setAnalysisError] = useState("");
+
+  const hasClaude = proToken && proToken.generations_left >= 2;
+  const canCalculate = role.trim() && current && experience;
+
+  const calculate = () => {
+    const exp = Number(experience);
+    const base = Number(current);
+    const hasCompeting = competing === "yes";
+
+    const bracket = exp <= 2
+      ? { low: 0.10, high: 0.15, label: "Entry level", tip: "You have less leverage at this stage — lead with enthusiasm and long-term potential." }
+      : exp <= 5
+      ? { low: 0.15, high: 0.20, label: "Mid-level", tip: "Standard negotiation range. Companies expect this — asking is normal and respected." }
+      : exp <= 10
+      ? { low: 0.20, high: 0.28, label: "Senior", tip: "You have strong leverage. Be direct and anchor high — you can always come down." }
+      : { low: 0.25, high: 0.35, label: "Principal / Lead", tip: "Negotiate the full package: base, bonus, equity, flexibility. Don't leave any of it on the table." };
+
+    // Competing offer adds 5% to both ends
+    const lowBoost = hasCompeting ? 0.05 : 0;
+    const target = Math.round(base * (1 + bracket.low + lowBoost) / 1000) * 1000;
+    const stretch = Math.round(base * (1 + bracket.high + lowBoost) / 1000) * 1000;
+    const midpoint = Math.round((target + stretch) / 2 / 1000) * 1000;
+    const pctLow = Math.round((bracket.low + lowBoost) * 100);
+    const pctHigh = Math.round((bracket.high + lowBoost) * 100);
+
+    setResult({ base, exp, target, stretch, midpoint, pctLow, pctHigh, bracket, hasCompeting });
+    setAnalysis("");
+    setAnalysisError("");
+  };
+
+  const getFullAnalysis = async () => {
+    if (!hasClaude) { onNeedUpgrade(); return; }
+    setLoadingAnalysis(true); setAnalysisError("");
+    const prompt = `You are a senior compensation consultant and career coach with deep knowledge of global salary markets. A user wants a full salary negotiation analysis.
+
+Their situation:
+- Role: ${role}
+- Industry: ${industry || "not specified"}
+- Location: ${location || "not specified"}
+- Situation: ${situation === "new_offer" ? "Received a new job offer" : situation === "raise" ? "Asking for a raise" : "Going for a promotion"}
+- Offered/Current salary: ${sym}${Number(current).toLocaleString()}
+- Years of experience: ${experience}
+- Company size/type: ${companySize ? { startup: "Early-stage startup", scaleup: "Scale-up (growth stage)", midsize: "Mid-size company", enterprise: "Large enterprise", public: "Publicly listed company" }[companySize] : "not specified"}
+- Employment status: ${employed === "employed" ? "Currently employed (has leverage to walk away)" : employed === "unemployed" ? "Currently between jobs (less walk-away leverage)" : "not specified"}
+- Competing offer: ${competing === "yes" ? "Yes" : "No"}
+- Key skills/strengths: ${topSkills || "not specified"}
+- Calculated negotiation range: ${sym}${result.target.toLocaleString()} – ${sym}${result.stretch.toLocaleString()}
+
+Give a thorough, personalised negotiation analysis with these sections:
+
+1. **Situation Assessment** – Read their specific situation. What leverage do they actually have? Be honest if it's weak.
+
+2. **Market Rate Reality Check** – Based on the role, industry, location and experience level, what does this position actually pay in the real market right now? Is the offer fair, below market, or above market? Give a realistic salary range you'd expect to see for this exact profile, and explain your reasoning. Be specific — use real market knowledge, not generalities.
+
+3. **Why This Negotiation Range** – Explain in detail why the calculated range (${sym}${result.target.toLocaleString()} – ${sym}${result.stretch.toLocaleString()}) makes sense given their profile and the market context above.
+
+4. **Timing & How to Play It** – Tactical advice on when to bring up the number, how many rounds of back-and-forth to expect, whether to name a number first or wait for them. Tailor this specifically to their situation (${situation === "new_offer" ? "new offer" : situation === "raise" ? "asking for a raise" : "promotion"}).
+
+5. **Negotiation Strategy** – Step-by-step approach for their specific situation. What to say, in what order, and how to frame it.
+
+6. **Word-for-Word Script** – A strong opening line, and a confident response to "this is our final offer / we can't go higher."
+
+7. **The Compounding Argument** – Calculate what successfully negotiating to the midpoint (${sym}${result.midpoint.toLocaleString()}) means financially over 5 and 10 years, assuming 3% annual raises compound on top of this new base. Show the actual numbers. This helps them feel the real stakes of the conversation.
+
+8. **Watch Out For** – 2–3 specific red flags or mistakes to avoid given their exact situation.
+
+9. **Beyond Base Salary** – What else is on the table to negotiate: bonus structure, equity, remote flexibility, title, early review date, signing bonus, etc. Prioritise by what's most realistic for their role and industry.
+
+Be specific, direct and practical. No filler. Every section should feel personalised to this person's situation, not generic advice.`;
+
+    try {
+      const res = await fetch("/api/generate-claude", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: proToken.token, toolName: "Salary Negotiation Helper", userInput: prompt, tokensToDeduct: 2 }) });
+      const data = await res.json();
+      if (!res.ok) { setAnalysisError(data.error || "Generation failed."); setLoadingAnalysis(false); return; }
+      setAnalysis(data.result);
+      onTokenUpdate({ ...proToken, generations_left: data.generations_left });
+    } catch { setAnalysisError("Server error. Please try again."); }
+    setLoadingAnalysis(false);
+  };
+
+  const situationLabels = { new_offer: "💼 New Job Offer", raise: "📈 Asking for a Raise", promotion: "🚀 Going for Promotion" };
+
+  return (
+    <div>
+      <CurrencyPicker value={currency} onChange={setCurrency} />
+
+      {/* Situation selector */}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 11, color: T.muted, marginBottom: 6, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.3 }}>What's your situation?</div>
+        <div style={{ display: "flex", gap: 6 }}>
+          {Object.entries(situationLabels).map(([val, label]) => (
+            <button key={val} onClick={() => setSituation(val)} style={{ flex: 1, padding: "8px 4px", borderRadius: 9, border: `1.5px solid ${situation === val ? T.blue : T.border}`, background: situation === val ? T.blueDim : "white", color: situation === val ? T.blue : T.muted, fontSize: 10, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer", lineHeight: 1.4 }}>{label}</button>
+          ))}
+        </div>
+      </div>
+
+      <Row label="Job Title / Role"><input value={role} onChange={e => setRole(e.target.value)} placeholder="e.g. Product Manager" style={inputStyle} /></Row>
+      <Row label="Industry (optional)"><input value={industry} onChange={e => setIndustry(e.target.value)} placeholder="e.g. Tech, Finance, Healthcare" style={inputStyle} /></Row>
+      <Row label="Location (optional)"><input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. New York, London, Remote" style={inputStyle} /></Row>
+      <Row label={`${situation === "raise" ? "Current" : "Offered"} Salary (${sym})`}><NumInput val={current} set={setCurrent} /></Row>
+      <Row label="Years of Experience in This Field"><NumInput val={experience} set={setExp} /></Row>
+
+      {/* Company size */}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 11, color: T.muted, marginBottom: 6, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.3 }}>Company size / type</div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {[["startup", "🚀 Startup"], ["scaleup", "📈 Scale-up"], ["midsize", "🏢 Mid-size"], ["enterprise", "🌐 Enterprise"], ["public", "📋 Public Co."]].map(([val, label]) => (
+            <button key={val} onClick={() => setCompanySize(val)} style={{ padding: "7px 10px", borderRadius: 9, border: `1.5px solid ${companySize === val ? T.purple : T.border}`, background: companySize === val ? T.purpleDim : "white", color: companySize === val ? T.purple : T.muted, fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>{label}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Employment status */}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 11, color: T.muted, marginBottom: 6, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.3 }}>Your current employment status</div>
+        <div style={{ display: "flex", gap: 6 }}>
+          {[["employed", "✅ Currently employed"], ["unemployed", "🔍 Between jobs"]].map(([val, label]) => (
+            <button key={val} onClick={() => setEmployed(val)} style={{ flex: 1, padding: "8px 6px", borderRadius: 9, border: `1.5px solid ${employed === val ? T.accent : T.border}`, background: employed === val ? T.accentDim : "white", color: employed === val ? T.accent : T.muted, fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>{label}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Competing offer toggle */}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 11, color: T.muted, marginBottom: 6, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.3 }}>Do you have a competing offer?</div>
+        <div style={{ display: "flex", gap: 6 }}>
+          {[["no", "No"], ["yes", "Yes — I have one"]].map(([val, label]) => (
+            <button key={val} onClick={() => setCompeting(val)} style={{ flex: 1, padding: "8px 0", borderRadius: 9, border: `1.5px solid ${competing === val ? T.green : T.border}`, background: competing === val ? T.greenDim : "white", color: competing === val ? T.green : T.muted, fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>{label}</button>
+          ))}
+        </div>
+      </div>
+
+      <Row label="Your strongest skills / achievements (optional)"><input value={topSkills} onChange={e => setTopSkills(e.target.value)} placeholder="e.g. led team of 10, increased revenue 40%" style={inputStyle} /></Row>
+
+      {/* Calculate button */}
+      <button onClick={calculate} disabled={!canCalculate} style={{ width: "100%", padding: "12px 0", borderRadius: 10, border: "none", background: canCalculate ? T.blue : T.border, color: canCalculate ? "white" : T.muted, fontSize: 13, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: canCalculate ? "pointer" : "default", marginTop: 4, marginBottom: 16, letterSpacing: 0.3 }}>
+        Calculate My Range →
+      </button>
+
+      {/* Results */}
+      {result && (
+        <div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 10 }}>
+            <MiniResult label="Open With" value={`${sym}${result.stretch.toLocaleString()}`} />
+            <MiniResult label="Accept At" value={`${sym}${result.target.toLocaleString()}`} />
+            <MiniResult label="Midpoint" value={`${sym}${result.midpoint.toLocaleString()}`} />
+          </div>
+
+          <Result label="Your Negotiation Range" value={`${sym}${result.target.toLocaleString()} – ${sym}${result.stretch.toLocaleString()}`} color={T.blue} />
+
+          {/* Why these numbers */}
+          <div style={{ marginTop: 10, padding: "12px 14px", borderRadius: 10, background: T.bg, border: `1px solid ${T.border}`, fontSize: 12, color: T.ink, fontFamily: "DM Sans, sans-serif", lineHeight: 1.8 }}>
+            <div style={{ fontSize: 10, color: T.muted, marginBottom: 6, letterSpacing: 0.3 }}>WHY THESE NUMBERS</div>
+            Base: {sym}{result.base.toLocaleString()} · {result.exp} years ({result.bracket.label}) → +{result.pctLow}–{result.pctHigh}%
+            {result.hasCompeting && <span style={{ color: T.green }}> · +5% competing offer boost</span>}<br/>
+            <span style={{ fontSize: 11, color: T.muted }}>Always open with your stretch number — you can always come down, never up.</span>
+          </div>
+
+          <Tip>{result.bracket.tip}</Tip>
+
+          <CopyButton text={`${role} negotiation range: ${sym}${result.target.toLocaleString()} – ${sym}${result.stretch.toLocaleString()} — ToolForge`} />
+
+          {/* Pro full analysis section */}
+          {!analysis && (
+            <div style={{ marginTop: 14, padding: 16, borderRadius: 12, border: `2px solid ${T.gold}`, background: T.goldDim }}>
+              <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 13, color: T.gold, marginBottom: 4 }}>✦ Full AI Negotiation Analysis</div>
+              <div style={{ fontSize: 12, color: T.gold, fontFamily: "DM Sans, sans-serif", lineHeight: 1.6, marginBottom: 12 }}>
+                Get a personalised deep-dive: why this range fits your situation, a word-for-word negotiation script, red flags to watch out for, and what else to negotiate beyond base salary.
+              </div>
+              {analysisError && <div style={{ marginBottom: 10, padding: "8px 10px", borderRadius: 8, background: "#fee2e2", border: "1px solid #fca5a5", fontSize: 11, color: "#dc2626", fontFamily: "DM Sans, sans-serif" }}>{analysisError}</div>}
+              <button onClick={getFullAnalysis} disabled={loadingAnalysis} style={{ width: "100%", padding: "11px 0", borderRadius: 9, border: "none", background: loadingAnalysis ? T.border : T.gold, color: "white", fontSize: 13, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: loadingAnalysis ? "default" : "pointer" }}>
+                {loadingAnalysis ? "Analysing…" : hasClaude ? `✦ See Full Analysis · 2 tokens (${proToken.generations_left} left)` : "✦ Unlock Full Analysis — from $2.99"}
+              </button>
+            </div>
+          )}
+
+          {/* Full analysis output */}
+          {analysis && (
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontSize: 10, color: T.gold, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.5, marginBottom: 8, fontWeight: 700 }}>✦ FULL AI ANALYSIS</div>
+              <div style={{ padding: 14, borderRadius: 10, background: T.bg, border: `1px solid ${T.border}`, fontSize: 13, lineHeight: 1.8, color: T.ink, whiteSpace: "pre-wrap", fontFamily: "DM Sans, sans-serif" }}>{analysis}</div>
+              <CopyButton text={analysis} />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 const GROQ_PROMPTS = {
@@ -1045,7 +1248,7 @@ function ToolView({ tool, onBack, proToken, onNeedUpgrade, onTokenUpdate, addWid
   const cat = CATEGORIES.find(c => c.id === tool.catId);
   const renderTool = () => {
     switch (tool.id) {
-      case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper />; case "word-counter": return <WordCounter />; case "bmi": return <BMICalculator />; case "qr-generator": return <QRGenerator />;
+      case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />; case "word-counter": return <WordCounter />; case "bmi": return <BMICalculator />; case "qr-generator": return <QRGenerator />;
       case "deadline": return <DeadlineCountdown {...dlProps} />;
       case "pomodoro": return <PomodoroTimer {...pomoProps} />;
       default: if (AI_TOOLS.includes(tool.name)) return <AIToolPlaceholder name={tool.name} proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
