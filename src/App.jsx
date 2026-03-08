@@ -30,6 +30,7 @@ const CATEGORIES = [
     { id: "tagline", icon: "✨", name: "Business Tagline Generator", desc: "AI slogans that stick" },
     { id: "essay", icon: "📝", name: "Essay Outline Generator", desc: "AI-structured essay plans" },
     { id: "email", icon: "💌", name: "Marketing Email Writer", desc: "Convert with AI-written emails" },
+    { id: "resume-reviewer", icon: "📋", name: "Resume Reviewer", desc: "Get honest AI feedback on your CV" },
   ]},
   { id: "calculators", label: "Calculators", icon: "🧮", color: T.blue, colorDim: T.blueDim, tools: [
     { id: "rate", icon: "💰", name: "Hourly Rate Calculator", desc: "Know exactly what to charge" },
@@ -288,6 +289,12 @@ Be direct, specific to their numbers, and practical. No generic filler.`;
   return (
     <div>
       <CurrencyPicker value={currency} onChange={setCurrency} />
+
+      {/* Legal disclaimer */}
+      <div style={{ marginBottom: 14, padding: "9px 12px", borderRadius: 8, background: "#f0f9ff", border: "1px solid #bae6fd", fontSize: 11, color: "#0369a1", fontFamily: "DM Sans, sans-serif", lineHeight: 1.6 }}>
+        ⚠️ For informational purposes only. Projections are based on historical averages and are not guaranteed. This is not financial advice — consult a licensed financial advisor before making investment decisions.
+      </div>
+
       <Row label={`Savings Goal (${sym})`}><NumInput val={goal} set={setGoal} /></Row>
       <Row label={`Already Saved (${sym})`}><NumInput val={saved} set={setSaved} /></Row>
       <Row label={`Monthly Contribution (${sym})`}><NumInput val={monthly} set={setMonthly} /></Row>
@@ -1087,7 +1094,162 @@ const GROQ_PROMPTS = {
   "Client Proposal Writer": "You are a freelance consultant. Write a professional project proposal with: Overview, Scope, Timeline, Investment. Output the proposal only.",
   "Invoice Text Generator": "You are an invoicing assistant. Generate clean invoice line items and a payment note. Output invoice text only.",
   "Marketing Email Writer": "You are an email marketer. Write a high-converting marketing email with subject, preview text, body and CTA. Output the email only.",
+  "Resume Reviewer": "You are a professional CV and resume coach. Give a brief but honest review of the resume provided. Cover: (1) overall impression in 2 sentences, (2) top 2 strengths, (3) top 3 things to improve immediately. Be direct and specific. Output only the review, no preamble.",
 };
+
+function ResumeReviewer({ proToken, onNeedUpgrade, onTokenUpdate }) {
+  const [cvText, setCvText] = useState("");
+  const [targetRole, setTargetRole] = useState("");
+  const [freeReview, setFreeReview] = useState("");
+  const [fullReview, setFullReview] = useState("");
+  const [loadingFree, setLoadingFree] = useState(false);
+  const [loadingFull, setLoadingFull] = useState(false);
+  const [freeError, setFreeError] = useState("");
+  const [fullError, setFullError] = useState("");
+  const [groqCount, setGroqCount] = useState(() => { try { const s = localStorage.getItem("tf_groq_usage"); if (!s) return 0; const { date, count } = JSON.parse(s); return new Date().toDateString() === date ? count : 0; } catch { return 0; } });
+
+  const groqAtLimit = groqCount >= 3;
+  const hasClaude = proToken && proToken.generations_left >= 2;
+  const canReview = cvText.trim().length > 100;
+
+  const getFreeReview = async () => {
+    if (!canReview || groqAtLimit) return;
+    setLoadingFree(true); setFreeError(""); setFreeReview(""); setFullReview("");
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${import.meta.env.VITE_GROQ_KEY || ""}` }, body: JSON.stringify({ model: "llama-3.3-70b-versatile", max_tokens: 600, messages: [{ role: "system", content: "You are a professional CV and resume coach. Give a brief but honest review of the resume provided. Cover: (1) overall impression in 2 sentences, (2) top 2 strengths, (3) top 3 things to improve immediately. Be direct and specific. Output only the review, no preamble." }, { role: "user", content: `${targetRole ? `Target role: ${targetRole}\n\n` : ""}Resume:\n${cvText}` }] }) });
+      const data = await res.json();
+      const text = data.choices?.[0]?.message?.content;
+      if (!text) throw new Error("Empty");
+      setFreeReview(text);
+      const n = groqCount + 1; setGroqCount(n); localStorage.setItem("tf_groq_usage", JSON.stringify({ date: new Date().toDateString(), count: n }));
+    } catch { setFreeError("Review failed. Please try again."); }
+    setLoadingFree(false);
+  };
+
+  const getFullReview = async () => {
+    if (!hasClaude) { onNeedUpgrade(); return; }
+    setLoadingFull(true); setFullError("");
+    const prompt = `You are a senior recruitment consultant and CV expert who has reviewed thousands of CVs across all industries. Give a thorough, honest, and actionable review of the following resume.
+${targetRole ? `The candidate is targeting: ${targetRole}` : ""}
+
+Resume:
+${cvText}
+
+Provide a full structured review with these sections:
+
+1. **Overall Score: X/100** – Give a score and a one-line verdict. Be honest — most CVs score between 40–75.
+
+2. **First Impression** – What does a recruiter think in the first 6 seconds? Does it pass the scan test?
+
+3. **Section-by-Section Breakdown**
+   - Summary/Objective: (if present)
+   - Work Experience: quality of bullet points, use of numbers/results, action verbs
+   - Skills: relevance, specificity, layout
+   - Education: appropriate level of detail
+   - Format & Design: readability, length, ATS-friendliness
+
+4. **ATS Compatibility Check** – Will this CV get filtered out by applicant tracking systems? What keywords or formatting issues could cause problems?
+
+5. **Top 3 Critical Fixes** – The 3 most impactful changes they should make immediately, with specific examples.
+
+6. **Rewrite Examples** – Take 2 weak bullet points from their CV and rewrite them stronger (more results-focused, quantified where possible).
+
+7. **Honest Verdict** – Would you shortlist this candidate for an interview? Why or why not?
+
+Be specific, reference their actual CV content, and don't soften feedback that needs to be heard. This person wants to get hired — help them do that.`;
+
+    try {
+      const res = await fetch("/api/generate-claude", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: proToken.token, toolName: "Resume Reviewer", userInput: prompt, tokensToDeduct: 2 }) });
+      const data = await res.json();
+      if (!res.ok) { setFullError(data.error || "Generation failed."); setLoadingFull(false); return; }
+      setFullReview(data.result);
+      onTokenUpdate({ ...proToken, generations_left: data.generations_left });
+    } catch { setFullError("Server error. Please try again."); }
+    setLoadingFull(false);
+  };
+
+  return (
+    <div>
+      <Row label="Target Role (optional)">
+        <input value={targetRole} onChange={e => setTargetRole(e.target.value)} placeholder="e.g. Senior Product Manager, UX Designer" style={inputStyle} />
+      </Row>
+      <Row label="Paste your CV / Resume">
+        <textarea value={cvText} onChange={e => setCvText(e.target.value)} placeholder="Paste the full text of your CV here — work experience, skills, education, everything..." style={{ ...inputStyle, width: "100%", height: 160, resize: "vertical", boxSizing: "border-box", fontFamily: "DM Sans, sans-serif" }} />
+      </Row>
+      {cvText.trim().length > 0 && cvText.trim().length < 100 && (
+        <div style={{ fontSize: 11, color: T.muted, marginBottom: 8, fontFamily: "DM Sans, sans-serif" }}>Paste more of your CV for a meaningful review ({cvText.trim().length} / 100 chars minimum)</div>
+      )}
+
+      {/* Free review */}
+      {!freeReview && !fullReview && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+          {/* Groq free button */}
+          <button onClick={getFreeReview} disabled={!canReview || groqAtLimit || loadingFree} style={{ width: "100%", padding: "11px 0", borderRadius: 10, border: "none", background: !canReview || groqAtLimit ? T.border : T.green, color: !canReview || groqAtLimit ? T.muted : "white", fontSize: 13, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: canReview && !groqAtLimit ? "pointer" : "default" }}>
+            {loadingFree ? "Reviewing…" : groqAtLimit ? "🆓 Free limit reached today" : `🆓 Quick Review — Free (${groqCount}/3 used)`}
+          </button>
+          {/* Claude pro button */}
+          <button onClick={getFullReview} disabled={!canReview || loadingFull} style={{ width: "100%", padding: "11px 0", borderRadius: 10, border: "none", background: !canReview ? T.border : T.gold, color: !canReview ? T.muted : "white", fontSize: 13, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: canReview ? "pointer" : "default" }}>
+            {hasClaude ? `✦ Full Review · 2 tokens (${proToken.generations_left} left)` : "✦ Full Review — Unlock from $2.99"}
+          </button>
+        </div>
+      )}
+
+      {freeError && <div style={{ marginTop: 10, padding: "9px 12px", borderRadius: 8, background: "#fee2e2", border: "1px solid #fca5a5", fontSize: 12, color: "#dc2626", fontFamily: "DM Sans, sans-serif" }}>{freeError}</div>}
+
+      {/* Free review output */}
+      {freeReview && !fullReview && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ fontSize: 10, color: T.green, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.5, marginBottom: 8, fontWeight: 700 }}>🆓 QUICK REVIEW</div>
+          <div style={{ padding: 14, borderRadius: 10, background: T.bg, border: `1px solid ${T.border}`, fontSize: 13, lineHeight: 1.8, color: T.ink, whiteSpace: "pre-wrap", fontFamily: "DM Sans, sans-serif" }}>{freeReview}</div>
+          <CopyButton text={freeReview} />
+          {/* Upsell to full review */}
+          <div style={{ marginTop: 14, padding: 16, borderRadius: 12, border: `2px solid ${T.gold}`, background: T.goldDim }}>
+            <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 13, color: T.gold, marginBottom: 4 }}>✦ Want the full picture?</div>
+            <div style={{ fontSize: 12, color: T.gold, fontFamily: "DM Sans, sans-serif", lineHeight: 1.6, marginBottom: 12 }}>Get a score out of 100, section-by-section breakdown, ATS check, rewritten bullet points, and an honest shortlist verdict.</div>
+            {fullError && <div style={{ marginBottom: 10, padding: "8px 10px", borderRadius: 8, background: "#fee2e2", border: "1px solid #fca5a5", fontSize: 11, color: "#dc2626", fontFamily: "DM Sans, sans-serif" }}>{fullError}</div>}
+            {loadingFull ? (
+              <div style={{ padding: "18px 14px", borderRadius: 10, background: "rgba(255,255,255,0.6)", border: `1px solid ${T.gold}55`, textAlign: "center" }}>
+                <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 10 }}>
+                  {[0,1,2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: T.gold, animation: `tf-bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
+                </div>
+                <style>{`@keyframes tf-bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1.1);opacity:1} }`}</style>
+                <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: T.gold, marginBottom: 4 }}>Claude is reviewing your CV…</div>
+                <div style={{ fontSize: 11, color: T.gold, fontFamily: "DM Sans, sans-serif", opacity: 0.8 }}>This takes 20–30 seconds. Please don't close this page.</div>
+              </div>
+            ) : (
+              <button onClick={getFullReview} style={{ width: "100%", padding: "11px 0", borderRadius: 9, border: "none", background: T.gold, color: "white", fontSize: 13, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
+                {hasClaude ? `✦ Full Review · 2 tokens (${proToken.generations_left} left)` : "✦ Unlock Full Review — from $2.99"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Full review loading (when going directly to full) */}
+      {loadingFull && !freeReview && (
+        <div style={{ marginTop: 14, padding: "24px 14px", borderRadius: 10, background: T.goldDim, border: `2px solid ${T.gold}`, textAlign: "center" }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 10 }}>
+            {[0,1,2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: T.gold, animation: `tf-bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
+          </div>
+          <style>{`@keyframes tf-bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1.1);opacity:1} }`}</style>
+          <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: T.gold, marginBottom: 4 }}>Claude is reviewing your CV…</div>
+          <div style={{ fontSize: 11, color: T.gold, fontFamily: "DM Sans, sans-serif", opacity: 0.8 }}>This takes 20–30 seconds. Please don't close this page.</div>
+        </div>
+      )}
+
+      {fullError && !freeReview && <div style={{ marginTop: 10, padding: "9px 12px", borderRadius: 8, background: "#fee2e2", border: "1px solid #fca5a5", fontSize: 12, color: "#dc2626", fontFamily: "DM Sans, sans-serif" }}>{fullError}</div>}
+
+      {/* Full review output */}
+      {fullReview && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ fontSize: 10, color: T.gold, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.5, marginBottom: 8, fontWeight: 700 }}>✦ FULL CV REVIEW</div>
+          <div style={{ padding: 14, borderRadius: 10, background: T.bg, border: `1px solid ${T.border}`, fontSize: 13, lineHeight: 1.8, color: T.ink, whiteSpace: "pre-wrap", fontFamily: "DM Sans, sans-serif" }}>{fullReview}</div>
+          <CopyButton text={fullReview} />
+        </div>
+      )}
+    </div>
+  );
+}
 
 function AIToolPlaceholder({ name, proToken, onNeedUpgrade, onTokenUpdate }) {
   const [input, setInput] = useState(""); const [output, setOutput] = useState(""); const [loading, setLoading] = useState(false); const [mode, setMode] = useState("groq"); const [error, setError] = useState("");
@@ -1469,6 +1631,7 @@ function ToolView({ tool, onBack, proToken, onNeedUpgrade, onTokenUpdate, addWid
   const cat = CATEGORIES.find(c => c.id === tool.catId);
   const renderTool = () => {
     switch (tool.id) {
+case "resume-reviewer": return <ResumeReviewer proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
       case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />; case "word-counter": return <WordCounter />; case "bmi": return <BMICalculator />; case "qr-generator": return <QRGenerator />;
       case "deadline": return <DeadlineCountdown {...dlProps} />;
       case "pomodoro": return <PomodoroTimer {...pomoProps} />;
@@ -1704,7 +1867,7 @@ export default function ToolForge() {
               <div className="tf-grid" style={gridStyle}>
                 {filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}
               </div>
-            </> 
+            </>
           ) : activeCat !== "all" ? (
             <div className="tf-grid" style={gridStyle}>
               {filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}
