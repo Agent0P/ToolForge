@@ -5,7 +5,7 @@ import {
   DeadlineCountdown, PomodoroTimer, FloatingWidget,
   TimezoneConverter, UnitConverter, StudyPlanner, CitationFormatter,
   WordCounter, BMICalculator, QRGenerator,
-} from "./tools";
+} from "./tools"; 
 import { SavingsCalc, SalaryHelper, ResumeReviewer, AIToolPlaceholder } from "./ai-tools";
 import { TicTacToe } from "./games";
 
