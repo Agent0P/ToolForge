@@ -192,7 +192,9 @@ function RefundPage({ onBack }) {
           <div style={{ ...s.body, paddingLeft:14 }}>• Refund requests made more than 3 days after purchase<br/>• Packs or plans where any generations have been used<br/>• Dissatisfaction with AI output quality alone (we encourage you to try the free Groq tier before purchasing)</div>
 
           <div style={s.heading}>How to Request a Refund</div>
-          <div style={s.body}>Contact us via toolforge.pro with your purchase email and order ID (found in your Lemon Squeezy receipt). We will process eligible refunds within 3 business days. Refunds are returned to the original payment method via Lemon Squeezy.</div>
+          <div style={s.body}>To request a refund, contact us via toolforge.pro and include the following:</div>
+          <div style={{ ...s.body, paddingLeft:14 }}>• Your purchase email address<br/>• Your order ID (found in your Lemon Squeezy receipt email)</div>
+          <div style={s.body}>We will verify your eligibility and process approved refunds within 3 business days. Once issued, the refund typically appears back on your card within <strong>5–10 business days</strong> depending on your bank or card provider. Refunds are returned to the original payment method via Lemon Squeezy.</div>
 
           <div style={s.heading}>Subscription Cancellations</div>
           <div style={s.body}>Pro Monthly subscribers can cancel at any time via the Lemon Squeezy customer portal (link in your receipt email). Cancellation stops future billing immediately. You retain access until the end of your current billing period. Partial-month refunds are not issued for cancellations.</div>
