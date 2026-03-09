@@ -67,7 +67,7 @@ const FAQ_ITEMS = [
 ];
 
 /* ── Shared UI components ── */
-function Footer({ onFaq }) {
+function Footer({ onFaq, onTos, onRefund }) {
   return (
     <div style={{ borderTop:`1px solid ${T.border}`, padding:"20px 20px", background:T.card, textAlign:"center" }}>
       <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:14, color:T.ink, marginBottom:6 }}>
@@ -79,6 +79,8 @@ function Footer({ onFaq }) {
       <div style={{ display:"flex", justifyContent:"center", gap:20, flexWrap:"wrap" }}>
         <span onClick={onFaq} style={{ fontSize:11, color:T.accent, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>FAQ & About</span>
         <a href="https://toolforge.lemonsqueezy.com" target="_blank" rel="noreferrer" style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", textDecoration:"none" }}>Pricing</a>
+        <span onClick={onTos} style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>Terms of Service</span>
+        <span onClick={onRefund} style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>Refund Policy</span>
       </div>
       <div style={{ fontSize:10, color:T.muted, fontFamily:"DM Sans, sans-serif", marginTop:14 }}>
         © {new Date().getFullYear()} ToolForge · Made with ☕
@@ -118,7 +120,87 @@ function FAQPage({ onBack }) {
           </div>
         ))}
       </div>
-      <Footer onFaq={() => {}} />
+      <Footer onFaq={() => {}} onTos={() => {}} onRefund={() => {}} />
+    </div>
+  );
+}
+
+function TosPage({ onBack }) {
+  const s = { heading: { fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:14, color:"#0f0f0d", marginTop:20, marginBottom:6 }, body: { fontSize:12, color:"#6b6b5f", fontFamily:"DM Sans, sans-serif", lineHeight:1.8, marginBottom:4 } };
+  return (
+    <div style={{ maxWidth:480, margin:"0 auto", minHeight:"100vh", background:"#f7f5f0", fontFamily:"DM Sans, sans-serif" }}>
+      <div style={{ padding:"24px 20px 20px", borderBottom:"1px solid #e0ddd6", background:"white" }}>
+        <button onClick={onBack} style={{ background:"none", border:"none", color:"#e85d04", fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, cursor:"pointer", marginBottom:12, padding:0 }}>← Back to ToolForge</button>
+        <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:24, color:"#0f0f0d", marginBottom:4 }}>Terms of Service</div>
+        <div style={{ fontSize:12, color:"#6b6b5f" }}>Last updated: {new Date().toLocaleDateString("en-US", { month:"long", year:"numeric" })}</div>
+      </div>
+      <div style={{ padding:"16px 20px 40px" }}>
+        <div style={{ background:"white", borderRadius:16, padding:20, border:"1px solid #e0ddd6" }}>
+
+          <div style={s.heading}>1. Acceptance of Terms</div>
+          <div style={s.body}>By accessing or using ToolForge ("the Service") at toolforge.pro, you agree to be bound by these Terms of Service. If you do not agree, please do not use the Service.</div>
+
+          <div style={s.heading}>2. Description of Service</div>
+          <div style={s.body}>ToolForge provides free and premium online tools for freelancers, students, and small businesses. Free tools are available without registration. Premium AI features require a paid token purchased via Lemon Squeezy.</div>
+
+          <div style={s.heading}>3. Paid Plans & Access Tokens</div>
+          <div style={s.body}>Upon successful payment, you receive a unique access token granting a set number of AI generations. Tokens are non-transferable and tied to your purchase email. ToolForge is not responsible for tokens lost due to browser data being cleared — use the "Restore Access" feature to recover access.</div>
+
+          <div style={s.heading}>4. Acceptable Use</div>
+          <div style={s.body}>You agree not to misuse the Service, including but not limited to: attempting to reverse-engineer the platform, using automated tools to abuse free limits, generating illegal or harmful content, or reselling access tokens.</div>
+
+          <div style={s.heading}>5. AI-Generated Content</div>
+          <div style={s.body}>All AI-generated content is provided for informational and productivity purposes only. ToolForge makes no guarantees regarding the accuracy, completeness, or fitness of AI outputs for any particular purpose. You are solely responsible for how you use generated content.</div>
+
+          <div style={s.heading}>6. Intellectual Property</div>
+          <div style={s.body}>The ToolForge name, logo, design, and underlying code are the intellectual property of ToolForge. AI-generated outputs belong to the user who generated them, subject to the terms of the underlying AI providers (Anthropic, Groq).</div>
+
+          <div style={s.heading}>7. Limitation of Liability</div>
+          <div style={s.body}>ToolForge is provided "as is" without warranties of any kind. We are not liable for any indirect, incidental, or consequential damages arising from your use of the Service, including loss of data or revenue.</div>
+
+          <div style={s.heading}>8. Changes to Terms</div>
+          <div style={s.body}>We reserve the right to update these Terms at any time. Continued use of the Service after changes constitutes acceptance of the new Terms.</div>
+
+          <div style={s.heading}>9. Contact</div>
+          <div style={s.body}>For any questions regarding these Terms, please contact us via the ToolForge website at toolforge.pro.</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RefundPage({ onBack }) {
+  const s = { heading: { fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:14, color:"#0f0f0d", marginTop:20, marginBottom:6 }, body: { fontSize:12, color:"#6b6b5f", fontFamily:"DM Sans, sans-serif", lineHeight:1.8, marginBottom:4 } };
+  return (
+    <div style={{ maxWidth:480, margin:"0 auto", minHeight:"100vh", background:"#f7f5f0", fontFamily:"DM Sans, sans-serif" }}>
+      <div style={{ padding:"24px 20px 20px", borderBottom:"1px solid #e0ddd6", background:"white" }}>
+        <button onClick={onBack} style={{ background:"none", border:"none", color:"#e85d04", fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, cursor:"pointer", marginBottom:12, padding:0 }}>← Back to ToolForge</button>
+        <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:24, color:"#0f0f0d", marginBottom:4 }}>Refund Policy</div>
+        <div style={{ fontSize:12, color:"#6b6b5f" }}>Last updated: {new Date().toLocaleDateString("en-US", { month:"long", year:"numeric" })}</div>
+      </div>
+      <div style={{ padding:"16px 20px 40px" }}>
+        <div style={{ background:"white", borderRadius:16, padding:20, border:"1px solid #e0ddd6" }}>
+
+          <div style={s.heading}>Our Commitment</div>
+          <div style={s.body}>We want you to be satisfied with your purchase. If ToolForge doesn't work as described, we'll make it right.</div>
+
+          <div style={s.heading}>Eligibility for a Refund</div>
+          <div style={s.body}>You are eligible for a full refund if:</div>
+          <div style={{ ...s.body, paddingLeft:14 }}>• You request it within <strong>7 days</strong> of your purchase date<br/>• You have <strong>not used any AI generations</strong> from your purchased pack or plan</div>
+
+          <div style={s.heading}>Non-Refundable Situations</div>
+          <div style={{ ...s.body, paddingLeft:14 }}>• Refund requests made more than 7 days after purchase<br/>• Packs or plans where any generations have been used<br/>• Dissatisfaction with AI output quality alone (we encourage you to try the free Groq tier before purchasing)</div>
+
+          <div style={s.heading}>How to Request a Refund</div>
+          <div style={s.body}>Contact us via toolforge.pro with your purchase email and order ID (found in your Lemon Squeezy receipt). We will process eligible refunds within 5 business days. Refunds are returned to the original payment method via Lemon Squeezy.</div>
+
+          <div style={s.heading}>Subscription Cancellations</div>
+          <div style={s.body}>Pro Monthly subscribers can cancel at any time via the Lemon Squeezy customer portal (link in your receipt email). Cancellation stops future billing immediately. You retain access until the end of your current billing period. Partial-month refunds are not issued for cancellations.</div>
+
+          <div style={s.heading}>Questions</div>
+          <div style={s.body}>If you have any questions about this policy, please reach out via toolforge.pro.</div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -264,6 +346,8 @@ export default function ToolForge() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [collapsed, setCollapsed] = useState({});
   const [showFaq, setShowFaq] = useState(window.location.pathname === "/faq");
+  const [showTos, setShowTos] = useState(window.location.pathname === "/terms");
+  const [showRefund, setShowRefund] = useState(window.location.pathname === "/refund");
   const [widgets, setWidgets] = useState({});
   const [activePill, setActivePill] = useState(null);
   const addWidget = (id, data) => setWidgets(w => ({ ...w, [id]: data }));
@@ -342,6 +426,8 @@ export default function ToolForge() {
   if (orderId) return <SuccessPage orderId={orderId} onDone={() => { window.history.replaceState({}, "", "/"); try { const s = localStorage.getItem("tf_pro_token"); if (s) setProToken(JSON.parse(s)); } catch {} window.location.reload(); }} />;
 
   if (showFaq) return <FAQPage onBack={() => { setShowFaq(false); window.history.pushState({}, "", "/"); }} />;
+  if (showTos) return <TosPage onBack={() => { setShowTos(false); window.history.pushState({}, "", "/"); }} />;
+  if (showRefund) return <RefundPage onBack={() => { setShowRefund(false); window.history.pushState({}, "", "/"); }} />;
 
   const toggleCollapse = (id) => setCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
   const filtered = ALL_TOOLS.filter(t => (activeCat === "all" || t.catId === activeCat) && (t.name.toLowerCase().includes(search.toLowerCase()) || t.desc.toLowerCase().includes(search.toLowerCase())));
@@ -456,7 +542,7 @@ export default function ToolForge() {
       </div>
 
       <div style={{ maxWidth:480, margin:"0 auto" }}>
-        <Footer onFaq={() => { setShowFaq(true); window.history.pushState({}, "", "/faq"); }} />
+        <Footer onFaq={() => { setShowFaq(true); window.history.pushState({}, "", "/faq"); }} onTos={() => { setShowTos(true); window.history.pushState({}, "", "/terms"); }} onRefund={() => { setShowRefund(true); window.history.pushState({}, "", "/refund"); }} />
       </div>
 
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
