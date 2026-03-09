@@ -58,7 +58,7 @@ const FAQ_ITEMS = [
   { q:"What's the difference between Groq AI and Claude Sonnet AI?", a:"Groq (free) uses the Llama 3.3 model — fast and capable for most tasks. Claude Sonnet AI (paid) is Anthropic's Claude model — it produces noticeably better, more nuanced writing. Worth it if you rely on the AI tools regularly." },
   { q:"What do I get with a paid plan?", a:"The One-Time Pack ($2.99) gives you 50 Claude Sonnet AI generations. The Pro Monthly ($7.99/mo) gives 400 generations per month and renews automatically. The Top-Up Pack ($2.99) adds 100 generations to your existing balance whenever you need more." },
   { q:"How do I access my account on a new device?", a:"There are no accounts or passwords. Just go to ToolForge, click \"Restore Access\" and enter the email you used to purchase. Your access will be restored instantly on any device, any browser." },
-  { q:"I bought a plan but can't access Claude — what do I do?", a:"Click \"Restore Access\" on the homepage and enter your purchase email. Your access will be restored instantly on any device." },
+  { q:"I bought a plan but can't access Claude — what do I do?", a:"Click \"Restore Access\" on the homepage and enter your purchase email. Your access will be restored instantly on any device. If you're still having trouble, email us at toolforgesupport@gmail.com." },
   { q:"Is my data private? Do you store my inputs?", a:"Your inputs are sent to the AI model to generate a response and are not stored on our servers. We don't sell data or show ads based on your inputs. Payments are handled entirely by Lemon Squeezy — we never see your card details." },
   { q:"How many tools are there and will more be added?", a:"There are currently 25 tools and we add more every week. Upcoming tools include a mortgage calculator, debt payoff calculator, currency converter and more." },
   { q:"What payment methods are accepted?", a:"All major credit and debit cards are accepted via Lemon Squeezy, our payment provider. Payments are secure and encrypted." },
@@ -81,6 +81,7 @@ function Footer({ onFaq, onTos, onRefund }) {
         <a href="https://toolforge.lemonsqueezy.com" target="_blank" rel="noreferrer" style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", textDecoration:"none" }}>Pricing</a>
         <span onClick={onTos} style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>Terms of Service</span>
         <span onClick={onRefund} style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>Refund Policy</span>
+        <a href="mailto:toolforgesupport@gmail.com" style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", textDecoration:"underline" }}>Contact</a>
       </div>
       <div style={{ fontSize:10, color:T.muted, fontFamily:"DM Sans, sans-serif", marginTop:14 }}>
         © {new Date().getFullYear()} ToolForge · Made with ☕
@@ -162,7 +163,7 @@ function TosPage({ onBack }) {
           <div style={s.body}>We reserve the right to update these Terms at any time. Continued use of the Service after changes constitutes acceptance of the new Terms.</div>
 
           <div style={s.heading}>9. Contact</div>
-          <div style={s.body}>For any questions regarding these Terms, please contact us via the ToolForge website at toolforge.pro.</div>
+          <div style={s.body}>For any questions regarding these Terms, please contact us at <strong>toolforgesupport@gmail.com</strong>.</div>
         </div>
       </div>
     </div>
@@ -192,7 +193,7 @@ function RefundPage({ onBack }) {
           <div style={{ ...s.body, paddingLeft:14 }}>• Refund requests made more than 3 days after purchase<br/>• Packs or plans where any generations have been used<br/>• Dissatisfaction with AI output quality alone (we encourage you to try the free Groq tier before purchasing)</div>
 
           <div style={s.heading}>How to Request a Refund</div>
-          <div style={s.body}>To request a refund, contact us via toolforge.pro and include the following:</div>
+          <div style={s.body}>To request a refund, email us at <strong>toolforgesupport@gmail.com</strong> and include the following:</div>
           <div style={{ ...s.body, paddingLeft:14 }}>• Your purchase email address<br/>• Your order ID (found in your Lemon Squeezy receipt email)</div>
           <div style={s.body}>We will verify your eligibility and process approved refunds within 3 business days. Once issued, the refund typically appears back on your card within <strong>5–10 business days</strong> depending on your bank or card provider. Refunds are returned to the original payment method via Lemon Squeezy.</div>
 
@@ -200,7 +201,7 @@ function RefundPage({ onBack }) {
           <div style={s.body}>Pro Monthly subscribers can cancel at any time via the Lemon Squeezy customer portal (link in your receipt email). Cancellation stops future billing immediately. You retain access until the end of your current billing period. Partial-month refunds are not issued for cancellations.</div>
 
           <div style={s.heading}>Questions</div>
-          <div style={s.body}>If you have any questions about this policy, please reach out via toolforge.pro.</div>
+          <div style={s.body}>If you have any questions about this policy, please email us at <strong>toolforgesupport@gmail.com</strong>.</div>
         </div>
       </div>
     </div>
@@ -281,7 +282,7 @@ function SuccessPage({ orderId, onDone }) {
         {status==="error" && <>
           <div style={{ fontSize:40, marginBottom:16 }}>⚠️</div>
           <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:18, color:T.ink, marginBottom:8 }}>Taking longer than expected</div>
-          <div style={{ fontSize:13, color:T.muted, marginBottom:20, fontFamily:"DM Sans, sans-serif", lineHeight:1.6 }}>Your payment was received! Check your email for your access token, or contact support.</div>
+          <div style={{ fontSize:13, color:T.muted, marginBottom:20, fontFamily:"DM Sans, sans-serif", lineHeight:1.6 }}>Your payment was received! Check your email for your access token, or contact us at toolforgesupport@gmail.com.</div>
           <button onClick={onDone} style={{ width:"100%", padding:"12px 0", borderRadius:10, border:"none", background:T.accent, color:"white", fontSize:14, fontFamily:"Syne, sans-serif", fontWeight:700, cursor:"pointer" }}>Back to ToolForge</button>
         </>}
       </div>
