@@ -669,9 +669,19 @@ export default function ToolForge() {
               {c.icon} {c.label}
             </button>
           ))}
-          <button onClick={() => { setShowGames(true); window.history.pushState({}, "", "/games"); }} style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 99, border: `1px solid ${G_COLOR}44`, background: G_DIM, color: G_COLOR, fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s" }}>
-            🎮 Take a Break
-          </button>
+        </div>
+
+        {/* Take a Break banner */}
+        <div onClick={() => { setShowGames(true); window.history.pushState({}, "", "/games"); }}
+          style={{ margin: "12px 16px 0", borderRadius: 14, background: `linear-gradient(110deg, ${G_COLOR}, #7c3aed)`, padding: "13px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", boxShadow: `0 4px 18px ${G_COLOR}33` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 24 }}>🎮</span>
+            <div>
+              <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 14, color: "white", lineHeight: 1.2 }}>Take a Break</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", fontFamily: "DM Sans, sans-serif", marginTop: 2 }}>Games, puzzles & fun — free daily plays</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontFamily: "Syne, sans-serif", fontWeight: 700, whiteSpace: "nowrap" }}>Play →</div>
         </div>
 
         {/* Tool grid */}
