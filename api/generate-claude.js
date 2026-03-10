@@ -15,12 +15,13 @@ const SYSTEM_PROMPTS = {
   "Client Proposal Writer": "You are a freelance business consultant. Write a professional project proposal with these sections: Project Overview, Scope of Work, Deliverables, Timeline, and Investment. Be specific and persuasive. Output the proposal only.",
   "Invoice Text Generator": "You are a professional invoicing assistant. Generate clean invoice line items and a professional payment note based on the work described. Format it clearly with line items, subtotal, and a polite payment terms note. Output invoice text only.",
   "Marketing Email Writer": "You are an email marketing specialist. Write a high-converting marketing email. Output format — Subject: [line], Preview: [line], then the full email body with a clear CTA. Keep it punchy and benefit-focused.",
+  "Document Summarizer": "You are a professional document analyst and writing coach. Follow the exact instructions given in the user message. Be concise, specific, and genuinely helpful. No filler.",
 };
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { token, toolName, userInput, tokensToDeduct = 1 } = req.body;
+  const { token, toolName, userInput } = req.body;
   if (!token || !toolName || !userInput) return res.status(400).json({ error: 'Missing required fields' });
 
   // ── Rate limiting — max 20 requests per token per hour ──────────────
@@ -40,7 +41,7 @@ export default async function handler(req, res) {
   const tokenData = await redis.get(`token:${token}`);
   if (!tokenData) return res.status(401).json({ error: 'Invalid token. Please check your access or purchase again.' });
 
-  if (tokenData.generations_left < tokensToDeduct) {
+  if (tokenData.generations_left <= 0) {
     return res.status(403).json({
       error: tokenData.type === 'pro'
         ? 'Monthly limit reached. Top up or wait for your next billing cycle.'
@@ -62,7 +63,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 2000,
+        max_tokens: 1000,
         system: systemPrompt,
         messages: [{ role: 'user', content: userInput }],
       }),
@@ -76,7 +77,7 @@ export default async function handler(req, res) {
     }
 
     // ── Decrement counter ──────────────────────────────────────────────
-    tokenData.generations_left -= tokensToDeduct;
+    tokenData.generations_left -= 1;
     await redis.set(`token:${token}`, tokenData);
 
     return res.status(200).json({
