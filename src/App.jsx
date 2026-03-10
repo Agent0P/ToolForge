@@ -22,6 +22,7 @@ const T = {
 const CATEGORIES = [
   { id: "writing", label: "Writing & AI", icon: "✍️", color: T.accent, colorDim: T.accentDim, tools: [
     { id: "summarize", icon: "🗂", name: "Document Summarizer", desc: "Summarize any file or text instantly" },
+    { id: "resume", icon: "📋", name: "Resume Reviewer", desc: "AI feedback to strengthen your CV" },
     { id: "cover", icon: "📄", name: "Cover Letter Generator", desc: "Tailored AI cover letters in seconds" },
     { id: "linkedin", icon: "🔗", name: "LinkedIn Bio Writer", desc: "Stand out with an AI-crafted bio" },
     { id: "cold", icon: "📧", name: "Cold Email Generator", desc: "Outreach emails that get replies" },
@@ -40,6 +41,7 @@ const CATEGORIES = [
     { id: "salary", icon: "📊", name: "Salary Negotiation Helper", desc: "Know your worth, negotiate better" },
     { id: "tip", icon: "🍽", name: "Tip & Bill Splitter", desc: "Split any bill instantly" },
     { id: "savings", icon: "🏦", name: "Savings Goal Calculator", desc: "Plan your way to any goal" },
+    { id: "bmi", icon: "⚖️", name: "BMI Calculator", desc: "Check your body mass index instantly" },
   ]},
   { id: "planning", label: "Planning & Time", icon: "📅", color: T.purple, colorDim: T.purpleDim, tools: [
     { id: "deadline", icon: "🗓", name: "Deadline Countdown", desc: "Days, hours, minutes to any date" },
@@ -51,6 +53,7 @@ const CATEGORIES = [
     { id: "unit", icon: "📏", name: "Unit Converter", desc: "Length, weight, temp & more" },
     { id: "timezone", icon: "🌍", name: "Timezone Converter", desc: "Convert times across the world instantly" },
     { id: "wordcount", icon: "📝", name: "Word Counter", desc: "Count words, reading time & more" },
+    { id: "qr", icon: "🔲", name: "QR Code Generator", desc: "Turn any link or text into a QR code" },
   ]},
 ];
 
@@ -861,6 +864,288 @@ function SuccessPage({ orderId, onDone }) {
 
 
 
+
+function BMICalc() {
+  const [unit, setUnit] = useState("metric");
+  const [heightCm, setHeightCm] = useState(175);
+  const [weightKg, setWeightKg] = useState(70);
+  const [heightFt, setHeightFt] = useState(5);
+  const [heightIn, setHeightIn] = useState(9);
+  const [weightLb, setWeightLb] = useState(154);
+
+  const bmi = unit === "metric"
+    ? (weightKg / ((heightCm / 100) ** 2)).toFixed(1)
+    : (703 * weightLb / ((heightFt * 12 + Number(heightIn)) ** 2)).toFixed(1);
+
+  const category = bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy Weight" : bmi < 30 ? "Overweight" : "Obese";
+  const catColor = bmi < 18.5 ? T.blue : bmi < 25 ? T.green : bmi < 30 ? "#f59e0b" : "#dc2626";
+
+  const ranges = [["Underweight","< 18.5",T.blue],["Healthy","18.5–24.9",T.green],["Overweight","25–29.9","#f59e0b"],["Obese","≥ 30","#dc2626"]];
+
+  return (
+    <div>
+      <div style={{ display:"flex", gap:6, marginBottom:14 }}>
+        {[["metric","Metric (kg/cm)"],["imperial","Imperial (lb/ft)"]].map(([val,label]) => (
+          <button key={val} onClick={() => setUnit(val)} style={{ flex:1, padding:"8px 0", borderRadius:9, border:`1.5px solid ${unit===val?T.blue:T.border}`, background:unit===val?T.blueDim:"white", color:unit===val?T.blue:T.muted, fontSize:12, fontFamily:"Syne, sans-serif", fontWeight:700, cursor:"pointer" }}>{label}</button>
+        ))}
+      </div>
+
+      {unit === "metric" ? (
+        <>
+          <Row label="Height (cm)"><NumInput val={heightCm} set={setHeightCm} /></Row>
+          <Row label="Weight (kg)"><NumInput val={weightKg} set={setWeightKg} /></Row>
+        </>
+      ) : (
+        <>
+          <Row label="Height">
+            <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+              <NumInput val={heightFt} set={setHeightFt} />
+              <span style={{ fontSize:12, color:T.muted }}>ft</span>
+              <NumInput val={heightIn} set={setHeightIn} />
+              <span style={{ fontSize:12, color:T.muted }}>in</span>
+            </div>
+          </Row>
+          <Row label="Weight (lb)"><NumInput val={weightLb} set={setWeightLb} /></Row>
+        </>
+      )}
+
+      <Result label="Your BMI" value={bmi} color={catColor} />
+      <div style={{ marginTop:6, padding:"10px 14px", borderRadius:10, background:`${catColor}11`, border:`1px solid ${catColor}44`, textAlign:"center" }}>
+        <span style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:14, color:catColor }}>{category}</span>
+      </div>
+
+      <div style={{ marginTop:14, display:"grid", gridTemplateColumns:"1fr 1fr", gap:6 }}>
+        {ranges.map(([name, range, color]) => (
+          <div key={name} style={{ padding:"8px 10px", borderRadius:9, background:category===name?`${color}15`:"white", border:`1px solid ${category===name?color:T.border}` }}>
+            <div style={{ fontSize:10, fontFamily:"Syne, sans-serif", fontWeight:700, color, marginBottom:2 }}>{name}</div>
+            <div style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>{range}</div>
+          </div>
+        ))}
+      </div>
+      <Tip>BMI is a general indicator — it doesn't account for muscle mass or body composition.</Tip>
+      <CopyButton text={`BMI: ${bmi} — ${category} — ToolForge`} />
+    </div>
+  );
+}
+
+function QRGenerator() {
+  const [input, setInput] = useState("https://toolforge.pro");
+  const [size, setSize] = useState(200);
+  const qrUrl = input.trim() ? `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(input.trim())}&margin=10` : null;
+
+  const download = async () => {
+    if (!qrUrl) return;
+    const res = await fetch(qrUrl);
+    const blob = await res.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "qrcode.png";
+    a.click();
+  };
+
+  return (
+    <div>
+      <Row label="URL or Text">
+        <input value={input} onChange={e => setInput(e.target.value)} placeholder="https://yoursite.com or any text" style={{ ...inputStyle, flex: 1 }} />
+      </Row>
+      <Row label="Size (px)">
+        <div style={{ display:"flex", gap:6 }}>
+          {[150,200,300,400].map(s => (
+            <button key={s} onClick={() => setSize(s)} style={{ flex:1, padding:"6px 0", borderRadius:8, border:`1px solid ${size===s?T.teal:T.border}`, background:size===s?"#f0fdfa":"white", color:size===s?T.teal:T.muted, fontSize:12, fontFamily:"Syne, sans-serif", fontWeight:700, cursor:"pointer" }}>{s}</button>
+          ))}
+        </div>
+      </Row>
+
+      {qrUrl && (
+        <div style={{ marginTop:16, display:"flex", flexDirection:"column", alignItems:"center", gap:14 }}>
+          <div style={{ padding:16, borderRadius:14, background:"white", border:`1px solid ${T.border}`, boxShadow:"0 2px 12px #0001" }}>
+            <img src={qrUrl} alt="QR Code" width={size} height={size} style={{ display:"block" }} />
+          </div>
+          <button onClick={download} style={{ padding:"10px 28px", borderRadius:10, border:"none", background:T.teal, color:"white", fontSize:13, fontFamily:"Syne, sans-serif", fontWeight:700, cursor:"pointer", letterSpacing:0.5 }}>
+            ⬇ Download PNG
+          </button>
+          <div style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", textAlign:"center" }}>Right-click the QR code to save, or use the button above</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResumeReviewer({ proToken, onNeedUpgrade, onTokenUpdate }) {
+  const [text, setText] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [fileError, setFileError] = useState("");
+  const [dragOver, setDragOver] = useState(false);
+  const [aiMode, setAiMode] = useState("groq");
+  const [output, setOutput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const [groqCount, setGroqCount] = useState(() => {
+    try { const s = localStorage.getItem("tf_groq_usage"); if (!s) return 0; const { date, count } = JSON.parse(s); return new Date().toDateString() === date ? count : 0; } catch { return 0; }
+  });
+  const groqAtLimit = groqCount >= 3;
+  const hasClaude = proToken && proToken.generations_left >= 2;
+  const canGenerate = text.trim().length > 100 && !loading && (aiMode === "groq" ? !groqAtLimit : hasClaude);
+
+  const SYSTEM_PROMPT = `You are an expert resume coach and recruiter with 15 years of experience. Review the resume provided and give honest, specific, actionable feedback.
+
+Respond with these sections:
+
+**Overall Impression**
+A 2-3 sentence honest take on the resume's current state.
+
+**Strengths**
+2-3 things the resume does well — be specific, not generic.
+
+**Critical Issues**
+The most important problems holding this resume back. Be direct and specific — not "add more detail" but "your work experience at Company X has no metrics or results — add numbers."
+
+**Improvements by Section**
+Go through each section (Summary, Experience, Skills, Education etc.) and give specific suggestions for each.
+
+**Missing Elements**
+What's absent that recruiters expect to see for this type of role?
+
+**Rewritten Bullet Example**
+Take one weak bullet point from the resume and rewrite it to be stronger (more impact, metrics, action verbs).
+
+Be honest and specific. Vague praise is useless. The goal is to actually help them get interviews.`;
+
+  const handleFile = async (file) => {
+    setFileError(""); setOutput("");
+    if (!file) return;
+    const name = file.name.toLowerCase();
+    if (name.endsWith(".txt")) {
+      const reader = new FileReader();
+      reader.onload = e => { setText(e.target.result); setFileName(file.name); };
+      reader.readAsText(file);
+    } else if (name.endsWith(".docx")) {
+      try {
+        const mammoth = await import("mammoth");
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        setText(result.value); setFileName(file.name);
+      } catch { setFileError("Could not read DOCX file. Try pasting the text manually."); }
+    } else {
+      setFileError("Only .txt and .docx files are supported.");
+    }
+  };
+
+  const truncate = (t) => t.length > 6000 ? t.slice(0, 6000) + "\n\n[Truncated]" : t;
+
+  const generate = async () => {
+    if (!canGenerate) return;
+    setLoading(true); setOutput(""); setError("");
+    const userContent = `${jobTitle ? `Target role: ${jobTitle}\n\n` : ""}Resume:\n\n${truncate(text)}`;
+
+    if (aiMode === "groq") {
+      try {
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${import.meta.env.VITE_GROQ_KEY || ""}` },
+          body: JSON.stringify({ model: "llama-3.3-70b-versatile", max_tokens: 1200, messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: userContent }] })
+        });
+        const data = await res.json();
+        const result = data.choices?.[0]?.message?.content;
+        if (!result) throw new Error("Empty");
+        setOutput(result);
+        const n = groqCount + 1; setGroqCount(n);
+        localStorage.setItem("tf_groq_usage", JSON.stringify({ date: new Date().toDateString(), count: n }));
+      } catch { setError("Generation failed. Please try again."); }
+    } else {
+      try {
+        const res = await fetch("/api/generate-claude", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: proToken.token, toolName: "Resume Reviewer", userInput: `${SYSTEM_PROMPT}\n\n${userContent}`, tokensToDeduct: 2 })
+        });
+        const data = await res.json();
+        if (!res.ok) { setError(data.error || "Generation failed."); setLoading(false); return; }
+        setOutput(data.result);
+        onTokenUpdate({ ...proToken, generations_left: data.generations_left });
+      } catch { setError("Server error. Please try again."); }
+    }
+    setLoading(false);
+  };
+
+  const renderOutput = (text) => {
+    return text.split("\n").map((line, i) => {
+      if (line.startsWith("**") && line.endsWith("**")) {
+        return <div key={i} style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:13, color:T.ink, marginTop:i===0?0:16, marginBottom:6 }}>{line.replace(/\*\*/g,"")}</div>;
+      }
+      if (line.startsWith("- ") || line.startsWith("• ")) {
+        return <div key={i} style={{ display:"flex", gap:8, marginBottom:4 }}><span style={{ color:T.accent, flexShrink:0 }}>✦</span><span style={{ fontSize:13, color:T.ink, fontFamily:"DM Sans, sans-serif", lineHeight:1.6 }}>{line.slice(2)}</span></div>;
+      }
+      if (line.trim() === "") return <div key={i} style={{ height:4 }} />;
+      return <div key={i} style={{ fontSize:13, color:T.ink, fontFamily:"DM Sans, sans-serif", lineHeight:1.7, marginBottom:2 }}>{line.replace(/\*\*/g,"")}</div>;
+    });
+  };
+
+  return (
+    <div>
+      <Row label="Target Job Title (optional)">
+        <input value={jobTitle} onChange={e => setJobTitle(e.target.value)} placeholder="e.g. Senior Product Manager" style={{ ...inputStyle, flex:1 }} />
+      </Row>
+
+      <div
+        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={e => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]); }}
+        onClick={() => document.getElementById("rr-file-input").click()}
+        style={{ marginBottom:10, padding:"14px", borderRadius:10, border:`2px dashed ${dragOver?T.accent:T.border}`, background:dragOver?T.accentDim:T.bg, textAlign:"center", cursor:"pointer", transition:"all 0.15s" }}
+      >
+        <input id="rr-file-input" type="file" accept=".txt,.docx" style={{ display:"none" }} onChange={e => handleFile(e.target.files[0])} />
+        <div style={{ fontSize:20, marginBottom:4 }}>📂</div>
+        <div style={{ fontSize:12, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>
+          {fileName ? <><strong style={{ color:T.accent }}>{fileName}</strong> loaded</> : <>Drop your <strong>.txt</strong> or <strong>.docx</strong> resume, or click to browse</>}
+        </div>
+      </div>
+      {fileError && <div style={{ marginBottom:8, padding:"8px 12px", borderRadius:8, background:"#fef2f2", border:"1px solid #fca5a5", fontSize:12, color:"#dc2626", fontFamily:"DM Sans, sans-serif" }}>{fileError}</div>}
+
+      <textarea value={text} onChange={e => { setText(e.target.value); setFileName(""); setOutput(""); }} placeholder="Or paste your resume text here…" rows={6} style={{ width:"100%", boxSizing:"border-box", padding:"10px 12px", borderRadius:10, border:`1px solid ${T.border}`, fontSize:13, fontFamily:"DM Sans, sans-serif", resize:"vertical", outline:"none", color:T.ink, lineHeight:1.6, marginBottom:12 }} />
+
+      <div style={{ display:"flex", gap:8, marginBottom:12 }}>
+        <div onClick={() => setAiMode("groq")} style={{ flex:1, padding:"10px 12px", borderRadius:10, border:`1.5px solid ${aiMode==="groq"?T.green:T.border}`, background:aiMode==="groq"?T.greenDim:"white", cursor:"pointer", textAlign:"center" }}>
+          <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:aiMode==="groq"?T.green:T.muted }}>🆓 Free (Groq AI)</div>
+          <div style={{ fontSize:10, color:aiMode==="groq"?T.green:T.muted, marginTop:2 }}>{groqAtLimit?"Limit reached today":`${groqCount}/3 used today`}</div>
+        </div>
+        <div onClick={() => { if (!hasClaude) onNeedUpgrade(); else setAiMode("claude"); }} style={{ flex:1, padding:"10px 12px", borderRadius:10, border:`1.5px solid ${aiMode==="claude"?T.gold:T.border}`, background:aiMode==="claude"?T.goldDim:"white", cursor:"pointer", textAlign:"center" }}>
+          <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:aiMode==="claude"?T.gold:T.muted }}>✦ Premium (Claude Sonnet)</div>
+          <div style={{ fontSize:10, color:aiMode==="claude"?T.gold:T.muted, marginTop:2 }}>{hasClaude?`${proToken.generations_left} left · 2 tokens`:"Unlock from $2.99"}</div>
+        </div>
+      </div>
+
+      {aiMode==="groq" && groqAtLimit && <div style={{ marginBottom:10, padding:"8px 12px", borderRadius:8, background:T.accentDim, border:`1px solid ${T.accent}44`, fontSize:11, color:T.accent, fontFamily:"DM Sans, sans-serif" }}>Daily free limit reached. Resets at midnight — or unlock Premium Claude now.</div>}
+      {text.trim().length > 0 && text.trim().length < 100 && <div style={{ marginBottom:8, padding:"8px 12px", borderRadius:8, background:"#fef2f2", border:"1px solid #fca5a5", fontSize:11, color:"#dc2626", fontFamily:"DM Sans, sans-serif" }}>Paste more of your resume for a useful review.</div>}
+
+      <button onClick={generate} disabled={!canGenerate} style={{ width:"100%", padding:"12px 0", borderRadius:10, border:"none", background:!canGenerate?T.border:aiMode==="claude"?T.gold:T.green, color:!canGenerate?T.muted:"white", fontSize:13, fontFamily:"Syne, sans-serif", fontWeight:700, cursor:canGenerate?"pointer":"default", letterSpacing:0.5 }}>
+        {loading?"Reviewing…":aiMode==="claude"?"✦ Review with Claude Sonnet · 2 tokens":"Review with Groq AI"}
+      </button>
+
+      {error && <div style={{ marginTop:10, padding:"9px 12px", borderRadius:8, background:"#fee2e2", border:"1px solid #fca5a5", fontSize:12, color:"#dc2626", fontFamily:"DM Sans, sans-serif" }}>{error}</div>}
+
+      {loading && (
+        <div style={{ marginTop:16, padding:"20px", borderRadius:12, background:T.bg, border:`1px solid ${T.border}`, textAlign:"center" }}>
+          <div style={{ display:"flex", justifyContent:"center", gap:6, marginBottom:10 }}>
+            {[0,1,2].map(i => <div key={i} style={{ width:8, height:8, borderRadius:"50%", background:aiMode==="claude"?T.gold:T.green, animation:`tf-bounce 1.2s ease-in-out ${i*0.2}s infinite` }} />)}
+          </div>
+          <div style={{ fontSize:13, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>Reading your resume…</div>
+        </div>
+      )}
+
+      {output && !loading && (
+        <div style={{ marginTop:14 }}>
+          <div style={{ padding:"16px", borderRadius:12, background:T.bg, border:`1px solid ${T.border}` }}>
+            {renderOutput(output)}
+          </div>
+          <CopyButton text={output} />
+        </div>
+      )}
+    </div>
+  );
+}
 function DocumentSummarizer({ proToken, onNeedUpgrade, onTokenUpdate }) {
   const [text, setText] = useState("");
   const [fileName, setFileName] = useState("");
@@ -1213,7 +1498,7 @@ function ToolView({ tool, onBack, proToken, onNeedUpgrade, onTokenUpdate }) {
   const cat = CATEGORIES.find(c => c.id === tool.catId);
   const renderTool = () => {
     switch (tool.id) {
-      case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "deadline": return <DeadlineCountdown />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper />; case "pomodoro": return <PomodoroTimer />; case "wordcount": return <WordCounter />; case "summarize": return <DocumentSummarizer proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
+      case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "deadline": return <DeadlineCountdown />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper />; case "pomodoro": return <PomodoroTimer />; case "wordcount": return <WordCounter />; case "bmi": return <BMICalc />; case "qr": return <QRGenerator />; case "resume": return <ResumeReviewer proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />; case "summarize": return <DocumentSummarizer proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
       default: if (AI_TOOLS.includes(tool.name)) return <AIToolPlaceholder name={tool.name} proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
       return <div style={{ textAlign:"center", padding:"30px 0", color:T.muted, fontFamily:"DM Sans, sans-serif" }}><div style={{ fontSize:36, marginBottom:10 }}>{tool.icon}</div><div style={{ fontSize:14 }}>Coming soon!</div></div>;
     }
@@ -1271,7 +1556,7 @@ const FAQ_ITEMS = [
   { q:"How do I access my account on a new device?", a:"There are no accounts or passwords. Just go to ToolForge, click \"Restore Access\" and enter the email you used to purchase. Your access will be restored instantly on any device, any browser." },
   { q:"I bought a plan but can't access Claude — what do I do?", a:"Click \"Restore Access\" on the homepage and enter your purchase email. Your access will be restored instantly on any device." },
   { q:"Is my data private? Do you store my inputs?", a:"Your inputs are sent to the AI model to generate a response and are not stored on our servers. We don't sell data or show ads based on your inputs. Payments are handled entirely by Lemon Squeezy — we never see your card details." },
-  { q:"How many tools are there and will more be added?", a:"There are currently 21 tools and we add more every week. Upcoming tools include a BMI calculator, word counter, QR code generator, mortgage calculator and more. There's also a fun \"Take a Break\" games section coming soon." },
+  { q:"How many tools are there and will more be added?", a:"There are currently 27 tools and we add more regularly. Tools span AI writing, calculators, planning, utilities and more. There's also a fun \"Take a Break\" games section coming soon." },
   { q:"What payment methods are accepted?", a:"All major credit and debit cards are accepted via Lemon Squeezy, our payment provider. Payments are secure and encrypted." },
   { q:"Can I cancel my Pro subscription?", a:"Yes, anytime. Log into your Lemon Squeezy customer portal (link in your receipt email) and cancel with one click. You keep access until the end of your billing period." },
   { q:"Will there be ads on ToolForge?", a:"Not right now. The site is funded by the paid AI plans. If ads are ever introduced in the future, they'll be minimal and non-intrusive." },
