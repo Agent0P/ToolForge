@@ -776,6 +776,156 @@ function AIToolPlaceholder({ name, proToken, onNeedUpgrade, onTokenUpdate }) {
   );
 }
 
+
+/* ── Games registry ── */
+const G_COLOR = "#4f46e5";
+const G_DIM   = "#eef2ff";
+const GAMES = [
+  { id:"tictactoe",    icon:"⭕", name:"Tic-Tac-Toe",       desc:"Classic 3×3 — can you beat the AI?",             free:true,  tokens:0, hasDifficulty:true,  available:true  },
+  { id:"wordscramble", icon:"🔤", name:"Word Scramble",     desc:"Unscramble the word before time runs out",       free:true,  tokens:0, hasDifficulty:false, available:false },
+  { id:"dottodot",     icon:"✏️", name:"Dot-to-Dot",        desc:"Connect the dots to reveal the shape",           free:true,  tokens:0, hasDifficulty:false, available:false },
+  { id:"fourinarow",   icon:"🔴", name:"4-in-a-Row",        desc:"Drop pieces and connect four — vs AI",           free:false, tokens:1, hasDifficulty:true,  available:false },
+  { id:"battleships",  icon:"🚢", name:"Battleships",       desc:"Sink the enemy fleet before yours is gone",      free:false, tokens:1, hasDifficulty:true,  available:false },
+  { id:"runner",       icon:"🏃", name:"Endless Runner",    desc:"Dodge obstacles and survive as long as you can", free:false, tokens:1, hasDifficulty:true,  available:false },
+  { id:"rocklauncher", icon:"🪨", name:"Rock Launcher",     desc:"Aim, fire and knock down the structures",        free:false, tokens:2, hasDifficulty:false, available:false },
+  { id:"shooter",      icon:"🚀", name:"Top-Down Shooter",  desc:"Survive endless waves of enemies",               free:false, tokens:2, hasDifficulty:true,  available:false },
+];
+
+/* ── Games helpers ── */
+function getGameCounts() {
+  try {
+    const s = localStorage.getItem("tf_games_usage");
+    if (!s) return {};
+    const { date, counts } = JSON.parse(s);
+    return new Date().toDateString() === date ? counts : {};
+  } catch { return {}; }
+}
+function saveGameCount(id, counts) {
+  localStorage.setItem("tf_games_usage", JSON.stringify({ date: new Date().toDateString(), counts }));
+}
+
+function GameCard({ game, count, locked, comingSoon, onClick }) {
+  const [hov, setHov] = useState(false);
+  const playsLeft = Math.max(0, 3 - count);
+  return (
+    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      onClick={onClick}
+      style={{ position:"relative", borderRadius:14, border:`1.5px solid ${hov && !comingSoon ? G_COLOR : T.border}`, background: hov && !comingSoon ? G_DIM : T.card, cursor: comingSoon ? "default" : "pointer", transition:"all 0.18s", overflow:"hidden", boxShadow: hov && !comingSoon ? `0 4px 20px ${G_COLOR}18` : "0 1px 6px #0f0f0d08" }}>
+
+      {/* Blur overlay for locked premium */}
+      {locked && !comingSoon && (
+        <div style={{ position:"absolute", inset:0, backdropFilter:"blur(3px)", background:"rgba(255,255,255,0.5)", zIndex:2, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:6, borderRadius:13 }}>
+          <div style={{ fontSize:22 }}>🔒</div>
+          <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:10, color:G_COLOR, background:G_DIM, padding:"3px 10px", borderRadius:99, border:`1px solid ${G_COLOR}44` }}>PREMIUM</div>
+          <div style={{ fontSize:10, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>{game.tokens} token{game.tokens > 1 ? "s" : ""} / game</div>
+        </div>
+      )}
+
+      <div style={{ padding:"14px 12px", filter: locked && !comingSoon ? "blur(1px)" : "none" }}>
+        <div style={{ fontSize:26, marginBottom:8 }}>{game.icon}</div>
+        <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:T.ink, marginBottom:4, lineHeight:1.3 }}>{game.name}</div>
+        <div style={{ fontSize:11, color:T.muted, lineHeight:1.4, marginBottom:8 }}>{game.desc}</div>
+        <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+          {comingSoon && (
+            <span style={{ fontSize:9, padding:"2px 7px", borderRadius:99, background:"#f1f5f9", color:"#94a3b8", fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.5 }}>COMING SOON</span>
+          )}
+          {!comingSoon && game.free && !locked && (
+            <span style={{ fontSize:9, padding:"2px 7px", borderRadius:99, background:T.greenDim, color:T.green, fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.5 }}>
+              {playsLeft}/3 FREE TODAY
+            </span>
+          )}
+          {!comingSoon && !game.free && !locked && (
+            <span style={{ fontSize:9, padding:"2px 7px", borderRadius:99, background:G_DIM, color:G_COLOR, fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.5 }}>
+              {game.tokens} TOKEN{game.tokens > 1 ? "S" : ""}
+            </span>
+          )}
+          {game.hasDifficulty && !comingSoon && (
+            <span style={{ fontSize:9, padding:"2px 7px", borderRadius:99, background:T.accentDim, color:T.accent, fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.5 }}>DIFFICULTY</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GamesSection({ proToken, onNeedUpgrade, onTokenUpdate }) {
+  const [activeGame, setActiveGame] = useState(null);
+  const [counts, setCounts] = useState(getGameCounts);
+  const hasClaude = proToken && proToken.generations_left > 0;
+
+  const startGame = (game) => {
+    if (!game.available) return;
+    if (game.free) {
+      const c = counts[game.id] || 0;
+      if (c >= 3 && !hasClaude) { onNeedUpgrade(); return; }
+      if (!hasClaude) {
+        const newCounts = { ...counts, [game.id]: c + 1 };
+        setCounts(newCounts);
+        saveGameCount(game.id, newCounts);
+      }
+      setActiveGame(game);
+    } else {
+      if (!hasClaude || proToken.generations_left < game.tokens) { onNeedUpgrade(); return; }
+      setActiveGame(game);
+    }
+  };
+
+  if (activeGame) {
+    const renderGame = () => {
+      if (activeGame.id === "tictactoe") return <TicTacToe proToken={proToken} onTokenUpdate={onTokenUpdate} />;
+      return <div style={{ textAlign:"center", padding:"40px 0", color:T.muted, fontFamily:"DM Sans, sans-serif" }}>Coming soon!</div>;
+    };
+    return (
+      <div>
+        <button onClick={() => setActiveGame(null)} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", color:T.muted, fontSize:13, cursor:"pointer", fontFamily:"DM Sans, sans-serif", marginBottom:16, padding:0 }}>← Back to Games</button>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
+          <div style={{ width:46, height:46, borderRadius:12, background:G_DIM, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22 }}>{activeGame.icon}</div>
+          <div>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:17, color:T.ink }}>{activeGame.name}</div>
+            <div style={{ fontSize:12, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>{activeGame.desc}</div>
+          </div>
+        </div>
+        {renderGame()}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom:16, paddingBottom:14, borderBottom:`1px solid ${T.border}` }}>
+        <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.ink, marginBottom:4 }}>🎮 Take a Break</div>
+        <div style={{ fontSize:12, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>You've earned it. Free games reset daily at midnight.</div>
+        {hasClaude && <div style={{ marginTop:8, padding:"6px 12px", borderRadius:8, background:G_DIM, border:`1px solid ${G_COLOR}44`, display:"inline-flex", alignItems:"center", gap:6 }}><span style={{ fontSize:10, fontFamily:"Syne, sans-serif", fontWeight:700, color:G_COLOR }}>✦ Token holder</span><span style={{ fontSize:10, color:G_COLOR, fontFamily:"DM Sans, sans-serif" }}>Unlimited free games · {proToken.generations_left} tokens left</span></div>}
+      </div>
+
+      <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:T.green, marginBottom:8, letterSpacing:0.5 }}>🆓 FREE GAMES</div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
+        {GAMES.filter(g => g.free).map(game => (
+          <GameCard key={game.id} game={game} count={counts[game.id] || 0}
+            locked={(counts[game.id] || 0) >= 3 && !hasClaude}
+            comingSoon={!game.available}
+            onClick={() => startGame(game)} />
+        ))}
+      </div>
+
+      <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:G_COLOR, marginBottom:8, letterSpacing:0.5 }}>✦ PREMIUM GAMES</div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+        {GAMES.filter(g => !g.free).map(game => (
+          <GameCard key={game.id} game={game} count={0}
+            locked={!hasClaude || (proToken?.generations_left || 0) < game.tokens}
+            comingSoon={!game.available}
+            onClick={() => game.available ? startGame(game) : null} />
+        ))}
+      </div>
+
+      <div style={{ marginTop:20, padding:14, borderRadius:12, background:G_DIM, border:`1px solid ${G_COLOR}22`, textAlign:"center" }}>
+        <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:G_COLOR, marginBottom:3 }}>More games dropping weekly</div>
+        <div style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>4-in-a-Row · Battleships · Endless Runner · and more</div>
+      </div>
+    </div>
+  );
+}
+
 function UpgradeModal({ onClose }) {
   const onetimeUrl = import.meta.env.VITE_LS_ONETIME_URL || "#";
   const proUrl = import.meta.env.VITE_LS_PRO_URL || "#";
@@ -1607,7 +1757,6 @@ function FAQPage({ onBack }) {
 
 export default function ToolForge() {
   const [activeCat, setActiveCat] = useState("all");
-  const [showGames, setShowGames] = useState(false);
   const [activeTool, setActiveTool] = useState(null);
   const [search, setSearch] = useState("");
   const [showUpgrade, setShowUpgrade] = useState(false);
@@ -1624,23 +1773,6 @@ export default function ToolForge() {
 
   if (showFaq) return <FAQPage onBack={() => { setShowFaq(false); window.history.pushState({}, "", "/"); }} />;
 
-  if (showGames) return (
-    <>
-      <div style={{ maxWidth:480, margin:"0 auto", padding:20, background:T.bg, minHeight:"100vh" }}>
-        <button onClick={() => setShowGames(false)} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", color:T.muted, fontSize:13, cursor:"pointer", fontFamily:"DM Sans, sans-serif", marginBottom:16, padding:0 }}>← Back to tools</button>
-        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
-          <div style={{ width:46, height:46, borderRadius:12, background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22 }}>🎮</div>
-          <div>
-            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:"#1e1b4b" }}>Take a Break</div>
-            <div style={{ fontSize:12, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>Free games — no tokens needed</div>
-          </div>
-        </div>
-        <div style={{ background:T.card, borderRadius:16, padding:20, border:`1px solid ${T.border}`, boxShadow:"0 2px 24px #0f0f0d0a" }}>
-          <TicTacToe />
-        </div>
-      </div>
-    </>
-  );
 
   const toggleCollapse = (id) => setCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
 
@@ -1719,20 +1851,16 @@ export default function ToolForge() {
               {c.icon} {c.label}
             </button>
           ))}
-        </div>
-
-        {/* Games banner */}
-        <div onClick={() => setShowGames(true)} style={{ margin:"10px 16px 0", padding:"14px 18px", borderRadius:14, background:"linear-gradient(135deg,#4f46e5,#7c3aed)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-          <div>
-            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:14, color:"white", marginBottom:2 }}>🎮 Take a Break</div>
-            <div style={{ fontSize:11, color:"rgba(255,255,255,0.8)", fontFamily:"DM Sans, sans-serif" }}>Free games — Tic Tac Toe & more coming</div>
-          </div>
-          <div style={{ fontSize:20 }}>→</div>
+          <button onClick={() => setActiveCat("games")} style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 5, padding: "6px 13px", borderRadius: 99, border: `1.5px solid ${activeCat === "games" ? G_COLOR : T.border}`, background: activeCat === "games" ? G_DIM : "white", color: activeCat === "games" ? G_COLOR : T.muted, fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s" }}>
+            🎮 Take a Break
+          </button>
         </div>
 
         {/* Tool grid */}
         <div style={{ padding: 16 }}>
-          {search ? (
+          {activeCat === "games" ? (
+            <GamesSection proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} />
+          ) : search ? (
             <>
               <div style={{ fontSize: 12, color: T.muted, marginBottom: 12 }}>{filtered.length} result{filtered.length !== 1 ? "s" : ""} for "{search}"</div>
               <div className="tf-grid" style={gridStyle}>
@@ -1770,6 +1898,7 @@ export default function ToolForge() {
             <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: T.ink, marginBottom: 4 }}>✦ More tools dropping weekly</div>
             <div style={{ fontSize: 12, color: T.muted }}>Debt payoff · Resume bullets · Pricing guide · and 20+ more</div>
           </div>
+          )}
         </div>
       </div>
       <div style={{ maxWidth:480, margin:"0 auto" }}>
