@@ -1635,7 +1635,7 @@ export default function ToolForge() {
             <div style={{ fontSize:12, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>Free games — no tokens needed</div>
           </div>
         </div>
-        <div style={{ background:T.card, borderRadius:16, padding:20, border:, boxShadow:"0 2px 24px #0f0f0d0a" }}>
+        <div style={{ background:T.card, borderRadius:16, padding:20, border:`1px solid ${T.border}`, boxShadow:"0 2px 24px #0f0f0d0a" }}>
           <TicTacToe />
         </div>
       </div>
