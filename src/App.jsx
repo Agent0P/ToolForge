@@ -943,9 +943,7 @@ Be honest. The goal is to genuinely help the writer improve, not to flatter them
     }
   };
 
-  const truncate = (t) => t.length > 6000 ? t.slice(0, 6000) + "
-
-[Document truncated for analysis]" : t;
+  const truncate = (t) => t.length > 6000 ? t.slice(0, 6000) + "\n\n[Document truncated for analysis]" : t;
 
   const generate = async () => {
     if (!canGenerate) return;
@@ -1045,15 +1043,16 @@ ${userContent}`, tokensToDeduct: 1 })
         </div>
         <div onClick={() => { if (!hasClaude) onNeedUpgrade(); else setAiMode("claude"); }} style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${aiMode === "claude" ? T.gold : T.border}`, background: aiMode === "claude" ? T.goldDim : "white", cursor: "pointer", textAlign: "center" }}>
           <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: aiMode === "claude" ? T.gold : T.muted }}>✦ Premium (Claude Sonnet)</div>
-          <div style={{ fontSize: 10, color: aiMode === "claude" ? T.gold : T.muted, marginTop: 2 }}>{hasClaude ? `${proToken.generations_left} left · 1 token` : "Unlock from $2.99"}</div>
+          <div style={{ fontSize: 10, color: aiMode === "claude" ? T.gold : T.muted, marginTop: 2 }}>{hasClaude ? `${proToken.generations_left} left · ${analysisMode === "clarity" ? 2 : 1} token` : "Unlock from $2.99"}</div>
         </div>
       </div>
 
       {aiMode === "groq" && groqAtLimit && <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 8, background: T.accentDim, border: `1px solid ${T.accent}44`, fontSize: 11, color: T.accent, fontFamily: "DM Sans, sans-serif" }}>Daily free limit reached. Resets at midnight — or unlock Premium Claude now.</div>}
+      {text.trim().length > 6000 && <div style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, background: "#fef9c3", border: "1px solid #fde047", fontSize: 11, color: "#854d0e", fontFamily: "DM Sans, sans-serif" }}>⚠ Your document is over 6,000 characters — only the first 6,000 will be analysed.</div>}
       {text.trim().length > 0 && text.trim().length < 50 && <div style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, background: "#fef2f2", border: "1px solid #fca5a5", fontSize: 11, color: "#dc2626", fontFamily: "DM Sans, sans-serif" }}>Text is too short to summarize — paste more content.</div>}
 
       <button onClick={generate} disabled={!canGenerate} style={{ width: "100%", padding: "12px 0", borderRadius: 10, border: "none", background: !canGenerate ? T.border : aiMode === "claude" ? T.gold : T.green, color: !canGenerate ? T.muted : "white", fontSize: 13, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: canGenerate ? "pointer" : "default", letterSpacing: 0.5 }}>
-        {loading ? "Analysing…" : aiMode === "claude" ? `✦ Analyse with Claude Sonnet · 1 token` : analysisMode === "summary" ? "Summarize with Groq AI" : "Check Clarity with Groq AI"}
+        {loading ? "Analysing…" : aiMode === "claude" ? `✦ Analyse with Claude Sonnet · ${analysisMode === "clarity" ? 2 : 1} token` : analysisMode === "summary" ? "Summarize with Groq AI" : "Check Clarity with Groq AI"}
       </button>
 
       {error && <div style={{ marginTop: 10, padding: "9px 12px", borderRadius: 8, background: "#fee2e2", border: "1px solid #fca5a5", fontSize: 12, color: "#dc2626", fontFamily: "DM Sans, sans-serif" }}>{error}</div>}
