@@ -986,8 +986,7 @@ ${userContent}`, tokensToDeduct: 1 })
   };
 
   const renderOutput = (text) => {
-    return text.split("
-").map((line, i) => {
+    return text.split("\n").map((line, i) => {
       if (line.startsWith("**") && line.endsWith("**")) {
         return <div key={i} style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 13, color: T.ink, marginTop: i === 0 ? 0 : 16, marginBottom: 6 }}>{line.replace(/\*\*/g, "")}</div>;
       }
