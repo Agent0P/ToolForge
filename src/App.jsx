@@ -1086,8 +1086,7 @@ function WordCounter() {
   const chars = text.length;
   const charsNoSpace = text.replace(/\s/g, "").length;
   const sentences = text.trim() ? text.split(/[.!?]+/).filter(s => s.trim()).length : 0;
-  const paragraphs = text.trim() ? text.split(/
-+/).filter(p => p.trim()).length : 0;
+  const paragraphs = text.trim() ? text.split(/\n+/).filter(p => p.trim()).length : 0;
   const readMins = Math.ceil(words / 238);
   const speakMins = Math.ceil(words / 130);
 
