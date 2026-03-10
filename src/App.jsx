@@ -21,6 +21,7 @@ const T = {
 
 const CATEGORIES = [
   { id: "writing", label: "Writing & AI", icon: "✍️", color: T.accent, colorDim: T.accentDim, tools: [
+    { id: "summarize", icon: "🗂", name: "Document Summarizer", desc: "Summarize any file or text instantly" },
     { id: "cover", icon: "📄", name: "Cover Letter Generator", desc: "Tailored AI cover letters in seconds" },
     { id: "linkedin", icon: "🔗", name: "LinkedIn Bio Writer", desc: "Stand out with an AI-crafted bio" },
     { id: "cold", icon: "📧", name: "Cold Email Generator", desc: "Outreach emails that get replies" },
@@ -859,6 +860,224 @@ function SuccessPage({ orderId, onDone }) {
 }
 
 
+
+function DocumentSummarizer({ proToken, onNeedUpgrade, onTokenUpdate }) {
+  const [text, setText] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [fileError, setFileError] = useState("");
+  const [dragOver, setDragOver] = useState(false);
+  const [analysisMode, setAnalysisMode] = useState("summary"); // "summary" | "clarity"
+  const [aiMode, setAiMode] = useState("groq");
+  const [output, setOutput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const [groqCount, setGroqCount] = useState(() => {
+    try { const s = localStorage.getItem("tf_groq_usage"); if (!s) return 0; const { date, count } = JSON.parse(s); return new Date().toDateString() === date ? count : 0; } catch { return 0; }
+  });
+  const groqAtLimit = groqCount >= 3;
+  const hasClaude = proToken && proToken.generations_left >= 1;
+  const canGenerate = text.trim().length > 50 && !loading && (aiMode === "groq" ? !groqAtLimit : hasClaude);
+
+  const PROMPTS = {
+    summary: `You are a professional document analyst. The user has provided a document or piece of text. Your job is to give a clear, structured summary.
+
+Respond with these sections:
+
+**What This Is**
+One sentence describing what type of document this is and its purpose.
+
+**Summary**
+A clear 3-5 sentence summary of the content. Write it so someone who has never seen the document understands what it covers.
+
+**Key Points**
+5-7 bullet points of the most important information, decisions, arguments or facts.
+
+**Main Conclusion / Takeaway**
+What is the ultimate message or conclusion of this document?
+
+Be concise. No filler. Do not say things like "the document mentions" — just state the content directly.`,
+
+    clarity: `You are a professional writing coach and communications expert. The user wants to know how clearly their writing communicates their intended message — and how to make it better.
+
+Respond with these sections:
+
+**What I Understood**
+Explain in your own words what you understood this document to be saying. Be honest — write what the text actually communicates to a fresh reader, not what the author may have intended.
+
+**Core Message**
+In one sentence: what is the single main point this document is trying to make?
+
+**What Works Well**
+2-3 things the writing does effectively — structure, clarity, specifics, tone, etc.
+
+**What's Unclear or Missing**
+Be direct and specific. What confused you? What felt vague? What questions were left unanswered? What assumptions did the author make that a reader might not share?
+
+**Specific Improvements**
+3-5 concrete, actionable suggestions to make the message clearer and more impactful. Be specific — not "add more detail" but "the second paragraph assumes the reader knows X — add one sentence explaining it.'
+
+**Revised Opening Line (optional)**
+If the opening could be stronger, suggest an improved version.
+
+Be honest. The goal is to genuinely help the writer improve, not to flatter them.`
+  };
+
+  const handleFile = async (file) => {
+    setFileError(""); setOutput("");
+    if (!file) return;
+    const name = file.name.toLowerCase();
+    if (name.endsWith(".txt")) {
+      const reader = new FileReader();
+      reader.onload = e => { setText(e.target.result); setFileName(file.name); };
+      reader.readAsText(file);
+    } else if (name.endsWith(".docx")) {
+      try {
+        const mammoth = await import("mammoth");
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        setText(result.value); setFileName(file.name);
+      } catch { setFileError("Could not read DOCX file. Try copying the text manually."); }
+    } else {
+      setFileError("Only .txt and .docx files are supported.");
+    }
+  };
+
+  const truncate = (t) => t.length > 6000 ? t.slice(0, 6000) + "
+
+[Document truncated for analysis]" : t;
+
+  const generate = async () => {
+    if (!canGenerate) return;
+    setLoading(true); setOutput(""); setError("");
+    const systemPrompt = PROMPTS[analysisMode];
+    const userContent = `Here is the document to analyse:
+
+${truncate(text)}`;
+
+    if (aiMode === "groq") {
+      try {
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${import.meta.env.VITE_GROQ_KEY || ""}` },
+          body: JSON.stringify({ model: "llama-3.3-70b-versatile", max_tokens: 1200, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userContent }] })
+        });
+        const data = await res.json();
+        const result = data.choices?.[0]?.message?.content;
+        if (!result) throw new Error("Empty");
+        setOutput(result);
+        const n = groqCount + 1; setGroqCount(n);
+        localStorage.setItem("tf_groq_usage", JSON.stringify({ date: new Date().toDateString(), count: n }));
+      } catch { setError("Generation failed. Please try again."); }
+    } else {
+      try {
+        const res = await fetch("/api/generate-claude", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: proToken.token, toolName: "Document Summarizer", userInput: `${systemPrompt}
+
+${userContent}`, tokensToDeduct: 1 })
+        });
+        const data = await res.json();
+        if (!res.ok) { setError(data.error || "Generation failed."); setLoading(false); return; }
+        setOutput(data.result);
+        onTokenUpdate({ ...proToken, generations_left: data.generations_left });
+      } catch { setError("Server error. Please try again."); }
+    }
+    setLoading(false);
+  };
+
+  const renderOutput = (text) => {
+    return text.split("
+").map((line, i) => {
+      if (line.startsWith("**") && line.endsWith("**")) {
+        return <div key={i} style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 13, color: T.ink, marginTop: i === 0 ? 0 : 16, marginBottom: 6 }}>{line.replace(/\*\*/g, "")}</div>;
+      }
+      if (line.startsWith("- ") || line.startsWith("• ")) {
+        return <div key={i} style={{ display: "flex", gap: 8, marginBottom: 4 }}><span style={{ color: T.accent, flexShrink: 0 }}>✦</span><span style={{ fontSize: 13, color: T.ink, fontFamily: "DM Sans, sans-serif", lineHeight: 1.6 }}>{line.slice(2)}</span></div>;
+      }
+      if (line.trim() === "") return <div key={i} style={{ height: 4 }} />;
+      return <div key={i} style={{ fontSize: 13, color: T.ink, fontFamily: "DM Sans, sans-serif", lineHeight: 1.7, marginBottom: 2 }}>{line.replace(/\*\*/g, "")}</div>;
+    });
+  };
+
+  return (
+    <div>
+      {/* Analysis mode selector */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+        {[["summary", "📄", "What is this?", "Summary & key points"],["clarity", "🔍", "Clarity Check", "Improve your message"]].map(([val, icon, label, sub]) => (
+          <div key={val} onClick={() => { setAnalysisMode(val); setOutput(""); }} style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${analysisMode === val ? T.accent : T.border}`, background: analysisMode === val ? T.accentDim : "white", cursor: "pointer", textAlign: "center" }}>
+            <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: analysisMode === val ? T.accent : T.muted }}>{icon} {label}</div>
+            <div style={{ fontSize: 10, color: analysisMode === val ? T.accent : T.muted, marginTop: 2, opacity: 0.8 }}>{sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* File upload */}
+      <div
+        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={e => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]); }}
+        onClick={() => document.getElementById("ds-file-input").click()}
+        style={{ marginBottom: 10, padding: "14px", borderRadius: 10, border: `2px dashed ${dragOver ? T.accent : T.border}`, background: dragOver ? T.accentDim : T.bg, textAlign: "center", cursor: "pointer", transition: "all 0.15s" }}
+      >
+        <input id="ds-file-input" type="file" accept=".txt,.docx" style={{ display: "none" }} onChange={e => handleFile(e.target.files[0])} />
+        <div style={{ fontSize: 20, marginBottom: 4 }}>📂</div>
+        <div style={{ fontSize: 12, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>
+          {fileName ? <><strong style={{ color: T.accent }}>{fileName}</strong> loaded — ready to analyse</> : <>Drop a <strong>.txt</strong> or <strong>.docx</strong> file, or click to browse</>}
+        </div>
+      </div>
+      {fileError && <div style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, background: "#fef2f2", border: "1px solid #fca5a5", fontSize: 12, color: "#dc2626", fontFamily: "DM Sans, sans-serif" }}>{fileError}</div>}
+
+      <textarea
+        value={text}
+        onChange={e => { setText(e.target.value); setFileName(""); setOutput(""); }}
+        placeholder="Or paste your text here…"
+        rows={5}
+        style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: 10, border: `1px solid ${T.border}`, fontSize: 13, fontFamily: "DM Sans, sans-serif", resize: "vertical", outline: "none", color: T.ink, lineHeight: 1.6, marginBottom: 12 }}
+      />
+
+      {/* AI mode selector */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <div onClick={() => setAiMode("groq")} style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${aiMode === "groq" ? T.green : T.border}`, background: aiMode === "groq" ? T.greenDim : "white", cursor: "pointer", textAlign: "center" }}>
+          <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: aiMode === "groq" ? T.green : T.muted }}>🆓 Free (Groq AI)</div>
+          <div style={{ fontSize: 10, color: aiMode === "groq" ? T.green : T.muted, marginTop: 2 }}>{groqAtLimit ? "Limit reached today" : `${groqCount}/3 used today`}</div>
+        </div>
+        <div onClick={() => { if (!hasClaude) onNeedUpgrade(); else setAiMode("claude"); }} style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${aiMode === "claude" ? T.gold : T.border}`, background: aiMode === "claude" ? T.goldDim : "white", cursor: "pointer", textAlign: "center" }}>
+          <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: aiMode === "claude" ? T.gold : T.muted }}>✦ Premium (Claude Sonnet)</div>
+          <div style={{ fontSize: 10, color: aiMode === "claude" ? T.gold : T.muted, marginTop: 2 }}>{hasClaude ? `${proToken.generations_left} left · 1 token` : "Unlock from $2.99"}</div>
+        </div>
+      </div>
+
+      {aiMode === "groq" && groqAtLimit && <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 8, background: T.accentDim, border: `1px solid ${T.accent}44`, fontSize: 11, color: T.accent, fontFamily: "DM Sans, sans-serif" }}>Daily free limit reached. Resets at midnight — or unlock Premium Claude now.</div>}
+      {text.trim().length > 0 && text.trim().length < 50 && <div style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, background: "#fef2f2", border: "1px solid #fca5a5", fontSize: 11, color: "#dc2626", fontFamily: "DM Sans, sans-serif" }}>Text is too short to summarize — paste more content.</div>}
+
+      <button onClick={generate} disabled={!canGenerate} style={{ width: "100%", padding: "12px 0", borderRadius: 10, border: "none", background: !canGenerate ? T.border : aiMode === "claude" ? T.gold : T.green, color: !canGenerate ? T.muted : "white", fontSize: 13, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: canGenerate ? "pointer" : "default", letterSpacing: 0.5 }}>
+        {loading ? "Analysing…" : aiMode === "claude" ? `✦ Analyse with Claude Sonnet · 1 token` : analysisMode === "summary" ? "Summarize with Groq AI" : "Check Clarity with Groq AI"}
+      </button>
+
+      {error && <div style={{ marginTop: 10, padding: "9px 12px", borderRadius: 8, background: "#fee2e2", border: "1px solid #fca5a5", fontSize: 12, color: "#dc2626", fontFamily: "DM Sans, sans-serif" }}>{error}</div>}
+
+      {loading && (
+        <div style={{ marginTop: 16, padding: "20px", borderRadius: 12, background: T.bg, border: `1px solid ${T.border}`, textAlign: "center" }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 10 }}>
+            {[0,1,2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: aiMode === "claude" ? T.gold : T.green, animation: `tf-bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
+          </div>
+          <div style={{ fontSize: 13, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>{analysisMode === "summary" ? "Reading your document…" : "Checking clarity of your message…"}</div>
+        </div>
+      )}
+
+      {output && !loading && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ padding: "16px", borderRadius: 12, background: T.bg, border: `1px solid ${T.border}` }}>
+            {renderOutput(output)}
+          </div>
+          <CopyButton text={output} />
+        </div>
+      )}
+    </div>
+  );
+}
 function WordCounter() {
   const [text, setText] = useState("");
   const [dragOver, setDragOver] = useState(false);
@@ -997,7 +1216,7 @@ function ToolView({ tool, onBack, proToken, onNeedUpgrade, onTokenUpdate }) {
   const cat = CATEGORIES.find(c => c.id === tool.catId);
   const renderTool = () => {
     switch (tool.id) {
-      case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "deadline": return <DeadlineCountdown />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper />; case "pomodoro": return <PomodoroTimer />; case "wordcount": return <WordCounter />;
+      case "rate": return <RateCalc />; case "project": return <ProjectEstimator />; case "gpa": return <GPACalc />; case "tip": return <TipSplitter />; case "savings": return <SavingsCalc />; case "margin": return <MarginCalc />; case "breakeven": return <BreakEvenCalc />; case "deadline": return <DeadlineCountdown />; case "unit": return <UnitConverter />; case "timezone": return <TimezoneConverter />; case "study": return <StudyPlanner />; case "citation": return <CitationFormatter />; case "salary": return <SalaryHelper />; case "pomodoro": return <PomodoroTimer />; case "wordcount": return <WordCounter />; case "summarize": return <DocumentSummarizer proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
       default: if (AI_TOOLS.includes(tool.name)) return <AIToolPlaceholder name={tool.name} proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
       return <div style={{ textAlign:"center", padding:"30px 0", color:T.muted, fontFamily:"DM Sans, sans-serif" }}><div style={{ fontSize:36, marginBottom:10 }}>{tool.icon}</div><div style={{ fontSize:14 }}>Coming soon!</div></div>;
     }
