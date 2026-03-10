@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { TicTacToe } from "./games";
 
 /* ── Google Fonts ── */
 const injectFonts = () => {
@@ -1606,6 +1607,7 @@ function FAQPage({ onBack }) {
 
 export default function ToolForge() {
   const [activeCat, setActiveCat] = useState("all");
+  const [showGames, setShowGames] = useState(false);
   const [activeTool, setActiveTool] = useState(null);
   const [search, setSearch] = useState("");
   const [showUpgrade, setShowUpgrade] = useState(false);
@@ -1621,6 +1623,24 @@ export default function ToolForge() {
   if (orderId) return <SuccessPage orderId={orderId} onDone={() => { window.history.replaceState({}, "", "/"); try { const s = localStorage.getItem("tf_pro_token"); if (s) setProToken(JSON.parse(s)); } catch {} window.location.reload(); }} />;
 
   if (showFaq) return <FAQPage onBack={() => { setShowFaq(false); window.history.pushState({}, "", "/"); }} />;
+
+  if (showGames) return (
+    <>
+      <div style={{ maxWidth:480, margin:"0 auto", padding:20, background:T.bg, minHeight:"100vh" }}>
+        <button onClick={() => setShowGames(false)} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", color:T.muted, fontSize:13, cursor:"pointer", fontFamily:"DM Sans, sans-serif", marginBottom:16, padding:0 }}>← Back to tools</button>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
+          <div style={{ width:46, height:46, borderRadius:12, background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22 }}>🎮</div>
+          <div>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:"#1e1b4b" }}>Take a Break</div>
+            <div style={{ fontSize:12, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>Free games — no tokens needed</div>
+          </div>
+        </div>
+        <div style={{ background:T.card, borderRadius:16, padding:20, border:, boxShadow:"0 2px 24px #0f0f0d0a" }}>
+          <TicTacToe />
+        </div>
+      </div>
+    </>
+  );
 
   const toggleCollapse = (id) => setCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
 
@@ -1699,6 +1719,15 @@ export default function ToolForge() {
               {c.icon} {c.label}
             </button>
           ))}
+        </div>
+
+        {/* Games banner */}
+        <div onClick={() => setShowGames(true)} style={{ margin:"10px 16px 0", padding:"14px 18px", borderRadius:14, background:"linear-gradient(135deg,#4f46e5,#7c3aed)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <div>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:14, color:"white", marginBottom:2 }}>🎮 Take a Break</div>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,0.8)", fontFamily:"DM Sans, sans-serif" }}>Free games — Tic Tac Toe & more coming</div>
+          </div>
+          <div style={{ fontSize:20 }}>→</div>
         </div>
 
         {/* Tool grid */}
