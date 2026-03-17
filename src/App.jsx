@@ -377,9 +377,13 @@ export default function ToolForge() {
   }, [isDesktop]);
 
   /* ── Pomodoro ── */
-  const POMO_MODES = { focus:25*60, short:5*60, long:15*60 };
+  const POMO_MODES = [
+    { id:"focus", label:"Focus",       icon:"🍅", mins:25, color:T.accent, colorDim:T.accentDim },
+    { id:"short",  label:"Short Break", icon:"☕", mins:5,  color:T.green,  colorDim:T.greenDim  },
+    { id:"long",   label:"Long Break",  icon:"🌿", mins:15, color:T.blue,   colorDim:T.blueDim   },
+  ];
   const [pomoMode, setPomoMode]         = useState("focus");
-  const [pomoSec, setPomoSec]           = useState(POMO_MODES.focus);
+  const [pomoSec, setPomoSec]           = useState(25 * 60);
   const [pomoRunning, setPomoRunning]   = useState(false);
   const [pomoPaused, setPomoPaused]     = useState(false);
   const [pomoSessions, setPomoSessions] = useState(0);
@@ -390,7 +394,15 @@ export default function ToolForge() {
     else clearInterval(pomoRef.current);
     return () => clearInterval(pomoRef.current);
   }, [pomoRunning, pomoMode]);
-  const pomoProps = { modes:POMO_MODES, modeId:pomoMode, secondsLeft:pomoSec, running:pomoRunning, pinned:pomoPinned, sessions:pomoSessions, paused:pomoPaused, onStart:() => { setPomoRunning(true); setPomoPaused(false); setPomoPinned(true); }, onPause:() => { setPomoRunning(false); setPomoPaused(true); }, onReset:() => { clearInterval(pomoRef.current); setPomoRunning(false); setPomoPaused(false); setPomoSec(POMO_MODES[pomoMode]); setPomoPinned(false); }, onSwitchMode:(m) => { clearInterval(pomoRef.current); setPomoMode(m); setPomoSec(POMO_MODES[m]); setPomoRunning(false); setPomoPaused(false); }, onTogglePin:() => setPomoPinned(p=>!p) };
+  const pomoProps = {
+    modes:POMO_MODES, modeId:pomoMode, secondsLeft:pomoSec, running:pomoRunning,
+    pinned:pomoPinned, sessions:pomoSessions, paused:pomoPaused,
+    onStart:      () => { setPomoRunning(true); setPomoPaused(false); setPomoPinned(true); },
+    onPause:      () => { setPomoRunning(false); setPomoPaused(true); },
+    onReset:      () => { const m = POMO_MODES.find(x=>x.id===pomoMode); clearInterval(pomoRef.current); setPomoRunning(false); setPomoPaused(false); setPomoSec(m.mins*60); setPomoPinned(false); },
+    onSwitchMode: (id) => { const m = POMO_MODES.find(x=>x.id===id); clearInterval(pomoRef.current); setPomoMode(id); setPomoSec(m.mins*60); setPomoRunning(false); setPomoPaused(false); },
+    onTogglePin:  () => setPomoPinned(p=>!p),
+  };
 
   /* ── Deadline ── */
   const [dlLabel, setDlLabel]     = useState("");
@@ -529,19 +541,50 @@ export default function ToolForge() {
 
           {/* Middle tool list */}
           <div style={{ width:midW, flexShrink:0, background:TH.bg, borderRight:`1px solid ${TH.border}`, overflowY:"auto", padding:"10px 8px" }}>
-            <div style={{ fontSize:9, color:TH.muted, letterSpacing:0.6, marginBottom:8, fontFamily:"Syne, sans-serif", fontWeight:700, paddingLeft:2 }}>
+            <div style={{ fontSize:9, color:TH.muted, letterSpacing:0.6, marginBottom:10, fontFamily:"Syne, sans-serif", fontWeight:700, paddingLeft:2 }}>
               {search ? `${middleTools.length} RESULT${middleTools.length!==1?"S":""}` : activeCat==="all" ? `ALL ${ALL_TOOLS.length} TOOLS` : `${CATEGORIES.find(c=>c.id===activeCat)?.label?.toUpperCase()} — ${middleTools.length}`}
             </div>
-            {middleTools.map(tool => (
-              <div key={tool.id} onClick={() => { setActiveTool(tool); setShowGames(false); }}
-                style={{ padding:"8px 10px", borderRadius:8, border:`1px solid ${activeTool?.id===tool.id?tool.catColor:TH.border}`, background:activeTool?.id===tool.id?tool.catColorDim:TH.card, display:"flex", alignItems:"center", gap:8, cursor:"pointer", marginBottom:4, transition:"all 0.15s" }}>
-                <span style={{ fontSize:14, flexShrink:0 }}>{tool.icon}</span>
-                <div style={{ minWidth:0 }}>
-                  <div style={{ fontSize:11, color:activeTool?.id===tool.id?tool.catColor:TH.ink, fontWeight:activeTool?.id===tool.id?600:400, fontFamily:"DM Sans, sans-serif", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{tool.name}</div>
-                  {AI_TOOLS.includes(tool.name) && <div style={{ fontSize:9, color:TH.accent, fontFamily:"Syne, sans-serif", fontWeight:700 }}>✦ AI</div>}
+
+            {/* Group by category when showing All or searching */}
+            {(activeCat === "all" || search) ? (
+              CATEGORIES.map(cat => {
+                const catTools = middleTools.filter(t => t.catId === cat.id);
+                if (catTools.length === 0) return null;
+                return (
+                  <div key={cat.id} style={{ marginBottom:16 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 8px", marginBottom:5, borderRadius:7, background:cat.colorDim, border:`1px solid ${cat.color}22` }}>
+                      <span style={{ fontSize:12 }}>{cat.icon}</span>
+                      <span style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:10, color:cat.color, flex:1 }}>{cat.label}</span>
+                      <span style={{ fontSize:9, color:cat.color, opacity:0.7 }}>{catTools.length}</span>
+                    </div>
+                    {catTools.map(tool => (
+                      <div key={tool.id} onClick={() => { setActiveTool(tool); setShowGames(false); }}
+                        style={{ padding:"9px 10px", borderRadius:8, border:`1px solid ${activeTool?.id===tool.id?tool.catColor:TH.border}`, background:activeTool?.id===tool.id?tool.catColorDim:TH.card, display:"flex", alignItems:"flex-start", gap:9, cursor:"pointer", marginBottom:4, transition:"all 0.15s" }}>
+                        <span style={{ fontSize:15, flexShrink:0, marginTop:1 }}>{tool.icon}</span>
+                        <div style={{ minWidth:0 }}>
+                          <div style={{ fontSize:11, color:activeTool?.id===tool.id?tool.catColor:TH.ink, fontWeight:600, fontFamily:"Syne, sans-serif", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", marginBottom:2 }}>{tool.name}</div>
+                          <div style={{ fontSize:10, color:TH.muted, lineHeight:1.3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{tool.desc}</div>
+                          {AI_TOOLS.includes(tool.name) && <span style={{ fontSize:9, color:TH.accent, fontFamily:"Syne, sans-serif", fontWeight:700 }}>✦ AI</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })
+            ) : (
+              /* Single category list */
+              middleTools.map(tool => (
+                <div key={tool.id} onClick={() => { setActiveTool(tool); setShowGames(false); }}
+                  style={{ padding:"10px 10px", borderRadius:8, border:`1px solid ${activeTool?.id===tool.id?tool.catColor:TH.border}`, background:activeTool?.id===tool.id?tool.catColorDim:TH.card, display:"flex", alignItems:"flex-start", gap:9, cursor:"pointer", marginBottom:5, transition:"all 0.15s" }}>
+                  <span style={{ fontSize:16, flexShrink:0, marginTop:1 }}>{tool.icon}</span>
+                  <div style={{ minWidth:0 }}>
+                    <div style={{ fontSize:12, color:activeTool?.id===tool.id?tool.catColor:TH.ink, fontWeight:600, fontFamily:"Syne, sans-serif", marginBottom:3 }}>{tool.name}</div>
+                    <div style={{ fontSize:11, color:TH.muted, lineHeight:1.4 }}>{tool.desc}</div>
+                    {AI_TOOLS.includes(tool.name) && <span style={{ fontSize:9, color:TH.accent, fontFamily:"Syne, sans-serif", fontWeight:700, marginTop:4, display:"block" }}>✦ AI POWERED</span>}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           {/* Handle 2 */}
