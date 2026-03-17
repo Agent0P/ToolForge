@@ -447,128 +447,145 @@ export function FloatingWidget({ widgets, removeWidget, activePill, setActivePil
 
 export function TimezoneConverter() {
   const CITIES = [
-    { label: "New York",       tz: "America/New_York",                  region: "Americas" },
-    { label: "Los Angeles",    tz: "America/Los_Angeles",               region: "Americas" },
-    { label: "Chicago",        tz: "America/Chicago",                   region: "Americas" },
-    { label: "Toronto",        tz: "America/Toronto",                   region: "Americas" },
-    { label: "Vancouver",      tz: "America/Vancouver",                 region: "Americas" },
-    { label: "Mexico City",    tz: "America/Mexico_City",               region: "Americas" },
-    { label: "São Paulo",      tz: "America/Sao_Paulo",                 region: "Americas" },
-    { label: "Buenos Aires",   tz: "America/Argentina/Buenos_Aires",    region: "Americas" },
-    { label: "Bogotá",         tz: "America/Bogota",                    region: "Americas" },
-    { label: "Lima",           tz: "America/Lima",                      region: "Americas" },
-    { label: "Santiago",       tz: "America/Santiago",                  region: "Americas" },
-    { label: "London",         tz: "Europe/London",                     region: "Europe" },
-    { label: "Paris",          tz: "Europe/Paris",                      region: "Europe" },
-    { label: "Berlin",         tz: "Europe/Berlin",                     region: "Europe" },
-    { label: "Madrid",         tz: "Europe/Madrid",                     region: "Europe" },
-    { label: "Rome",           tz: "Europe/Rome",                       region: "Europe" },
-    { label: "Amsterdam",      tz: "Europe/Amsterdam",                  region: "Europe" },
-    { label: "Stockholm",      tz: "Europe/Stockholm",                  region: "Europe" },
-    { label: "Warsaw",         tz: "Europe/Warsaw",                     region: "Europe" },
-    { label: "Athens",         tz: "Europe/Athens",                     region: "Europe" },
-    { label: "Kyiv",           tz: "Europe/Kyiv",                       region: "Europe" },
-    { label: "Moscow",         tz: "Europe/Moscow",                     region: "Europe" },
-    { label: "Istanbul",       tz: "Europe/Istanbul",                   region: "Europe" },
-    { label: "Tel Aviv",       tz: "Asia/Jerusalem",                    region: "Middle East & Africa" },
-    { label: "Beirut",         tz: "Asia/Beirut",                       region: "Middle East & Africa" },
-    { label: "Dubai",          tz: "Asia/Dubai",                        region: "Middle East & Africa" },
-    { label: "Riyadh",         tz: "Asia/Riyadh",                       region: "Middle East & Africa" },
-    { label: "Cairo",          tz: "Africa/Cairo",                      region: "Middle East & Africa" },
-    { label: "Nairobi",        tz: "Africa/Nairobi",                    region: "Middle East & Africa" },
-    { label: "Lagos",          tz: "Africa/Lagos",                      region: "Middle East & Africa" },
-    { label: "Johannesburg",   tz: "Africa/Johannesburg",               region: "Middle East & Africa" },
-    { label: "Casablanca",     tz: "Africa/Casablanca",                 region: "Middle East & Africa" },
-    { label: "Mumbai",         tz: "Asia/Kolkata",                      region: "Asia" },
-    { label: "Delhi",          tz: "Asia/Kolkata",                      region: "Asia" },
-    { label: "Karachi",        tz: "Asia/Karachi",                      region: "Asia" },
-    { label: "Dhaka",          tz: "Asia/Dhaka",                        region: "Asia" },
-    { label: "Bangkok",        tz: "Asia/Bangkok",                      region: "Asia" },
-    { label: "Singapore",      tz: "Asia/Singapore",                    region: "Asia" },
-    { label: "Kuala Lumpur",   tz: "Asia/Kuala_Lumpur",                 region: "Asia" },
-    { label: "Jakarta",        tz: "Asia/Jakarta",                      region: "Asia" },
-    { label: "Manila",         tz: "Asia/Manila",                       region: "Asia" },
-    { label: "Hong Kong",      tz: "Asia/Hong_Kong",                    region: "Asia" },
-    { label: "Beijing",        tz: "Asia/Shanghai",                     region: "Asia" },
-    { label: "Shanghai",       tz: "Asia/Shanghai",                     region: "Asia" },
-    { label: "Tokyo",          tz: "Asia/Tokyo",                        region: "Asia" },
-    { label: "Seoul",          tz: "Asia/Seoul",                        region: "Asia" },
-    { label: "Sydney",         tz: "Australia/Sydney",                  region: "Oceania" },
-    { label: "Melbourne",      tz: "Australia/Melbourne",               region: "Oceania" },
-    { label: "Brisbane",       tz: "Australia/Brisbane",                region: "Oceania" },
-    { label: "Perth",          tz: "Australia/Perth",                   region: "Oceania" },
-    { label: "Auckland",       tz: "Pacific/Auckland",                  region: "Oceania" },
-    { label: "Wellington",     tz: "Pacific/Auckland",                  region: "Oceania" },
-    { label: "UTC",            tz: "UTC",                               region: "UTC" },
+    { label:"New York",       tz:"America/New_York",               region:"Americas" },
+    { label:"Los Angeles",    tz:"America/Los_Angeles",            region:"Americas" },
+    { label:"Chicago",        tz:"America/Chicago",                region:"Americas" },
+    { label:"Toronto",        tz:"America/Toronto",                region:"Americas" },
+    { label:"Vancouver",      tz:"America/Vancouver",              region:"Americas" },
+    { label:"Mexico City",    tz:"America/Mexico_City",            region:"Americas" },
+    { label:"São Paulo",      tz:"America/Sao_Paulo",              region:"Americas" },
+    { label:"Buenos Aires",   tz:"America/Argentina/Buenos_Aires", region:"Americas" },
+    { label:"Bogotá",         tz:"America/Bogota",                 region:"Americas" },
+    { label:"Lima",           tz:"America/Lima",                   region:"Americas" },
+    { label:"Santiago",       tz:"America/Santiago",               region:"Americas" },
+    { label:"London",         tz:"Europe/London",                  region:"Europe" },
+    { label:"Paris",          tz:"Europe/Paris",                   region:"Europe" },
+    { label:"Berlin",         tz:"Europe/Berlin",                  region:"Europe" },
+    { label:"Madrid",         tz:"Europe/Madrid",                  region:"Europe" },
+    { label:"Rome",           tz:"Europe/Rome",                    region:"Europe" },
+    { label:"Amsterdam",      tz:"Europe/Amsterdam",               region:"Europe" },
+    { label:"Stockholm",      tz:"Europe/Stockholm",               region:"Europe" },
+    { label:"Warsaw",         tz:"Europe/Warsaw",                  region:"Europe" },
+    { label:"Athens",         tz:"Europe/Athens",                  region:"Europe" },
+    { label:"Kyiv",           tz:"Europe/Kyiv",                    region:"Europe" },
+    { label:"Moscow",         tz:"Europe/Moscow",                  region:"Europe" },
+    { label:"Istanbul",       tz:"Europe/Istanbul",                region:"Europe" },
+    { label:"Tel Aviv",       tz:"Asia/Jerusalem",                 region:"Middle East" },
+    { label:"Beirut",         tz:"Asia/Beirut",                    region:"Middle East" },
+    { label:"Dubai",          tz:"Asia/Dubai",                     region:"Middle East" },
+    { label:"Riyadh",         tz:"Asia/Riyadh",                    region:"Middle East" },
+    { label:"Cairo",          tz:"Africa/Cairo",                   region:"Africa" },
+    { label:"Nairobi",        tz:"Africa/Nairobi",                 region:"Africa" },
+    { label:"Lagos",          tz:"Africa/Lagos",                   region:"Africa" },
+    { label:"Johannesburg",   tz:"Africa/Johannesburg",            region:"Africa" },
+    { label:"Casablanca",     tz:"Africa/Casablanca",              region:"Africa" },
+    { label:"Mumbai",         tz:"Asia/Kolkata",                   region:"Asia" },
+    { label:"Delhi",          tz:"Asia/Kolkata",                   region:"Asia" },
+    { label:"Karachi",        tz:"Asia/Karachi",                   region:"Asia" },
+    { label:"Dhaka",          tz:"Asia/Dhaka",                     region:"Asia" },
+    { label:"Bangkok",        tz:"Asia/Bangkok",                   region:"Asia" },
+    { label:"Singapore",      tz:"Asia/Singapore",                 region:"Asia" },
+    { label:"Kuala Lumpur",   tz:"Asia/Kuala_Lumpur",              region:"Asia" },
+    { label:"Jakarta",        tz:"Asia/Jakarta",                   region:"Asia" },
+    { label:"Manila",         tz:"Asia/Manila",                    region:"Asia" },
+    { label:"Hong Kong",      tz:"Asia/Hong_Kong",                 region:"Asia" },
+    { label:"Beijing",        tz:"Asia/Shanghai",                  region:"Asia" },
+    { label:"Shanghai",       tz:"Asia/Shanghai",                  region:"Asia" },
+    { label:"Tokyo",          tz:"Asia/Tokyo",                     region:"Asia" },
+    { label:"Seoul",          tz:"Asia/Seoul",                     region:"Asia" },
+    { label:"Sydney",         tz:"Australia/Sydney",               region:"Oceania" },
+    { label:"Melbourne",      tz:"Australia/Melbourne",            region:"Oceania" },
+    { label:"Brisbane",       tz:"Australia/Brisbane",             region:"Oceania" },
+    { label:"Perth",          tz:"Australia/Perth",                region:"Oceania" },
+    { label:"Auckland",       tz:"Pacific/Auckland",               region:"Oceania" },
+    { label:"UTC",            tz:"UTC",                            region:"UTC" },
   ];
 
   const UTC_OFFSETS = [
-    { offset: -12,   label: "UTC−12",    regions: "Baker Island, Howland Island" },
-    { offset: -11,   label: "UTC−11",    regions: "American Samoa, Niue" },
-    { offset: -10,   label: "UTC−10",    regions: "Hawaii, Cook Islands" },
-    { offset: -9.5,  label: "UTC−9:30",  regions: "Marquesas Islands" },
-    { offset: -9,    label: "UTC−9",     regions: "Alaska, Gambier Islands" },
-    { offset: -8,    label: "UTC−8",     regions: "Los Angeles, Vancouver, Tijuana" },
-    { offset: -7,    label: "UTC−7",     regions: "Denver, Phoenix, Calgary" },
-    { offset: -6,    label: "UTC−6",     regions: "Chicago, Mexico City, Guatemala" },
-    { offset: -5,    label: "UTC−5",     regions: "New York, Toronto, Lima, Bogotá" },
-    { offset: -4,    label: "UTC−4",     regions: "Santiago, Caracas, Halifax" },
-    { offset: -3.5,  label: "UTC−3:30",  regions: "Newfoundland" },
-    { offset: -3,    label: "UTC−3",     regions: "São Paulo, Buenos Aires, Montevideo" },
-    { offset: -2,    label: "UTC−2",     regions: "South Georgia Island" },
-    { offset: -1,    label: "UTC−1",     regions: "Azores, Cape Verde" },
-    { offset: 0,     label: "UTC±0",     regions: "London (winter), Dublin, Lisbon, Accra" },
-    { offset: 1,     label: "UTC+1",     regions: "Paris, Berlin, Rome, Lagos, Warsaw" },
-    { offset: 2,     label: "UTC+2",     regions: "Tel Aviv, Cairo, Athens, Johannesburg" },
-    { offset: 3,     label: "UTC+3",     regions: "Moscow, Nairobi, Riyadh, Kuwait" },
-    { offset: 3.5,   label: "UTC+3:30",  regions: "Tehran" },
-    { offset: 4,     label: "UTC+4",     regions: "Dubai, Baku, Tbilisi" },
-    { offset: 4.5,   label: "UTC+4:30",  regions: "Kabul" },
-    { offset: 5,     label: "UTC+5",     regions: "Karachi, Tashkent, Yekaterinburg" },
-    { offset: 5.5,   label: "UTC+5:30",  regions: "Mumbai, Delhi, Colombo" },
-    { offset: 5.75,  label: "UTC+5:45",  regions: "Kathmandu" },
-    { offset: 6,     label: "UTC+6",     regions: "Dhaka, Almaty, Omsk" },
-    { offset: 6.5,   label: "UTC+6:30",  regions: "Yangon (Rangoon)" },
-    { offset: 7,     label: "UTC+7",     regions: "Bangkok, Jakarta, Hanoi" },
-    { offset: 8,     label: "UTC+8",     regions: "Beijing, Singapore, Hong Kong, Perth" },
-    { offset: 8.75,  label: "UTC+8:45",  regions: "Eucla, Australia" },
-    { offset: 9,     label: "UTC+9",     regions: "Tokyo, Seoul, Yakutsk" },
-    { offset: 9.5,   label: "UTC+9:30",  regions: "Adelaide, Darwin" },
-    { offset: 10,    label: "UTC+10",    regions: "Sydney, Melbourne, Vladivostok" },
-    { offset: 10.5,  label: "UTC+10:30", regions: "Lord Howe Island" },
-    { offset: 11,    label: "UTC+11",    regions: "Solomon Islands, Magadan" },
-    { offset: 12,    label: "UTC+12",    regions: "Auckland, Fiji, Kamchatka" },
-    { offset: 12.75, label: "UTC+12:45", regions: "Chatham Islands" },
-    { offset: 13,    label: "UTC+13",    regions: "Tonga, Samoa (DST)" },
-    { offset: 14,    label: "UTC+14",    regions: "Line Islands (Kiribati)" },
+    { offset:-12,   label:"UTC-12",    regions:"Baker Island, Howland Island" },
+    { offset:-11,   label:"UTC-11",    regions:"American Samoa, Niue" },
+    { offset:-10,   label:"UTC-10",    regions:"Hawaii, Cook Islands" },
+    { offset:-9.5,  label:"UTC-9:30",  regions:"Marquesas Islands" },
+    { offset:-9,    label:"UTC-9",     regions:"Alaska, Gambier Islands" },
+    { offset:-8,    label:"UTC-8",     regions:"Los Angeles, Vancouver, Tijuana" },
+    { offset:-7,    label:"UTC-7",     regions:"Denver, Phoenix, Calgary" },
+    { offset:-6,    label:"UTC-6",     regions:"Chicago, Mexico City, Guatemala" },
+    { offset:-5,    label:"UTC-5",     regions:"New York, Toronto, Lima, Bogota" },
+    { offset:-4,    label:"UTC-4",     regions:"Santiago, Caracas, Halifax" },
+    { offset:-3.5,  label:"UTC-3:30",  regions:"Newfoundland" },
+    { offset:-3,    label:"UTC-3",     regions:"Sao Paulo, Buenos Aires, Montevideo" },
+    { offset:-2,    label:"UTC-2",     regions:"South Georgia Island" },
+    { offset:-1,    label:"UTC-1",     regions:"Azores, Cape Verde" },
+    { offset:0,     label:"UTC+0",     regions:"London (winter), Dublin, Lisbon, Accra" },
+    { offset:1,     label:"UTC+1",     regions:"Paris, Berlin, Rome, Lagos, Warsaw" },
+    { offset:2,     label:"UTC+2",     regions:"Tel Aviv, Cairo, Athens, Johannesburg" },
+    { offset:3,     label:"UTC+3",     regions:"Moscow, Nairobi, Riyadh, Kuwait" },
+    { offset:3.5,   label:"UTC+3:30",  regions:"Tehran" },
+    { offset:4,     label:"UTC+4",     regions:"Dubai, Baku, Tbilisi" },
+    { offset:4.5,   label:"UTC+4:30",  regions:"Kabul" },
+    { offset:5,     label:"UTC+5",     regions:"Karachi, Tashkent, Yekaterinburg" },
+    { offset:5.5,   label:"UTC+5:30",  regions:"Mumbai, Delhi, Colombo" },
+    { offset:5.75,  label:"UTC+5:45",  regions:"Kathmandu" },
+    { offset:6,     label:"UTC+6",     regions:"Dhaka, Almaty, Omsk" },
+    { offset:6.5,   label:"UTC+6:30",  regions:"Yangon (Rangoon)" },
+    { offset:7,     label:"UTC+7",     regions:"Bangkok, Jakarta, Hanoi" },
+    { offset:8,     label:"UTC+8",     regions:"Beijing, Singapore, Hong Kong, Perth" },
+    { offset:9,     label:"UTC+9",     regions:"Tokyo, Seoul, Yakutsk" },
+    { offset:9.5,   label:"UTC+9:30",  regions:"Adelaide, Darwin" },
+    { offset:10,    label:"UTC+10",    regions:"Sydney, Melbourne, Vladivostok" },
+    { offset:11,    label:"UTC+11",    regions:"Solomon Islands, Magadan" },
+    { offset:12,    label:"UTC+12",    regions:"Auckland, Fiji, Kamchatka" },
+    { offset:13,    label:"UTC+13",    regions:"Tonga, Samoa (DST)" },
+    { offset:14,    label:"UTC+14",    regions:"Line Islands (Kiribati)" },
   ];
 
-  const [tab, setTab] = useState("city");
+  const [tab, setTab]             = useState("city");
   const [fromLabel, setFromLabel] = useState("New York");
-  const [inputTime, setInputTime] = useState(() => { const n = new Date(); return `${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`; });
+  const [inputTime, setInputTime] = useState(() => {
+    const n = new Date();
+    return String(n.getHours()).padStart(2,"0") + ":" + String(n.getMinutes()).padStart(2,"0");
+  });
   const [myUtcOffset, setMyUtcOffset] = useState(0);
   const [filterRegion, setFilterRegion] = useState("All");
+
+  // Meeting planner state
+  const [meetCities, setMeetCities] = useState(["New York", "London", "Tokyo", "Dubai"]);
+  const [meetAdd, setMeetAdd]       = useState("Tokyo");
+  const [workStart, setWorkStart]   = useState(9);
+  const [workEnd, setWorkEnd]       = useState(18);
 
   const regions = ["All", ...Array.from(new Set(CITIES.map(c => c.region)))];
   const fromCity = CITIES.find(c => c.label === fromLabel) || CITIES[0];
 
+  const getHourInTz = (utcHour, tz) => {
+    const d = new Date();
+    d.setUTCHours(utcHour, 0, 0, 0);
+    const h = parseInt(d.toLocaleString("en-US", { timeZone: tz, hour:"numeric", hour12:false }), 10);
+    return isNaN(h) ? 0 : h % 24;
+  };
+
   const convert = (toTz) => {
-    const [hStr, mStr] = inputTime.split(":");
-    const h = parseInt(hStr, 10); const m = parseInt(mStr, 10);
-    if (isNaN(h) || isNaN(m)) return { time: "--:--", period: "", offset: "" };
+    const parts = inputTime.split(":");
+    const h = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    if (isNaN(h) || isNaN(m)) return { time:"--:--", period:"", offset:"" };
     const now = new Date();
     now.setHours(h, m, 0, 0);
     const fromStr = now.toLocaleString("en-US", { timeZone: fromCity.tz });
-    const toStr = now.toLocaleString("en-US", { timeZone: toTz });
-    const fromDate = new Date(fromStr); const toDate2 = new Date(toStr);
-    const diffMs = toDate2 - fromDate;
-    const result = new Date(now.getTime() + diffMs);
-    const rh = result.getHours(); const rm = result.getMinutes();
-    const timeStr = `${String(rh).padStart(2,"0")}:${String(rm).padStart(2,"0")}`;
-    const period = rh < 6 ? "🌙 Night" : rh < 12 ? "🌅 Morning" : rh < 17 ? "☀️ Afternoon" : rh < 21 ? "🌆 Evening" : "🌙 Night";
-    const offH = Math.floor(Math.abs(diffMs) / 36e5); const offSign = diffMs >= 0 ? "+" : "-";
-    const offsetStr = diffMs === 0 ? "same time" : `${offSign}${offH}h`;
-    return { time: timeStr, period, offset: offsetStr };
+    const toStr   = now.toLocaleString("en-US", { timeZone: toTz });
+    const fromDate = new Date(fromStr);
+    const toDate2  = new Date(toStr);
+    const diffMs   = toDate2 - fromDate;
+    const result   = new Date(now.getTime() + diffMs);
+    const rh = result.getHours();
+    const rm = result.getMinutes();
+    const timeStr  = String(rh).padStart(2,"0") + ":" + String(rm).padStart(2,"0");
+    const period   = rh < 6 ? "Night" : rh < 12 ? "Morning" : rh < 17 ? "Afternoon" : rh < 21 ? "Evening" : "Night";
+    const periodEmoji = rh < 6 ? "🌙" : rh < 12 ? "🌅" : rh < 17 ? "☀️" : rh < 21 ? "🌆" : "🌙";
+    const offH     = Math.floor(Math.abs(diffMs) / 36e5);
+    const offSign  = diffMs >= 0 ? "+" : "-";
+    const offsetStr = diffMs === 0 ? "same time" : offSign + offH + "h";
+    return { time: timeStr, period: periodEmoji + " " + period, offset: offsetStr };
   };
 
   const diffColor = (diff) => {
@@ -580,16 +597,34 @@ export function TimezoneConverter() {
 
   const filteredCities = filterRegion === "All" ? CITIES : CITIES.filter(c => c.region === filterRegion);
 
+  // Meeting planner: find UTC hours where all cities are within workStart–workEnd
+  const meetingSlots = Array.from({ length: 24 }, (_, utcH) => {
+    const cityHours = meetCities.map(label => {
+      const city = CITIES.find(c => c.label === label);
+      if (!city) return null;
+      return { label, hour: getHourInTz(utcH, city.tz) };
+    }).filter(Boolean);
+    const allInRange = cityHours.every(c => c.hour >= workStart && c.hour < workEnd);
+    return { utcHour: utcH, cityHours, allInRange };
+  }).filter(s => s.allInRange);
+
+  const tabBtn = (id, label) => (
+    <button key={id} onClick={() => setTab(id)}
+      style={{ flex:1, padding:"8px 0", borderRadius:9, border:"1.5px solid " + (tab===id ? T.teal : T.border), background:tab===id ? T.tealDim : T.card, color:tab===id ? T.teal : T.muted, fontSize:11, fontFamily:"Syne, sans-serif", fontWeight:700, cursor:"pointer" }}>
+      {label}
+    </button>
+  );
+
   return (
     <div>
-      <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-        {["city", "utc"].map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{ flex: 1, padding: "8px 0", borderRadius: 9, border: `1.5px solid ${tab === t ? T.teal : T.border}`, background: tab === t ? T.tealDim : "white", color: tab === t ? T.teal : T.muted, fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
-            {t === "city" ? "🌆 City Converter" : "🕐 UTC Offset Tool"}
-          </button>
-        ))}
+      {/* Tab bar */}
+      <div style={{ display:"flex", gap:6, marginBottom:16 }}>
+        {tabBtn("city",    "🌆 City")}
+        {tabBtn("utc",     "🕐 UTC Offset")}
+        {tabBtn("meeting", "📅 Meeting Planner")}
       </div>
 
+      {/* ── City Converter ── */}
       {tab === "city" && (
         <div>
           <Row label="Convert from">
@@ -600,32 +635,38 @@ export function TimezoneConverter() {
           <Row label="Time">
             <input type="time" value={inputTime} onChange={e => setInputTime(e.target.value)} style={inputStyle} />
           </Row>
-          <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+          <div style={{ display:"flex", gap:6, marginBottom:12, flexWrap:"wrap" }}>
             {regions.map(r => (
-              <button key={r} onClick={() => setFilterRegion(r)} style={{ padding: "5px 10px", borderRadius: 99, border: `1px solid ${filterRegion === r ? T.teal : T.border}`, background: filterRegion === r ? T.tealDim : "white", color: filterRegion === r ? T.teal : T.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", cursor: "pointer" }}>{r}</button>
+              <button key={r} onClick={() => setFilterRegion(r)}
+                style={{ padding:"5px 10px", borderRadius:99, border:"1px solid " + (filterRegion===r ? T.teal : T.border), background:filterRegion===r ? T.tealDim : T.card, color:filterRegion===r ? T.teal : T.muted, fontSize:11, fontFamily:"DM Sans, sans-serif", cursor:"pointer" }}>
+                {r}
+              </button>
             ))}
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
             {filteredCities.filter(z => z.label !== fromLabel).map(z => {
               const r = convert(z.tz);
               return (
-                <div key={z.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 13px", borderRadius: 9, background: "white", border: `1px solid ${T.border}` }}>
+                <div key={z.label} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 13px", borderRadius:9, background:T.card, border:"1px solid " + T.border }}>
                   <div>
-                    <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: T.ink }}>{z.label}</div>
-                    <div style={{ fontSize: 10, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>{z.region} · {r.period}</div>
+                    <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:T.ink }}>{z.label}</div>
+                    <div style={{ fontSize:10, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>{z.region} · {r.period}</div>
                   </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 18, color: T.teal }}>{r.time}</div>
-                    <div style={{ fontSize: 10, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>{r.offset}</div>
+                  <div style={{ textAlign:"right" }}>
+                    <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.teal }}>{r.time}</div>
+                    <div style={{ fontSize:10, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>{r.offset}</div>
                   </div>
                 </div>
               );
             })}
           </div>
-          <CopyButton text={CITIES.filter(z => z.label !== fromLabel).map(z => { const r = convert(z.tz); return `${z.label}: ${r.time}`; }).join("\n")} />
+          <div style={{ marginTop:10 }}>
+            <CopyButton text={CITIES.filter(z => z.label !== fromLabel).map(z => { const r = convert(z.tz); return z.label + ": " + r.time; }).join("\n")} />
+          </div>
         </div>
       )}
 
+      {/* ── UTC Offset Tool ── */}
       {tab === "utc" && (
         <div>
           <Row label="Your UTC offset">
@@ -635,29 +676,126 @@ export function TimezoneConverter() {
               ))}
             </select>
           </Row>
-          <div style={{ fontSize: 11, color: T.muted, marginBottom: 12, fontFamily: "DM Sans, sans-serif" }}>
+          <div style={{ fontSize:11, color:T.muted, marginBottom:12, fontFamily:"DM Sans, sans-serif" }}>
             Hour difference between you ({UTC_OFFSETS.find(u => u.offset === myUtcOffset)?.label}) and every other timezone:
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
             {UTC_OFFSETS.filter(u => u.offset !== myUtcOffset).map(u => {
               const diff = u.offset - myUtcOffset;
               const sign = diff > 0 ? "+" : "";
-              const hrs = Math.floor(Math.abs(diff));
+              const hrs  = Math.floor(Math.abs(diff));
               const mins = Math.round((Math.abs(diff) - hrs) * 60);
-              const diffStr = mins ? `${sign}${diff < 0 ? "-" : ""}${hrs}h ${mins}m` : `${sign}${diff}h`;
+              const diffStr = mins ? sign + (diff < 0 ? "-" : "") + hrs + "h " + mins + "m" : sign + diff + "h";
               return (
-                <div key={u.offset} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "10px 13px", borderRadius: 9, background: "white", border: `1px solid ${T.border}` }}>
+                <div key={u.offset} style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 13px", borderRadius:9, background:T.card, border:"1px solid " + T.border }}>
                   <div>
-                    <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: T.ink, marginBottom: 2 }}>{u.label}</div>
-                    <div style={{ fontFamily: "DM Sans, sans-serif", fontSize: 11, color: T.muted }}>{u.regions}</div>
+                    <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:T.ink, marginBottom:2 }}>{u.label}</div>
+                    <div style={{ fontFamily:"DM Sans, sans-serif", fontSize:11, color:T.muted }}>{u.regions}</div>
                   </div>
-                  <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 14, color: diffColor(diff), minWidth: 52, textAlign: "right", paddingTop: 2 }}>
+                  <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:14, color:diffColor(diff), minWidth:52, textAlign:"right", paddingTop:2 }}>
                     {diffStr}
                   </div>
                 </div>
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* ── Meeting Planner ── */}
+      {tab === "meeting" && (
+        <div>
+          <div style={{ fontSize:12, color:T.muted, marginBottom:12, fontFamily:"DM Sans, sans-serif", lineHeight:1.6 }}>
+            Find the best time to meet across multiple cities. Highlights hours when everyone is within working hours.
+          </div>
+
+          {/* Work hours range */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:12 }}>
+            <div>
+              <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:4 }}>WORK DAY STARTS</div>
+              <select value={workStart} onChange={e => setWorkStart(Number(e.target.value))} style={inputStyle}>
+                {Array.from({length:24}, (_,i) => <option key={i} value={i}>{String(i).padStart(2,"0")}:00</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:4 }}>WORK DAY ENDS</div>
+              <select value={workEnd} onChange={e => setWorkEnd(Number(e.target.value))} style={inputStyle}>
+                {Array.from({length:24}, (_,i) => <option key={i} value={i}>{String(i).padStart(2,"0")}:00</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* City chips */}
+          <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:6 }}>CITIES</div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:10 }}>
+            {meetCities.map(city => (
+              <div key={city} style={{ display:"flex", alignItems:"center", gap:5, padding:"5px 10px", borderRadius:99, background:T.tealDim, border:"1px solid " + T.teal }}>
+                <span style={{ fontSize:11, color:T.teal, fontFamily:"Syne, sans-serif", fontWeight:700 }}>{city}</span>
+                <span onClick={() => setMeetCities(cs => cs.filter(c => c !== city))}
+                  style={{ fontSize:11, color:T.teal, cursor:"pointer", lineHeight:1, opacity:0.7 }}>✕</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ display:"flex", gap:8, marginBottom:16 }}>
+            <select value={meetAdd} onChange={e => setMeetAdd(e.target.value)} style={{ ...inputStyle, flex:1 }}>
+              {CITIES.filter(c => !meetCities.includes(c.label)).map(c => (
+                <option key={c.label} value={c.label}>{c.label}</option>
+              ))}
+            </select>
+            <button onClick={() => { if (meetAdd && !meetCities.includes(meetAdd)) setMeetCities(cs => [...cs, meetAdd]); }}
+              style={{ padding:"9px 14px", borderRadius:9, border:"none", background:T.teal, color:"white", fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, cursor:"pointer", flexShrink:0 }}>
+              + Add
+            </button>
+          </div>
+
+          {/* Results */}
+          {meetCities.length < 2 ? (
+            <div style={{ padding:"16px", textAlign:"center", color:T.muted, fontSize:12, fontFamily:"DM Sans, sans-serif", background:T.card, borderRadius:10, border:"1px solid " + T.border }}>
+              Add at least 2 cities to find overlap windows
+            </div>
+          ) : meetingSlots.length === 0 ? (
+            <div style={{ padding:"16px", textAlign:"center", borderRadius:10, background:"#fef2f2", border:"1px solid #fecaca" }}>
+              <div style={{ fontSize:20, marginBottom:6 }}>😬</div>
+              <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:"#dc2626", marginBottom:4 }}>No overlap found</div>
+              <div style={{ fontSize:11, color:"#dc2626", opacity:0.8, fontFamily:"DM Sans, sans-serif" }}>
+                Try widening work hours or removing a city from a very different timezone
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div style={{ fontSize:10, color:T.teal, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:8 }}>
+                {meetingSlots.length} WINDOW{meetingSlots.length !== 1 ? "S" : ""} WORK FOR EVERYONE
+              </div>
+              <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                {meetingSlots.map(slot => (
+                  <div key={slot.utcHour} style={{ padding:"12px 14px", borderRadius:10, background:T.card, border:"1px solid " + T.teal + "44" }}>
+                    <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:6 }}>
+                      {"UTC " + String(slot.utcHour).padStart(2,"0") + ":00"}
+                    </div>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+                      {slot.cityHours.map(ch => {
+                        const h = ch.hour;
+                        const timeStr = String(h).padStart(2,"0") + ":00";
+                        const emoji = h < 6 ? "🌙" : h < 12 ? "🌅" : h < 17 ? "☀️" : h < 21 ? "🌆" : "🌙";
+                        return (
+                          <div key={ch.label} style={{ display:"flex", alignItems:"center", gap:5, padding:"4px 10px", borderRadius:8, background:T.tealDim }}>
+                            <span style={{ fontSize:12 }}>{emoji}</span>
+                            <div>
+                              <div style={{ fontSize:10, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>{ch.label}</div>
+                              <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.teal }}>{timeStr}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop:10 }}>
+                <CopyButton text={meetingSlots.map(slot => "UTC " + String(slot.utcHour).padStart(2,"0") + ":00 — " + slot.cityHours.map(ch => ch.label + " " + String(ch.hour).padStart(2,"0") + ":00").join(", ")).join("\n")} />
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
