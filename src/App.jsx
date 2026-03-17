@@ -371,8 +371,8 @@ export default function ToolForge() {
       el.addEventListener("mousedown", down); document.addEventListener("mousemove", move); document.addEventListener("mouseup", up);
       return () => { el.removeEventListener("mousedown", down); document.removeEventListener("mousemove", move); document.removeEventListener("mouseup", up); };
     };
-    const c1 = attach(h1, () => sideWRef.current, setSideW, 140, 300);
-    const c2 = attach(h2, () => midWRef.current,  setMidW,  140, 340);
+    const c1 = attach(h1, () => sideWRef.current, setSideW, 48, 300);
+    const c2 = attach(h2, () => midWRef.current,  setMidW,  52, 340);
     return () => { c1(); c2(); };
   }, [isDesktop]);
 
@@ -457,8 +457,12 @@ export default function ToolForge() {
   if (isDesktop) {
     const hStyle = (id) => ({ id, width:5, flexShrink:0, background:TH.border, cursor:"col-resize", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.15s", zIndex:10 });
 
+    /* ── Collapse thresholds ── */
+    const SIDE_ICON = sideW < 100;  // sidebar icon-only
+    const MID_ICON  = midW  < 100;  // middle icon-only
+    const MID_SLIM  = midW  < 160;  // middle icon+name, no desc
+
     const rightContent = () => {
-      if (showGames) return <div style={{ padding:24, overflowY:"auto", flex:1 }}><GamesSection proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} onBack={() => setShowGames(false)} /></div>;
       if (!activeTool) return (
         <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:40, textAlign:"center" }}>
           <div style={{ fontSize:48, marginBottom:16, opacity:0.2, color:TH.accent }}>✦</div>
@@ -505,33 +509,53 @@ export default function ToolForge() {
         {/* Three panels */}
         <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
 
-          {/* Sidebar */}
-          <div style={{ width:sideW, flexShrink:0, background:TH.card, borderRight:`1px solid ${TH.border}`, display:"flex", flexDirection:"column", overflow:"hidden" }}>
-            <div style={{ padding:"10px 10px 0", flexShrink:0 }}>
-              <div style={{ position:"relative", marginBottom:10 }}>
-                <span style={{ position:"absolute", left:9, top:"50%", transform:"translateY(-50%)", fontSize:12, color:TH.muted, pointerEvents:"none" }}>🔍</span>
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tools…" style={{ ...inputStyle, paddingLeft:30, fontSize:11, background:TH.bg, border:`1px solid ${TH.border}`, color:TH.ink }} />
-              </div>
-              <div style={{ fontSize:9, color:TH.muted, letterSpacing:0.6, marginBottom:6, fontFamily:"Syne, sans-serif", fontWeight:700, paddingLeft:2 }}>CATEGORIES</div>
-              {[{ id:"all", label:"All Tools", icon:"✦" }, ...CATEGORIES].map(c => (
-                <div key={c.id} onClick={() => { setActiveCat(c.id); setSearch(""); }}
-                  style={{ padding:"7px 10px", borderRadius:8, marginBottom:2, background:activeCat===c.id&&!search?TH.accentDim:"transparent", color:activeCat===c.id&&!search?TH.accent:TH.muted, fontSize:11, fontFamily:activeCat===c.id&&!search?"Syne, sans-serif":"DM Sans, sans-serif", fontWeight:activeCat===c.id&&!search?700:400, cursor:"pointer", transition:"all 0.15s" }}>
-                  {c.icon}&nbsp;&nbsp;{c.label}
+          {/* Sidebar — collapses to icon-only when narrow */}
+          <div style={{ width:sideW, flexShrink:0, background:TH.card, borderRight:`1px solid ${TH.border}`, display:"flex", flexDirection:"column", overflow:"hidden", transition:"width 0.15s" }}>
+            {SIDE_ICON ? (
+              /* ── Icon-only sidebar ── */
+              <div style={{ display:"flex", flexDirection:"column", alignItems:"center", padding:"10px 0", gap:4, flex:1 }}>
+                {[{ id:"all", label:"All Tools", icon:"✦", color:TH.accent }, ...CATEGORIES].map(c => (
+                  <div key={c.id} onClick={() => { setActiveCat(c.id); setSearch(""); }} title={c.label || "All Tools"}
+                    style={{ width:36, height:36, borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, cursor:"pointer", background:activeCat===c.id&&!search?TH.accentDim:"transparent", border:`1px solid ${activeCat===c.id&&!search?TH.accent:"transparent"}`, transition:"all 0.15s" }}>
+                    {c.icon}
+                  </div>
+                ))}
+                <div style={{ marginTop:"auto", marginBottom:8 }}>
+                  <div onClick={() => setShowGames(true)} title="Take a Break"
+                    style={{ width:36, height:36, borderRadius:9, background:"linear-gradient(135deg,#4f46e5,#7c3aed)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:17, cursor:"pointer" }}>
+                    🎮
+                  </div>
                 </div>
-              ))}
-            </div>
-            {!proToken && <div style={{ padding:"6px 10px" }}><RestoreToken onRestore={handleTokenUpdate} /></div>}
-            {/* Take a Break — bottom of sidebar */}
-            <div style={{ marginTop:"auto", padding:10, borderTop:`1px solid ${TH.border}` }}>
-              <div onClick={() => { setShowGames(true); setActiveTool(null); }}
-                style={{ background:"linear-gradient(90deg,#4f46e5,#7c3aed)", borderRadius:10, padding:"10px 12px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }}>
-                <div>
-                  <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:"white" }}>🎮 Take a Break</div>
-                  <div style={{ fontSize:10, color:"rgba(255,255,255,0.75)", marginTop:1 }}>Mini games</div>
-                </div>
-                <span style={{ color:"rgba(255,255,255,0.8)", fontSize:14 }}>→</span>
               </div>
-            </div>
+            ) : (
+              /* ── Full sidebar ── */
+              <>
+                <div style={{ padding:"10px 10px 0", flexShrink:0 }}>
+                  <div style={{ position:"relative", marginBottom:10 }}>
+                    <span style={{ position:"absolute", left:9, top:"50%", transform:"translateY(-50%)", fontSize:12, color:TH.muted, pointerEvents:"none" }}>🔍</span>
+                    <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…" style={{ ...inputStyle, paddingLeft:30, fontSize:11, background:TH.bg, border:`1px solid ${TH.border}`, color:TH.ink }} />
+                  </div>
+                  <div style={{ fontSize:9, color:TH.muted, letterSpacing:0.6, marginBottom:6, fontFamily:"Syne, sans-serif", fontWeight:700, paddingLeft:2 }}>CATEGORIES</div>
+                  {[{ id:"all", label:"All Tools", icon:"✦" }, ...CATEGORIES].map(c => (
+                    <div key={c.id} onClick={() => { setActiveCat(c.id); setSearch(""); }}
+                      style={{ padding:"7px 10px", borderRadius:8, marginBottom:2, background:activeCat===c.id&&!search?TH.accentDim:"transparent", color:activeCat===c.id&&!search?TH.accent:TH.muted, fontSize:11, fontFamily:activeCat===c.id&&!search?"Syne, sans-serif":"DM Sans, sans-serif", fontWeight:activeCat===c.id&&!search?700:400, cursor:"pointer", transition:"all 0.15s", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                      {c.icon}&nbsp;&nbsp;{c.label || "All Tools"}
+                    </div>
+                  ))}
+                </div>
+                {!proToken && <div style={{ padding:"6px 10px" }}><RestoreToken onRestore={handleTokenUpdate} /></div>}
+                <div style={{ marginTop:"auto", padding:10, borderTop:`1px solid ${TH.border}` }}>
+                  <div onClick={() => setShowGames(true)}
+                    style={{ background:"linear-gradient(90deg,#4f46e5,#7c3aed)", borderRadius:10, padding:"10px 12px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }}>
+                    <div>
+                      <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:"white" }}>🎮 Take a Break</div>
+                      <div style={{ fontSize:10, color:"rgba(255,255,255,0.75)", marginTop:1 }}>Mini games</div>
+                    </div>
+                    <span style={{ color:"rgba(255,255,255,0.8)", fontSize:14 }}>→</span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Handle 1 */}
@@ -541,47 +565,80 @@ export default function ToolForge() {
 
           {/* Middle tool list */}
           <div style={{ width:midW, flexShrink:0, background:TH.bg, borderRight:`1px solid ${TH.border}`, overflowY:"auto", padding:"10px 8px" }}>
-            <div style={{ fontSize:9, color:TH.muted, letterSpacing:0.6, marginBottom:10, fontFamily:"Syne, sans-serif", fontWeight:700, paddingLeft:2 }}>
-              {search ? `${middleTools.length} RESULT${middleTools.length!==1?"S":""}` : activeCat==="all" ? `ALL ${ALL_TOOLS.length} TOOLS` : `${CATEGORIES.find(c=>c.id===activeCat)?.label?.toUpperCase()} — ${middleTools.length}`}
-            </div>
+            {/* ── Header label (hidden in icon-only) ── */}
+            {!MID_ICON && (
+              <div style={{ fontSize:9, color:TH.muted, letterSpacing:0.6, marginBottom:10, fontFamily:"Syne, sans-serif", fontWeight:700, paddingLeft:2 }}>
+                {search ? `${middleTools.length} RESULT${middleTools.length!==1?"S":""}` : activeCat==="all" ? `ALL ${ALL_TOOLS.length} TOOLS` : `${CATEGORIES.find(c=>c.id===activeCat)?.label?.toUpperCase()} — ${middleTools.length}`}
+              </div>
+            )}
 
-            {/* Group by category when showing All or searching */}
-            {(activeCat === "all" || search) ? (
+            {/* ── Icon-only middle ── */}
+            {MID_ICON ? (
+              <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
+                {middleTools.map(tool => (
+                  <div key={tool.id} onClick={() => { setActiveTool(tool); setShowGames(false); }} title={tool.name}
+                    style={{ width:36, height:36, borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, cursor:"pointer", border:`1px solid ${activeTool?.id===tool.id?tool.catColor:"transparent"}`, background:activeTool?.id===tool.id?tool.catColorDim:"transparent", transition:"all 0.15s", margin:"0 auto" }}>
+                    {tool.icon}
+                  </div>
+                ))}
+              </div>
+            ) : (activeCat === "all" || search) ? (
+              /* ── Grouped by category ── */
               CATEGORIES.map(cat => {
                 const catTools = middleTools.filter(t => t.catId === cat.id);
                 if (catTools.length === 0) return null;
                 return (
-                  <div key={cat.id} style={{ marginBottom:16 }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 8px", marginBottom:5, borderRadius:7, background:cat.colorDim, border:`1px solid ${cat.color}22` }}>
-                      <span style={{ fontSize:12 }}>{cat.icon}</span>
-                      <span style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:10, color:cat.color, flex:1 }}>{cat.label}</span>
-                      <span style={{ fontSize:9, color:cat.color, opacity:0.7 }}>{catTools.length}</span>
-                    </div>
+                  <div key={cat.id} style={{ marginBottom:14 }}>
+                    {!MID_SLIM && (
+                      <div style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 8px", marginBottom:5, borderRadius:7, background:cat.colorDim, border:`1px solid ${cat.color}22` }}>
+                        <span style={{ fontSize:12 }}>{cat.icon}</span>
+                        <span style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:10, color:cat.color, flex:1 }}>{cat.label}</span>
+                        <span style={{ fontSize:9, color:cat.color, opacity:0.7 }}>{catTools.length}</span>
+                      </div>
+                    )}
+                    {MID_SLIM && (
+                      <div style={{ padding:"3px 6px", marginBottom:4, fontSize:10, color:cat.color, fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.4 }}>{cat.icon} {cat.label}</div>
+                    )}
                     {catTools.map(tool => (
                       <div key={tool.id} onClick={() => { setActiveTool(tool); setShowGames(false); }}
-                        style={{ padding:"9px 10px", borderRadius:8, border:`1px solid ${activeTool?.id===tool.id?tool.catColor:TH.border}`, background:activeTool?.id===tool.id?tool.catColorDim:TH.card, display:"flex", alignItems:"flex-start", gap:9, cursor:"pointer", marginBottom:4, transition:"all 0.15s" }}>
+                        style={{ padding: MID_SLIM ? "7px 8px" : "9px 10px", borderRadius:8, border:`1px solid ${activeTool?.id===tool.id?tool.catColor:TH.border}`, background:activeTool?.id===tool.id?tool.catColorDim:TH.card, display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer", marginBottom:4, transition:"all 0.15s" }}>
                         <span style={{ fontSize:15, flexShrink:0, marginTop:1 }}>{tool.icon}</span>
-                        <div style={{ minWidth:0 }}>
-                          <div style={{ fontSize:11, color:activeTool?.id===tool.id?tool.catColor:TH.ink, fontWeight:600, fontFamily:"Syne, sans-serif", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", marginBottom:2 }}>{tool.name}</div>
-                          <div style={{ fontSize:10, color:TH.muted, lineHeight:1.3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{tool.desc}</div>
-                          {AI_TOOLS.includes(tool.name) && <span style={{ fontSize:9, color:TH.accent, fontFamily:"Syne, sans-serif", fontWeight:700 }}>✦ AI</span>}
-                        </div>
+                        {!MID_SLIM && (
+                          <div style={{ minWidth:0 }}>
+                            <div style={{ fontSize:11, color:activeTool?.id===tool.id?tool.catColor:TH.ink, fontWeight:600, fontFamily:"Syne, sans-serif", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", marginBottom:2 }}>{tool.name}</div>
+                            <div style={{ fontSize:10, color:TH.muted, lineHeight:1.3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{tool.desc}</div>
+                            {AI_TOOLS.includes(tool.name) && <span style={{ fontSize:9, color:TH.accent, fontFamily:"Syne, sans-serif", fontWeight:700 }}>✦ AI</span>}
+                          </div>
+                        )}
+                        {MID_SLIM && (
+                          <div style={{ minWidth:0 }}>
+                            <div style={{ fontSize:11, color:activeTool?.id===tool.id?tool.catColor:TH.ink, fontWeight:600, fontFamily:"Syne, sans-serif", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{tool.name}</div>
+                            {AI_TOOLS.includes(tool.name) && <span style={{ fontSize:9, color:TH.accent, fontFamily:"Syne, sans-serif", fontWeight:700 }}>✦ AI</span>}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                 );
               })
             ) : (
-              /* Single category list */
+              /* ── Single category list ── */
               middleTools.map(tool => (
                 <div key={tool.id} onClick={() => { setActiveTool(tool); setShowGames(false); }}
-                  style={{ padding:"10px 10px", borderRadius:8, border:`1px solid ${activeTool?.id===tool.id?tool.catColor:TH.border}`, background:activeTool?.id===tool.id?tool.catColorDim:TH.card, display:"flex", alignItems:"flex-start", gap:9, cursor:"pointer", marginBottom:5, transition:"all 0.15s" }}>
+                  style={{ padding: MID_SLIM ? "8px 8px" : "10px 10px", borderRadius:8, border:`1px solid ${activeTool?.id===tool.id?tool.catColor:TH.border}`, background:activeTool?.id===tool.id?tool.catColorDim:TH.card, display:"flex", alignItems:"flex-start", gap:9, cursor:"pointer", marginBottom:5, transition:"all 0.15s" }}>
                   <span style={{ fontSize:16, flexShrink:0, marginTop:1 }}>{tool.icon}</span>
-                  <div style={{ minWidth:0 }}>
-                    <div style={{ fontSize:12, color:activeTool?.id===tool.id?tool.catColor:TH.ink, fontWeight:600, fontFamily:"Syne, sans-serif", marginBottom:3 }}>{tool.name}</div>
-                    <div style={{ fontSize:11, color:TH.muted, lineHeight:1.4 }}>{tool.desc}</div>
-                    {AI_TOOLS.includes(tool.name) && <span style={{ fontSize:9, color:TH.accent, fontFamily:"Syne, sans-serif", fontWeight:700, marginTop:4, display:"block" }}>✦ AI POWERED</span>}
-                  </div>
+                  {!MID_SLIM ? (
+                    <div style={{ minWidth:0 }}>
+                      <div style={{ fontSize:12, color:activeTool?.id===tool.id?tool.catColor:TH.ink, fontWeight:600, fontFamily:"Syne, sans-serif", marginBottom:3 }}>{tool.name}</div>
+                      <div style={{ fontSize:11, color:TH.muted, lineHeight:1.4 }}>{tool.desc}</div>
+                      {AI_TOOLS.includes(tool.name) && <span style={{ fontSize:9, color:TH.accent, fontFamily:"Syne, sans-serif", fontWeight:700, marginTop:4, display:"block" }}>✦ AI POWERED</span>}
+                    </div>
+                  ) : (
+                    <div style={{ minWidth:0 }}>
+                      <div style={{ fontSize:11, color:activeTool?.id===tool.id?tool.catColor:TH.ink, fontWeight:600, fontFamily:"Syne, sans-serif", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{tool.name}</div>
+                      {AI_TOOLS.includes(tool.name) && <span style={{ fontSize:9, color:TH.accent, fontFamily:"Syne, sans-serif", fontWeight:700 }}>✦ AI</span>}
+                    </div>
+                  )}
                 </div>
               ))
             )}
@@ -603,6 +660,42 @@ export default function ToolForge() {
             )}
           </div>
         </div>
+
+        {/* ── Games fullscreen overlay (desktop) ── */}
+        {showGames && (
+          <div style={{ position:"fixed", inset:0, zIndex:200, background:TH.bg, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+            {/* overlay nav */}
+            <div style={{ background:TH.card, borderBottom:`1px solid ${TH.border}`, padding:"10px 20px", display:"flex", alignItems:"center", gap:12, flexShrink:0 }}>
+              <button onClick={() => setShowGames(false)}
+                style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:`1px solid ${TH.border}`, borderRadius:8, padding:"6px 12px", color:TH.muted, fontSize:12, fontFamily:"DM Sans, sans-serif", cursor:"pointer" }}>
+                ← Back to tools
+              </button>
+              <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:15, color:TH.ink }}>🎮 Take a Break</span>
+              <span style={{ fontSize:11, color:TH.muted, fontFamily:"DM Sans, sans-serif" }}>Step away from work for a minute</span>
+            </div>
+            {/* overlay content */}
+            <div style={{ flex:1, overflowY:"auto", padding:24, maxWidth:700, width:"100%", margin:"0 auto" }}>
+              <GamesSection proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} onBack={() => setShowGames(false)} />
+            </div>
+          </div>
+        )}
+
+        {/* ── Games fullscreen overlay (desktop) ── */}
+        {showGames && (
+          <div style={{ position:"fixed", inset:0, zIndex:200, background:TH.bg, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+            <div style={{ background:TH.card, borderBottom:`1px solid ${TH.border}`, padding:"10px 20px", display:"flex", alignItems:"center", gap:14, flexShrink:0 }}>
+              <button onClick={() => setShowGames(false)}
+                style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:`1px solid ${TH.border}`, borderRadius:8, padding:"6px 12px", color:TH.muted, fontSize:12, fontFamily:"DM Sans, sans-serif", cursor:"pointer" }}>
+                ← Back to tools
+              </button>
+              <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:15, color:TH.ink }}>🎮 Take a Break</span>
+              <span style={{ fontSize:11, color:TH.muted, fontFamily:"DM Sans, sans-serif" }}>Step away for a minute</span>
+            </div>
+            <div style={{ flex:1, overflowY:"auto", padding:24, maxWidth:700, width:"100%", margin:"0 auto" }}>
+              <GamesSection proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} onBack={() => setShowGames(false)} />
+            </div>
+          </div>
+        )}
 
         <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={toolId => { setActiveTool(ALL_TOOLS.find(t=>t.id===toolId)); setShowGames(false); }} />
         {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
