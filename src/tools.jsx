@@ -5,9 +5,9 @@ import { T, inputStyle, addBtnStyle, CURRENCIES, NumInput, Row, Result, MiniResu
 export function RateCalc() {
   const [currency, setCurrency] = useState("USD");
   const sym = CURRENCIES.find(c => c.code === currency)?.symbol || "$";
-  const [expenses, setExpenses] = useState(2000); const [salary, setSalary] = useState(4000); const [hours, setHours] = useState(160); const [buffer, setBuffer] = useState(20);
-  const rate = ((Number(expenses) + Number(salary)) / Number(hours) * (1 + Number(buffer) / 100)).toFixed(2);
-  return <div><CurrencyPicker value={currency} onChange={setCurrency} /><Row label={`Monthly Expenses (${sym})`}><NumInput val={expenses} set={setExpenses} /></Row><Row label={`Desired Monthly Take-home (${sym})`}><NumInput val={salary} set={setSalary} /></Row><Row label="Billable Hours / Month"><NumInput val={hours} set={setHours} /></Row><Row label="Buffer / Profit (%)"><NumInput val={buffer} set={setBuffer} /></Row><Result label="Your Minimum Hourly Rate" value={`${sym}${rate}/hr`} /><CopyButton text={`My minimum hourly rate is ${sym}${rate}/hr — ToolForge`} /><Tip>Going below this rate means you're losing money. Add 20–40% more for growth.</Tip></div>;
+  const [expenses, setExpenses] = useState(""); const [salary, setSalary] = useState(""); const [hours, setHours] = useState(""); const [buffer, setBuffer] = useState(20);
+  const rate = (Number(expenses) > 0 || Number(salary) > 0) && Number(hours) > 0 ? ((Number(expenses) + Number(salary)) / Number(hours) * (1 + Number(buffer) / 100)).toFixed(2) : null;
+  return <div><CurrencyPicker value={currency} onChange={setCurrency} /><Row label={`Monthly Expenses (${sym})`}><NumInput val={expenses} set={setExpenses} /></Row><Row label={`Desired Monthly Take-home (${sym})`}><NumInput val={salary} set={setSalary} /></Row><Row label="Billable Hours / Month"><NumInput val={hours} set={setHours} /></Row><Row label="Buffer / Profit (%)"><NumInput val={buffer} set={setBuffer} /></Row>{rate && <><Result label="Your Minimum Hourly Rate" value={`${sym}${rate}/hr`} /><CopyButton text={`My minimum hourly rate is ${sym}${rate}/hr — ToolForge`} /></>}<Tip>Going below this rate means you're losing money. Add 20–40% more for growth.</Tip></div>;
 }
 
 export function ProjectEstimator() {
@@ -15,8 +15,8 @@ export function ProjectEstimator() {
   const sym = CURRENCIES.find(c => c.code === currency)?.symbol || "$";
   const nextId = useRef(3);
   const [tasks, setTasks] = useState([
-    { id:1, name: "Design",      hours: 5  },
-    { id:2, name: "Development", hours: 15 },
+    { id:1, name: "", hours: "" },
+    { id:2, name: "", hours: "" },
   ]);
   const [rate, setRate]       = useState(75);
   const [buffer, setBuffer]   = useState(15);
@@ -267,25 +267,183 @@ export function GPACalc() {
 export function TipSplitter() {
   const [currency, setCurrency] = useState("USD");
   const sym = CURRENCIES.find(c => c.code === currency)?.symbol || "$";
-  const [bill, setBill] = useState(80); const [tip, setTip] = useState(18); const [people, setPeople] = useState(4);
-  const tipAmt = (bill * tip / 100).toFixed(2); const total = (Number(bill) + Number(tipAmt)).toFixed(2); const perPerson = (total / people).toFixed(2);
-  return <div><CurrencyPicker value={currency} onChange={setCurrency} /><Row label={`Bill Total (${sym})`}><NumInput val={bill} set={setBill} /></Row><Row label="Tip (%)"><div style={{ display: "flex", gap: 6 }}>{[10,15,18,20,25].map(p => <button key={p} onClick={() => setTip(p)} style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: `1px solid ${tip===p?T.accent:T.border}`, background: tip===p?T.accentDim:"white", cursor: "pointer", fontSize: 12, fontFamily: "DM Sans, sans-serif", color: tip===p?T.accent:T.muted }}>{p}%</button>)}</div></Row><Row label="Number of People"><NumInput val={people} set={setPeople} /></Row><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}><MiniResult label="Tip Amount" value={`${sym}${tipAmt}`} /><MiniResult label="Total Bill" value={`${sym}${total}`} /></div><Result label="Each Person Pays" value={`${sym}${perPerson}`} /><CopyButton text={`Bill split: ${sym}${perPerson} each — ToolForge`} /></div>;
+  const [bill, setBill]     = useState("");
+  const [tip, setTip]       = useState(18);
+  const [customTip, setCustomTip] = useState("");
+  const [useCustom, setUseCustom] = useState(false);
+  const [people, setPeople] = useState(2);
+
+  const activeTip   = useCustom ? (parseFloat(customTip) || 0) : tip;
+  const billNum     = parseFloat(bill) || 0;
+  const tipAmt      = (billNum * activeTip / 100).toFixed(2);
+  const total       = (billNum + parseFloat(tipAmt)).toFixed(2);
+  const perPerson   = people > 0 ? (parseFloat(total) / people).toFixed(2) : "0.00";
+  const hasResult   = billNum > 0;
+
+  return (
+    <div>
+      <CurrencyPicker value={currency} onChange={setCurrency} />
+      <Row label={`Bill Total (${sym})`}><NumInput val={bill} set={setBill} /></Row>
+
+      <Row label="Tip">
+        <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+          {[10,15,18,20,25].map(p => (
+            <button key={p} onClick={() => { setTip(p); setUseCustom(false); }}
+              style={{ flex:1, minWidth:40, padding:"6px 0", borderRadius:8, border:`1px solid ${!useCustom&&tip===p?T.accent:T.border}`, background:!useCustom&&tip===p?T.accentDim:T.card, cursor:"pointer", fontSize:12, fontFamily:"DM Sans, sans-serif", color:!useCustom&&tip===p?T.accent:T.muted }}>
+              {p}%
+            </button>
+          ))}
+          <input
+            type="number" placeholder="Custom" value={customTip}
+            onChange={e => { setCustomTip(e.target.value); setUseCustom(true); }}
+            onFocus={() => setUseCustom(true)}
+            style={{ ...inputStyle, flex:1, minWidth:60, padding:"6px 8px", border:`1px solid ${useCustom?T.accent:T.border}`, background:useCustom?T.accentDim:T.card, color:useCustom?T.accent:T.ink, textAlign:"center" }}
+          />
+        </div>
+      </Row>
+
+      <Row label="Number of People"><NumInput val={people} set={setPeople} /></Row>
+
+      {hasResult && (
+        <>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:12 }}>
+            <MiniResult label={"Tip (" + activeTip + "%)"} value={sym + tipAmt} />
+            <MiniResult label="Total Bill" value={sym + total} />
+          </div>
+          <Result label="Each Person Pays" value={sym + perPerson} />
+          <CopyButton text={"Bill split: " + sym + perPerson + " each (" + activeTip + "% tip) — ToolForge"} />
+        </>
+      )}
+    </div>
+  );
 }
 
 export function MarginCalc() {
   const [currency, setCurrency] = useState("USD");
   const sym = CURRENCIES.find(c => c.code === currency)?.symbol || "$";
-  const [cost, setCost] = useState(30); const [price, setPrice] = useState(75);
-  const profit = (price - cost).toFixed(2); const margin = price > 0 ? ((profit / price) * 100).toFixed(1) : 0; const markup = cost > 0 ? (((price - cost) / cost) * 100).toFixed(1) : 0;
-  return <div><CurrencyPicker value={currency} onChange={setCurrency} /><Row label={`Cost Price (${sym})`}><NumInput val={cost} set={setCost} /></Row><Row label={`Selling Price (${sym})`}><NumInput val={price} set={setPrice} /></Row><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}><MiniResult label="Profit" value={`${sym}${profit}`} /><MiniResult label="Markup %" value={`${markup}%`} /></div><Result label="Profit Margin" value={`${margin}%`} color={margin >= 40 ? T.green : margin >= 20 ? T.accent : "#dc2626"} /><CopyButton text={`Profit margin: ${margin}% — ToolForge`} /><Tip>{margin >= 40 ? "Excellent margin!" : margin >= 20 ? "Decent margin." : "Low margin — review your pricing."}</Tip></div>;
+  const [cost, setCost]     = useState("");
+  const [price, setPrice]   = useState("");
+  const [targetMargin, setTargetMargin] = useState("40");
+  const [showReverse, setShowReverse]   = useState(false);
+
+  const costNum  = parseFloat(cost)  || 0;
+  const priceNum = parseFloat(price) || 0;
+  const hasResult = costNum > 0 && priceNum > 0;
+
+  const profit = hasResult ? (priceNum - costNum).toFixed(2) : "0.00";
+  const margin = hasResult && priceNum > 0 ? ((parseFloat(profit) / priceNum) * 100).toFixed(1) : 0;
+  const markup = hasResult && costNum > 0  ? (((priceNum - costNum) / costNum) * 100).toFixed(1) : 0;
+  const marginColor = margin >= 40 ? T.green : margin >= 20 ? T.accent : "#dc2626";
+
+  // Reverse: what price gives target margin?
+  const tgt = parseFloat(targetMargin) || 0;
+  const neededPrice = costNum > 0 && tgt < 100 ? (costNum / (1 - tgt / 100)).toFixed(2) : null;
+
+  return (
+    <div>
+      <CurrencyPicker value={currency} onChange={setCurrency} />
+      <Row label={`Cost Price (${sym})`}><NumInput val={cost} set={setCost} /></Row>
+      <Row label={`Selling Price (${sym})`}><NumInput val={price} set={setPrice} /></Row>
+
+      {hasResult && (
+        <>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:12 }}>
+            <MiniResult label="Profit" value={sym + profit} />
+            <MiniResult label="Markup %" value={markup + "%"} />
+          </div>
+          <Result label="Profit Margin" value={margin + "%"} color={marginColor} />
+          <CopyButton text={"Profit margin: " + margin + "% — ToolForge"} />
+          <Tip>{margin >= 40 ? "Excellent margin!" : margin >= 20 ? "Decent margin." : "Low margin — review your pricing."}</Tip>
+        </>
+      )}
+
+      {/* Reverse calculator */}
+      <div style={{ marginTop:12, borderRadius:12, border:`1px solid ${T.border}`, overflow:"hidden" }}>
+        <div onClick={() => setShowReverse(r => !r)}
+          style={{ padding:"11px 14px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer", background:showReverse?T.greenDim:T.card }}>
+          <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:T.green }}>🎯 What price hits my target margin?</div>
+          <span style={{ fontSize:13, color:T.muted, transform:showReverse?"rotate(180deg)":"rotate(0deg)", transition:"transform 0.2s", display:"inline-block" }}>▾</span>
+        </div>
+        {showReverse && (
+          <div style={{ padding:"14px", background:T.card, borderTop:`1px solid ${T.border}` }}>
+            <Row label="Target Margin (%)"><NumInput val={targetMargin} set={setTargetMargin} /></Row>
+            {neededPrice ? (
+              <div style={{ padding:"12px 14px", borderRadius:10, background:T.greenDim, border:`1px solid ${T.green}33`, textAlign:"center", marginTop:8 }}>
+                <div style={{ fontSize:11, color:T.green, fontFamily:"DM Sans, sans-serif", marginBottom:4 }}>Sell at</div>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:32, color:T.green, lineHeight:1 }}>{sym}{neededPrice}</div>
+                <div style={{ fontSize:11, color:T.green, opacity:0.8, marginTop:4, fontFamily:"DM Sans, sans-serif" }}>to achieve {targetMargin}% margin</div>
+              </div>
+            ) : (
+              <div style={{ fontSize:12, color:T.muted, textAlign:"center", padding:"8px 0", fontFamily:"DM Sans, sans-serif" }}>Enter a cost price above first</div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function BreakEvenCalc() {
   const [currency, setCurrency] = useState("USD");
   const sym = CURRENCIES.find(c => c.code === currency)?.symbol || "$";
-  const [fixed, setFixed] = useState(3000); const [varCost, setVarCost] = useState(20); const [sellPrice, setSellPrice] = useState(50);
-  const contrib = sellPrice - varCost; const units = contrib > 0 ? Math.ceil(fixed / contrib) : "∞"; const revenue = typeof units === "number" ? (units * sellPrice).toFixed(0) : "∞";
-  return <div><CurrencyPicker value={currency} onChange={setCurrency} /><Row label={`Monthly Fixed Costs (${sym})`}><NumInput val={fixed} set={setFixed} /></Row><Row label={`Variable Cost per Unit (${sym})`}><NumInput val={varCost} set={setVarCost} /></Row><Row label={`Selling Price per Unit (${sym})`}><NumInput val={sellPrice} set={setSellPrice} /></Row><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}><MiniResult label="Contribution Margin" value={`${sym}${contrib}`} /><MiniResult label="Break-Even Revenue" value={`${sym}${Number(revenue).toLocaleString()}`} /></div><Result label="Units to Break Even" value={typeof units === "number" ? units.toLocaleString() : "∞"} /><CopyButton text={`Break-even: ${units} units — ToolForge`} /><Tip>Sell more than {units} units per month and you're profitable.</Tip></div>;
+  const [fixed, setFixed]       = useState("");
+  const [varCost, setVarCost]   = useState("");
+  const [sellPrice, setSellPrice] = useState("");
+  const [actualUnits, setActualUnits] = useState("");
+
+  const fixedNum = parseFloat(fixed) || 0;
+  const varNum   = parseFloat(varCost) || 0;
+  const sellNum  = parseFloat(sellPrice) || 0;
+  const contrib  = sellNum - varNum;
+  const hasResult = fixedNum > 0 && contrib > 0;
+
+  const units   = hasResult ? Math.ceil(fixedNum / contrib) : null;
+  const revenue = units ? (units * sellNum).toFixed(0) : null;
+
+  // Profit at actual units sold
+  const actualNum   = parseInt(actualUnits) || 0;
+  const actualProfit = actualNum > 0 && hasResult
+    ? ((actualNum - units) * contrib).toFixed(0)
+    : null;
+
+  return (
+    <div>
+      <CurrencyPicker value={currency} onChange={setCurrency} />
+      <Row label={`Monthly Fixed Costs (${sym})`}><NumInput val={fixed} set={setFixed} /></Row>
+      <Row label={`Variable Cost per Unit (${sym})`}><NumInput val={varCost} set={setVarCost} /></Row>
+      <Row label={`Selling Price per Unit (${sym})`}><NumInput val={sellPrice} set={setSellPrice} /></Row>
+
+      {hasResult && (
+        <>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:12 }}>
+            <MiniResult label="Contribution Margin" value={sym + contrib.toFixed(2)} />
+            <MiniResult label="Break-Even Revenue" value={sym + Number(revenue).toLocaleString()} />
+          </div>
+          <Result label="Units to Break Even" value={units.toLocaleString()} />
+          <CopyButton text={"Break-even: " + units + " units at " + sym + sellNum + "/unit — ToolForge"} />
+          <Tip>{"Sell more than " + units + " units/month and you're profitable."}</Tip>
+
+          {/* Profit checker */}
+          <div style={{ marginTop:12, padding:"12px 14px", borderRadius:12, border:`1px solid ${T.border}`, background:T.card }}>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:T.ink, marginBottom:8 }}>📊 How profitable am I at X units?</div>
+            <Row label="Units You Expect to Sell"><NumInput val={actualUnits} set={setActualUnits} /></Row>
+            {actualProfit !== null && (
+              <div style={{ marginTop:8, padding:"10px 14px", borderRadius:10, background: parseFloat(actualProfit) >= 0 ? T.greenDim : "#fef2f2", border:`1px solid ${parseFloat(actualProfit) >= 0 ? T.green : "#fecaca"}`, textAlign:"center" }}>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:26, color: parseFloat(actualProfit) >= 0 ? T.green : "#dc2626" }}>
+                  {parseFloat(actualProfit) >= 0 ? "+" : ""}{sym}{Math.abs(parseFloat(actualProfit)).toLocaleString()}
+                </div>
+                <div style={{ fontSize:11, color: parseFloat(actualProfit) >= 0 ? T.green : "#dc2626", fontFamily:"DM Sans, sans-serif", marginTop:3 }}>
+                  {parseFloat(actualProfit) >= 0
+                    ? "profit — " + (actualNum - units) + " units above break-even"
+                    : "loss — " + (units - actualNum) + " units below break-even"}
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 export function DeadlineCountdown({ label, setLabel, target, setTarget, pinned, onTogglePin, running, onStart, onStop }) {
@@ -306,7 +464,7 @@ export function DeadlineCountdown({ label, setLabel, target, setTarget, pinned, 
             <div style={{ fontSize: 24, fontWeight: 800, color: T.purple, fontFamily: "Syne, sans-serif" }}>{fmt()}</div>
           </div>
         )}
-        {!running && <><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 12 }}><MiniResult label="Days" value={days} /><MiniResult label="Hours" value={hours} /><MiniResult label="Minutes" value={mins} /></div><Result label={`Until: ${label}`} value={`${days}d ${hours}h ${mins}m`} /></>}
+        {!running && <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 12 }}><MiniResult label="Days" value={days} /><MiniResult label="Hours" value={hours} /><MiniResult label="Minutes" value={mins} /></div>}
         <CopyButton text={`${days} days until ${label} — ToolForge`} />
         <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
           <button onClick={running ? onStop : onStart} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "none", background: running ? "#fee2e2" : T.purple, color: running ? "#dc2626" : "white", fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>
@@ -895,10 +1053,118 @@ export function UnitConverter() {
 }
 
 export function StudyPlanner() {
-  const [subject, setSubject] = useState("Calculus"); const [hours, setHours] = useState(10); const [days, setDays] = useState(5); const [technique, setTech] = useState("pomodoro");
-  const techniques = { pomodoro:{label:"Pomodoro (25min on / 5min break)",mins:30}, deep:{label:"Deep Work (90min blocks)",mins:90}, spaced:{label:"Spaced Repetition (30min review)",mins:30} };
-  const t = techniques[technique]; const sessions = Math.ceil((hours * 60) / t.mins); const perDay = Math.ceil(sessions / days);
-  return <div><Row label="Subject / Topic"><input value={subject} onChange={e=>setSubject(e.target.value)} style={inputStyle} /></Row><Row label="Total Study Hours Needed"><NumInput val={hours} set={setHours} /></Row><Row label="Days Available"><NumInput val={days} set={setDays} /></Row><Row label="Study Technique">{Object.entries(techniques).map(([k,v]) => <div key={k} onClick={()=>setTech(k)} style={{ padding:"9px 12px", borderRadius:8, marginBottom:6, border:`1px solid ${technique===k?T.purple:T.border}`, background:technique===k?T.purpleDim:"white", cursor:"pointer", fontSize:12, color:technique===k?T.purple:T.muted, fontFamily:"DM Sans, sans-serif" }}>{v.label}</div>)}</Row><div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:8 }}><MiniResult label="Sessions Needed" value={sessions} /><MiniResult label="Per Day" value={perDay} /></div><Result label={`Daily Plan for ${subject}`} value={`${perDay} × ${t.mins}min`} color={T.purple} /><CopyButton text={`Study plan: ${perDay} sessions/day for ${subject} — ToolForge`} /><Tip>Consistency beats cramming.</Tip></div>;
+  const TECHNIQUES = [
+    { id:"pomodoro", label:"🍅 Pomodoro",       desc:"25 min focus, 5 min break", mins:30,  longMins:25 },
+    { id:"deep",     label:"🧠 Deep Work",       desc:"90 min uninterrupted blocks", mins:90, longMins:90 },
+    { id:"spaced",   label:"🔁 Spaced Repetition", desc:"Short daily reviews, spaced out", mins:30, longMins:30 },
+    { id:"custom",   label:"⚙️ Custom",           desc:"Set your own session length", mins:45, longMins:45 },
+  ];
+
+  const [subject, setSubject]     = useState("");
+  const [hours, setHours]         = useState("");
+  const [days, setDays]           = useState("");
+  const [technique, setTech]      = useState("pomodoro");
+  const [customMins, setCustomMins] = useState(45);
+
+  const tech      = TECHNIQUES.find(t => t.id === technique);
+  const sessMins  = technique === "custom" ? Number(customMins) : tech.longMins;
+  const hoursNum  = parseFloat(hours) || 0;
+  const daysNum   = parseInt(days) || 0;
+  const hasResult = hoursNum > 0 && daysNum > 0 && sessMins > 0;
+
+  const totalMins   = hoursNum * 60;
+  const sessions    = hasResult ? Math.ceil(totalMins / sessMins) : 0;
+  const perDay      = hasResult ? Math.ceil(sessions / daysNum) : 0;
+  const minsPerDay  = perDay * sessMins;
+  const hrsPerDay   = (minsPerDay / 60).toFixed(1);
+
+  const schedule = hasResult ? Array.from({ length: Math.min(daysNum, 7) }, (_, i) => ({
+    day: "Day " + (i + 1),
+    sessions: i < daysNum ? perDay : 0,
+  })) : [];
+
+  return (
+    <div>
+      <Row label="Subject / Topic">
+        <input value={subject} onChange={e => setSubject(e.target.value)}
+          style={inputStyle} placeholder="e.g. Calculus, Spanish, History" />
+      </Row>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+        <Row label="Total Hours Needed"><NumInput val={hours} set={setHours} /></Row>
+        <Row label="Days Available"><NumInput val={days} set={setDays} /></Row>
+      </div>
+
+      {/* Technique picker */}
+      <div style={{ marginBottom:14 }}>
+        <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:6 }}>STUDY TECHNIQUE</div>
+        <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+          {TECHNIQUES.map(t => (
+            <div key={t.id} onClick={() => setTech(t.id)}
+              style={{ padding:"10px 13px", borderRadius:10, border:`1px solid ${technique===t.id?T.purple:T.border}`, background:technique===t.id?T.purpleDim:T.card, cursor:"pointer", transition:"all 0.15s", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+              <div>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:technique===t.id?T.purple:T.ink }}>{t.label}</div>
+                <div style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", marginTop:1 }}>{t.desc}</div>
+              </div>
+              {technique===t.id && <div style={{ width:8, height:8, borderRadius:"50%", background:T.purple, flexShrink:0 }} />}
+            </div>
+          ))}
+        </div>
+        {technique === "custom" && (
+          <div style={{ marginTop:8 }}>
+            <Row label="Session Length (minutes)"><NumInput val={customMins} set={setCustomMins} /></Row>
+          </div>
+        )}
+      </div>
+
+      {/* Results */}
+      {hasResult && (
+        <>
+          <div style={{ marginTop:4, padding:"16px 18px", borderRadius:14, background:T.card, border:`2px solid ${T.purple}22` }}>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:11, color:T.muted, marginBottom:10, letterSpacing:0.5 }}>YOUR STUDY PLAN{subject ? " FOR " + subject.toUpperCase() : ""}</div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:12 }}>
+              <div style={{ textAlign:"center", padding:"10px 6px", borderRadius:10, background:T.purpleDim }}>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:22, color:T.purple }}>{sessions}</div>
+                <div style={{ fontSize:10, color:T.muted, fontFamily:"DM Sans, sans-serif", marginTop:2 }}>total sessions</div>
+              </div>
+              <div style={{ textAlign:"center", padding:"10px 6px", borderRadius:10, background:T.purpleDim }}>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:22, color:T.purple }}>{perDay}</div>
+                <div style={{ fontSize:10, color:T.muted, fontFamily:"DM Sans, sans-serif", marginTop:2 }}>sessions/day</div>
+              </div>
+              <div style={{ textAlign:"center", padding:"10px 6px", borderRadius:10, background:T.purpleDim }}>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:22, color:T.purple }}>{hrsPerDay}h</div>
+                <div style={{ fontSize:10, color:T.muted, fontFamily:"DM Sans, sans-serif", marginTop:2 }}>per day</div>
+              </div>
+            </div>
+            <div style={{ fontSize:12, color:T.purple, fontFamily:"DM Sans, sans-serif", textAlign:"center", padding:"8px", borderRadius:8, background:T.purpleDim }}>
+              {sessMins} min sessions · {daysNum} days · {hoursNum}h total
+            </div>
+          </div>
+
+          {/* Mini weekly schedule */}
+          {daysNum <= 14 && (
+            <div style={{ marginTop:10 }}>
+              <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:6 }}>WEEK PREVIEW</div>
+              <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+                {schedule.map((d, i) => (
+                  <div key={i} style={{ flex:"0 0 auto", minWidth:48, padding:"8px 6px", borderRadius:8, background:T.purpleDim, border:`1px solid ${T.purple}33`, textAlign:"center" }}>
+                    <div style={{ fontSize:9, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>{d.day}</div>
+                    <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.purple, marginTop:2 }}>{d.sessions}×</div>
+                  </div>
+                ))}
+                {daysNum > 7 && <div style={{ flex:"0 0 auto", padding:"8px 6px", borderRadius:8, background:T.card, border:`1px solid ${T.border}`, fontSize:10, color:T.muted, fontFamily:"DM Sans, sans-serif", display:"flex", alignItems:"center" }}>+{daysNum-7} more</div>}
+              </div>
+            </div>
+          )}
+
+          <div style={{ marginTop:10 }}>
+            <CopyButton text={"Study plan" + (subject ? " for " + subject : "") + ": " + perDay + " sessions/day (" + sessMins + "min each) for " + daysNum + " days — ToolForge"} />
+          </div>
+          <Tip>Consistency beats cramming. Even one session a day compounds fast.</Tip>
+        </>
+      )}
+    </div>
+  );
 }
 
 export function CitationFormatter({ proToken, onNeedUpgrade, onTokenUpdate }) {
