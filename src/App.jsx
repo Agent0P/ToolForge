@@ -123,40 +123,84 @@ function ToolCard({ tool, onClick }) {
 }
 
 /* ── Modals & pages ── */
-function UpgradeModal({ onClose }) {
+function UpgradeModal({ onClose, proToken }) {
   const onetimeUrl = import.meta.env.VITE_LS_ONETIME_URL || "#";
   const proUrl     = import.meta.env.VITE_LS_PRO_URL     || "#";
+  const topupUrl   = import.meta.env.VITE_LS_TOPUP_URL   || "#";
+
+  // Subscriber state
+  const isPro     = proToken?.type === "pro";
+  const isPack    = proToken?.type === "pack" || (proToken && !isPro);
+  const hasToken  = !!proToken;
+
+  // Title / subtitle adapt to context
+  const title    = hasToken ? "Top up your balance" : "Unlock Claude Sonnet AI ✦";
+  const subtitle = hasToken
+    ? `You have ${proToken.generations_left} generation${proToken.generations_left !== 1 ? "s" : ""} left`
+    : "Claude produces noticeably better cover letters, proposals, and emails — polished enough to send to real clients.";
+
   return (
     <div style={{ position:"fixed", inset:0, background:"rgba(15,15,13,0.6)", zIndex:1000, display:"flex", alignItems:"flex-end", justifyContent:"center", padding:16 }} onClick={e => { if (e.target===e.currentTarget) onClose(); }}>
       <div style={{ background:T.card, borderRadius:20, padding:24, width:"100%", maxWidth:440, boxShadow:"0 -8px 40px rgba(0,0,0,0.15)" }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+
+        {/* Header */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
           <div>
-            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.ink }}>Unlock Claude</div>
-            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.ink }}>Sonnet AI ✦</div>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.ink }}>{title}</div>
+            <div style={{ fontSize:12, color:T.muted, fontFamily:"DM Sans, sans-serif", marginTop:3, lineHeight:1.5 }}>{subtitle}</div>
           </div>
-          <button onClick={onClose} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer", color:T.muted }}>✕</button>
+          <button onClick={onClose} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer", color:T.muted, marginLeft:12, flexShrink:0 }}>✕</button>
         </div>
-        <div style={{ fontSize:13, color:T.muted, marginBottom:16, fontFamily:"DM Sans, sans-serif", lineHeight:1.6 }}>Claude produces noticeably better cover letters, proposals, and emails — polished enough to send to real clients.</div>
-        <a href={onetimeUrl} style={{ textDecoration:"none", display:"block", marginBottom:10 }}>
-          <div style={{ padding:16, borderRadius:14, border:`2px solid ${T.accent}`, background:T.accentDim, cursor:"pointer" }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}><div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:T.accent }}>One-Time Pack</div><div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.accent }}>$2.99</div></div>
-            <div style={{ fontSize:12, color:T.accent, fontFamily:"DM Sans, sans-serif" }}>50 Claude generations · Never expires · No subscription</div>
-          </div>
-        </a>
-        <a href={proUrl} style={{ textDecoration:"none", display:"block", marginBottom:14 }}>
-          <div style={{ padding:16, borderRadius:14, border:`2px solid ${T.gold}`, background:T.goldDim, cursor:"pointer", position:"relative" }}>
-            <div style={{ position:"absolute", top:-10, right:12, fontSize:9, padding:"3px 9px", borderRadius:99, background:T.gold, color:"white", fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.5 }}>BEST VALUE</div>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
-              <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:T.gold }}>Pro Monthly</div>
-              <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.gold }}>$7.99<span style={{ fontSize:12, fontWeight:400 }}>/mo</span></div>
+
+        {/* Top-Up — ONLY for existing subscribers (pro or pack) */}
+        {hasToken && (
+          <a href={topupUrl} style={{ textDecoration:"none", display:"block", marginBottom:10 }}>
+            <div style={{ padding:16, borderRadius:14, border:`2px solid ${T.green}`, background:T.greenDim, cursor:"pointer", position:"relative" }}>
+              <div style={{ position:"absolute", top:-10, right:12, fontSize:9, padding:"3px 9px", borderRadius:99, background:T.green, color:"white", fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.5 }}>REFILL</div>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:T.green }}>Top-Up Pack</div>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.green }}>$2.99</div>
+              </div>
+              <div style={{ fontSize:12, color:T.green, fontFamily:"DM Sans, sans-serif" }}>+100 Claude generations · Added to your current balance instantly</div>
             </div>
-            <div style={{ fontSize:12, color:T.gold, fontFamily:"DM Sans, sans-serif" }}>400 Claude generations/month · No ads · Cancel anytime</div>
+          </a>
+        )}
+
+        {/* One-Time Pack — only for non-subscribers */}
+        {!hasToken && (
+          <a href={onetimeUrl} style={{ textDecoration:"none", display:"block", marginBottom:10 }}>
+            <div style={{ padding:16, borderRadius:14, border:`2px solid ${T.accent}`, background:T.accentDim, cursor:"pointer" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:T.accent }}>One-Time Pack</div>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.accent }}>$2.99</div>
+              </div>
+              <div style={{ fontSize:12, color:T.accent, fontFamily:"DM Sans, sans-serif" }}>50 Claude generations · Never expires · No subscription</div>
+            </div>
+          </a>
+        )}
+
+        {/* Pro Monthly — only for non-pro users */}
+        {!isPro && (
+          <a href={proUrl} style={{ textDecoration:"none", display:"block", marginBottom:14 }}>
+            <div style={{ padding:16, borderRadius:14, border:`2px solid ${T.gold}`, background:T.goldDim, cursor:"pointer", position:"relative" }}>
+              <div style={{ position:"absolute", top:-10, right:12, fontSize:9, padding:"3px 9px", borderRadius:99, background:T.gold, color:"white", fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.5 }}>BEST VALUE</div>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:T.gold }}>Pro Monthly</div>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.gold }}>$7.99<span style={{ fontSize:12, fontWeight:400 }}>/mo</span></div>
+              </div>
+              <div style={{ fontSize:12, color:T.gold, fontFamily:"DM Sans, sans-serif" }}>400 Claude generations/month · No ads · Cancel anytime</div>
+            </div>
+          </a>
+        )}
+
+        {/* Restore hint — only for non-subscribers */}
+        {!hasToken && (
+          <div style={{ marginBottom:12, padding:"10px 12px", borderRadius:8, background:"#f0f9ff", border:"1px solid #bae6fd", fontSize:11, color:"#0369a1", fontFamily:"DM Sans, sans-serif", lineHeight:1.6 }}>
+            💡 <strong>Already purchased?</strong> Click "Restore Access" on the home screen and enter your purchase email.
           </div>
-        </a>
-        <div style={{ marginBottom:12, padding:"10px 12px", borderRadius:8, background:"#f0f9ff", border:"1px solid #bae6fd", fontSize:11, color:"#0369a1", fontFamily:"DM Sans, sans-serif", lineHeight:1.6 }}>
-          💡 <strong>How to restore access:</strong> After purchase, go to ToolForge → click "Restore Access" → enter your purchase email. Works on any device, anytime.
-        </div>
-        <div style={{ textAlign:"center", fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>Secure payment via Lemon Squeezy · Token activated instantly after purchase</div>
+        )}
+
+        <div style={{ textAlign:"center", fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>Secure payment via Lemon Squeezy · Activated instantly</div>
       </div>
     </div>
   );
@@ -484,7 +528,7 @@ export default function ToolForge() {
           </div>
           <div style={{ display:"flex", gap:12, alignItems:"center" }}>
             <span onClick={() => { setShowFaq(true); window.history.pushState({},"","/faq"); }} style={{ fontSize:11, color:TH.muted, cursor:"pointer", fontFamily:"DM Sans, sans-serif" }}>FAQ</span>
-            <a href="https://toolforge.lemonsqueezy.com" target="_blank" rel="noreferrer" style={{ fontSize:11, color:TH.muted, textDecoration:"none", fontFamily:"DM Sans, sans-serif" }}>Pricing</a>
+            <span onClick={() => setShowUpgrade(true)} style={{ fontSize:11, color:TH.muted, cursor:"pointer", fontFamily:"DM Sans, sans-serif" }}>Pricing</span>
             <DarkToggle />
             {proToken && proToken.generations_left > 0
               ? <div style={{ background:TH.goldDim, border:`1px solid ${TH.gold}`, borderRadius:8, padding:"4px 11px", fontSize:10, color:TH.gold, fontFamily:"Syne, sans-serif", fontWeight:700 }}>✦ {proToken.generations_left} left</div>
@@ -698,7 +742,7 @@ export default function ToolForge() {
         )}
 
         <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={toolId => { setActiveTool(ALL_TOOLS.find(t=>t.id===toolId)); setShowGames(false); }} />
-        {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
+        {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} />}
       </div>
     );
   }
@@ -715,7 +759,7 @@ export default function ToolForge() {
           <GamesSection proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} onBack={() => setShowGames(false)} />
         </div>
       </div>
-      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} />}
       <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={toolId => { setShowGames(false); setActiveTool(ALL_TOOLS.find(t=>t.id===toolId)); }} />
     </>
   );
@@ -734,7 +778,7 @@ export default function ToolForge() {
         )}
       </div>
       <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={toolId => setActiveTool(ALL_TOOLS.find(t=>t.id===toolId))} />
-      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} />}
     </>
   );
 
@@ -844,7 +888,7 @@ export default function ToolForge() {
       </div>
 
       <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={toolId => setActiveTool(ALL_TOOLS.find(t=>t.id===toolId))} />
-      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} />}
     </>
   );
 }
