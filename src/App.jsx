@@ -49,7 +49,7 @@ const CATEGORIES = [
 ];
 
 const ALL_TOOLS = CATEGORIES.flatMap(c => c.tools.map(t => ({ ...t, catId:c.id, catColor:c.color, catColorDim:c.colorDim })));
-const AI_TOOLS  = ["Cover Letter Generator","LinkedIn Bio Writer","Cold Email Generator","Business Tagline Generator","Essay Outline Generator","Client Proposal Writer","Invoice Text Generator","Marketing Email Writer","Resume Reviewer","Salary Negotiation Helper","Savings Goal Calculator","Document Summarizer"];
+const AI_TOOLS  = ["Cover Letter Generator","LinkedIn Bio Writer","Cold Email Generator","Business Tagline Generator","Essay Outline Generator","Client Proposal Writer","Invoice Text Generator","Marketing Email Writer","Resume Reviewer","Salary Negotiation Helper","Savings Goal Calculator","Document Summarizer","Citation Formatter"];
 
 /* ── Tool renderer ── */
 function ToolView({ tool, onBack, proToken, onNeedUpgrade, onTokenUpdate, pomoProps, dlProps }) {
@@ -67,7 +67,7 @@ function ToolView({ tool, onBack, proToken, onNeedUpgrade, onTokenUpdate, pomoPr
       case "unit":      return <UnitConverter />;
       case "timezone":  return <TimezoneConverter />;
       case "study":     return <StudyPlanner />;
-      case "citation":  return <CitationFormatter />;
+      case "citation":  return <CitationFormatter proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
       case "salary":    return <SalaryHelper proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
       case "pomodoro":  return <PomodoroTimer {...pomoProps} />;
       case "wordcount": return <WordCounter />;
