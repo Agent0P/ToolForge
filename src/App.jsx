@@ -9,6 +9,17 @@ import {
 import { SavingsCalc, SalaryHelper, ResumeReviewer, AIToolPlaceholder, DocumentSummarizer } from "./ai-tools";
 import { G_COLOR, G_DIM, GamesSection } from "./games";
 
+/* ── Dark theme ── */
+const D = {
+  bg:"#1c1a17", ink:"#f0ede8", muted:"#8a8780", border:"#2e2b27",
+  card:"#242220", accent:"#f97316", accentDim:"#431407",
+  green:"#22c55e", greenDim:"#052e16",
+  blue:"#60a5fa", blueDim:"#1e3a5f",
+  purple:"#a78bfa", purpleDim:"#2e1065",
+  teal:"#2dd4bf", tealDim:"#042f2e",
+  gold:"#fbbf24", goldDim:"#292008",
+};
+
 /* ── Categories & tool registry ── */
 const CATEGORIES = [
   { id:"writing", label:"Writing & AI", icon:"✍️", color:T.accent, colorDim:T.accentDim, tools:[
@@ -52,7 +63,7 @@ const ALL_TOOLS = CATEGORIES.flatMap(c => c.tools.map(t => ({ ...t, catId:c.id, 
 const AI_TOOLS  = ["Cover Letter Generator","LinkedIn Bio Writer","Cold Email Generator","Business Tagline Generator","Essay Outline Generator","Client Proposal Writer","Invoice Text Generator","Marketing Email Writer","Resume Reviewer","Salary Negotiation Helper","Savings Goal Calculator","Document Summarizer","Citation Formatter"];
 
 /* ── Tool renderer ── */
-function ToolView({ tool, onBack, proToken, onNeedUpgrade, onTokenUpdate, pomoProps, dlProps }) {
+function ToolView({ tool, onBack, hideBack, proToken, onNeedUpgrade, onTokenUpdate, pomoProps, dlProps }) {
   const cat = CATEGORIES.find(c => c.id === tool.catId);
   const renderTool = () => {
     switch (tool.id) {
@@ -82,7 +93,9 @@ function ToolView({ tool, onBack, proToken, onNeedUpgrade, onTokenUpdate, pomoPr
   };
   return (
     <div>
-      <button onClick={onBack} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", color:T.muted, fontSize:13, cursor:"pointer", fontFamily:"DM Sans, sans-serif", marginBottom:16, padding:0 }}>← Back to all tools</button>
+      {!hideBack && (
+        <button onClick={onBack} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", color:T.muted, fontSize:13, cursor:"pointer", fontFamily:"DM Sans, sans-serif", marginBottom:16, padding:0 }}>← Back to all tools</button>
+      )}
       <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
         <div style={{ width:46, height:46, borderRadius:12, background:cat.colorDim, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22 }}>{tool.icon}</div>
         <div>
@@ -165,7 +178,6 @@ function SuccessPage({ orderId, onDone }) {
     };
     poll();
   }, [orderId]);
-
   return (
     <div style={{ maxWidth:480, margin:"0 auto", padding:40, background:T.bg, minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}>
       <div style={{ background:T.card, borderRadius:20, padding:28, textAlign:"center", border:`1px solid ${T.border}`, width:"100%" }}>
@@ -191,19 +203,19 @@ function SuccessPage({ orderId, onDone }) {
   );
 }
 
-/* ── Footer & static pages ── */
-function Footer({ onFaq, onTos, onRefund }) {
+function Footer({ onFaq, onTos, onRefund, TH: th }) {
+  const theme = th || T;
   return (
-    <div style={{ borderTop:`1px solid ${T.border}`, padding:"20px 20px", background:T.card, textAlign:"center" }}>
-      <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:14, color:T.ink, marginBottom:6 }}>Tool<span style={{ color:T.accent }}>Forge</span></div>
-      <div style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", marginBottom:12 }}>Free tools for freelancers, students & small businesses.</div>
+    <div style={{ borderTop:`1px solid ${theme.border}`, padding:"20px 20px", background:theme.card, textAlign:"center" }}>
+      <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:14, color:theme.ink, marginBottom:6 }}>Tool<span style={{ color:theme.accent }}>Forge</span></div>
+      <div style={{ fontSize:11, color:theme.muted, fontFamily:"DM Sans, sans-serif", marginBottom:12 }}>Free tools for freelancers, students & small businesses.</div>
       <div style={{ display:"flex", justifyContent:"center", gap:20, flexWrap:"wrap" }}>
-        <span onClick={onFaq}    style={{ fontSize:11, color:T.accent, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>FAQ & About</span>
-        <a href="https://toolforge.lemonsqueezy.com" target="_blank" rel="noreferrer" style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", textDecoration:"none" }}>Pricing</a>
-        <span onClick={onTos}    style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>Terms of Service</span>
-        <span onClick={onRefund} style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>Refund Policy</span>
+        <span onClick={onFaq}    style={{ fontSize:11, color:theme.accent, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>FAQ & About</span>
+        <a href="https://toolforge.lemonsqueezy.com" target="_blank" rel="noreferrer" style={{ fontSize:11, color:theme.muted, fontFamily:"DM Sans, sans-serif", textDecoration:"none" }}>Pricing</a>
+        <span onClick={onTos}    style={{ fontSize:11, color:theme.muted, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>Terms of Service</span>
+        <span onClick={onRefund} style={{ fontSize:11, color:theme.muted, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>Refund Policy</span>
       </div>
-      <div style={{ fontSize:10, color:T.muted, fontFamily:"DM Sans, sans-serif", marginTop:14 }}>© {new Date().getFullYear()} ToolForge · Made with ☕</div>
+      <div style={{ fontSize:10, color:theme.muted, fontFamily:"DM Sans, sans-serif", marginTop:14 }}>© {new Date().getFullYear()} ToolForge · Made with ☕</div>
     </div>
   );
 }
@@ -233,10 +245,7 @@ function FAQPage({ onBack, onTos, onRefund }) {
       </div>
       <div style={{ margin:16, padding:20, borderRadius:16, background:T.card, border:`1px solid ${T.border}` }}>
         <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:T.ink, marginBottom:8 }}>✦ About ToolForge</div>
-        <div style={{ fontSize:13, color:T.muted, lineHeight:1.7 }}>
-          ToolForge was built to give freelancers, students, job seekers and small business owners access to powerful tools — for free. No accounts, no paywalls on the essentials, no bloat. Just open a tool and get things done.<br /><br />
-          AI-powered tools use Groq (free, fast) or Claude Sonnet AI (premium, higher quality). New tools are added every week.
-        </div>
+        <div style={{ fontSize:13, color:T.muted, lineHeight:1.7 }}>ToolForge was built to give freelancers, students, job seekers and small business owners access to powerful tools — for free. No accounts, no paywalls on the essentials, no bloat.<br /><br />AI-powered tools use Groq (free, fast) or Claude Sonnet AI (premium, higher quality). New tools are added every week.</div>
       </div>
       <div style={{ padding:"0 16px 24px" }}>
         <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:14, color:T.ink, marginBottom:12 }}>Frequently Asked Questions</div>
@@ -246,11 +255,11 @@ function FAQPage({ onBack, onTos, onRefund }) {
               <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.ink, lineHeight:1.4 }}>{item.q}</div>
               <span style={{ fontSize:14, color:T.muted, flexShrink:0, transform:open===i?"rotate(180deg)":"rotate(0deg)", transition:"transform 0.2s", display:"inline-block" }}>▾</span>
             </div>
-            {open===i && <div style={{ padding:"0 16px 14px", fontSize:12, color:T.muted, lineHeight:1.7, borderTop:`1px solid ${T.border}`, paddingTop:12 }}>{item.a}</div>}
+            {open===i && <div style={{ padding:"0 16px 14px 16px", paddingTop:12, fontSize:12, color:T.muted, lineHeight:1.7, borderTop:`1px solid ${T.border}` }}>{item.a}</div>}
           </div>
         ))}
       </div>
-      <Footer onFaq={()=>{}} onTos={onTos} onRefund={onRefund} />
+      <Footer onFaq={() => {}} onTos={onTos} onRefund={onRefund} />
     </div>
   );
 }
@@ -282,7 +291,7 @@ function TosPage({ onBack, onFaq, onRefund }) {
           </div>
         ))}
       </div>
-      <Footer onFaq={onFaq} onTos={()=>{}} onRefund={onRefund} />
+      <Footer onFaq={onFaq} onTos={() => {}} onRefund={onRefund} />
     </div>
   );
 }
@@ -300,7 +309,7 @@ function RefundPage({ onBack, onFaq, onTos }) {
           { title:"Eligibility", body:"Refunds are available within 3 days of purchase, provided that no AI generations have been used from the purchased pack or plan." },
           { title:"Non-Refundable", body:"Once any AI generation has been used, or after 3 days have passed since purchase, the transaction is non-refundable." },
           { title:"Subscriptions", body:"Pro Monthly subscriptions can be cancelled at any time via your Lemon Squeezy customer portal. Cancellation stops future charges but does not refund the current billing period." },
-          { title:"How to Request a Refund", body:"To request a refund, email us at toolforgesupport@gmail.com and include:\n• Your purchase email address\n• Your order ID (found in your Lemon Squeezy receipt email)\n\nWe will verify your eligibility and process approved refunds within 3 business days. Once issued, the refund typically appears back on your card within 5–10 business days depending on your bank or card provider." },
+          { title:"How to Request a Refund", body:"To request a refund, email us at toolforgesupport@gmail.com and include:\n• Your purchase email address\n• Your order ID (found in your Lemon Squeezy receipt email)\n\nWe will verify your eligibility and process approved refunds within 3 business days." },
           { title:"Questions", body:"If you have any questions about this policy, contact us at toolforgesupport@gmail.com." },
         ].map((s, i) => (
           <div key={i} style={{ marginBottom:16, padding:16, borderRadius:12, background:T.card, border:`1px solid ${T.border}` }}>
@@ -309,12 +318,14 @@ function RefundPage({ onBack, onFaq, onTos }) {
           </div>
         ))}
       </div>
-      <Footer onFaq={onFaq} onTos={onTos} onRefund={()=>{}} />
+      <Footer onFaq={onFaq} onTos={onTos} onRefund={() => {}} />
     </div>
   );
 }
 
-/* ── Main App ── */
+/* ══════════════════════════════════════════════
+   MAIN APP
+══════════════════════════════════════════════ */
 export default function ToolForge() {
   const [activeCat, setActiveCat]       = useState("all");
   const [activeTool, setActiveTool]     = useState(null);
@@ -327,7 +338,45 @@ export default function ToolForge() {
   const [showRefund, setShowRefund]     = useState(window.location.pathname === "/refund");
   const [proToken, setProToken]         = useState(() => { try { const s = localStorage.getItem("tf_pro_token"); return s ? JSON.parse(s) : null; } catch { return null; } });
 
-  /* ── Lifted Pomodoro state ── */
+  /* ── Dark mode ── */
+  const [isDark, setIsDark] = useState(() => { try { return localStorage.getItem("tf_dark") === "1"; } catch { return false; } });
+  const toggleDark = () => setIsDark(d => { const n = !d; try { localStorage.setItem("tf_dark", n ? "1" : "0"); } catch {} return n; });
+  const TH = isDark ? D : T;
+
+  /* ── Desktop detection ── */
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
+  useEffect(() => {
+    const h = () => setIsDesktop(window.innerWidth >= 768);
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, []);
+
+  /* ── Resizable panels ── */
+  const [sideW, _setSideW] = useState(() => { try { return parseInt(localStorage.getItem("tf_sideW")) || 200; } catch { return 200; } });
+  const [midW,  _setMidW]  = useState(() => { try { return parseInt(localStorage.getItem("tf_midW"))  || 210; } catch { return 210; } });
+  const sideWRef = useRef(sideW); const midWRef = useRef(midW);
+  const setSideW = w => { sideWRef.current = w; _setSideW(w); try { localStorage.setItem("tf_sideW", w); } catch {} };
+  const setMidW  = w => { midWRef.current  = w; _setMidW(w);  try { localStorage.setItem("tf_midW",  w); } catch {} };
+
+  useEffect(() => {
+    if (!isDesktop) return;
+    const h1 = document.getElementById("tf-h1");
+    const h2 = document.getElementById("tf-h2");
+    if (!h1 || !h2) return;
+    const attach = (el, getW, setW, min, max) => {
+      let active = false, sx = 0, sw = 0;
+      const down = e => { active = true; sx = e.clientX; sw = getW(); document.body.style.cursor = "col-resize"; document.body.style.userSelect = "none"; e.preventDefault(); };
+      const move = e => { if (!active) return; setW(Math.max(min, Math.min(max, sw + e.clientX - sx))); };
+      const up   = () => { if (!active) return; active = false; document.body.style.cursor = ""; document.body.style.userSelect = ""; };
+      el.addEventListener("mousedown", down); document.addEventListener("mousemove", move); document.addEventListener("mouseup", up);
+      return () => { el.removeEventListener("mousedown", down); document.removeEventListener("mousemove", move); document.removeEventListener("mouseup", up); };
+    };
+    const c1 = attach(h1, () => sideWRef.current, setSideW, 140, 300);
+    const c2 = attach(h2, () => midWRef.current,  setMidW,  140, 340);
+    return () => { c1(); c2(); };
+  }, [isDesktop]);
+
+  /* ── Pomodoro ── */
   const POMO_MODES = { focus:25*60, short:5*60, long:15*60 };
   const [pomoMode, setPomoMode]         = useState("focus");
   const [pomoSec, setPomoSec]           = useState(POMO_MODES.focus);
@@ -336,190 +385,275 @@ export default function ToolForge() {
   const [pomoSessions, setPomoSessions] = useState(0);
   const [pomoPinned, setPomoPinned]     = useState(false);
   const pomoRef = useRef(null);
-
   useEffect(() => {
-    if (pomoRunning) {
-      pomoRef.current = setInterval(() => {
-        setPomoSec(s => {
-          if (s <= 1) { clearInterval(pomoRef.current); setPomoRunning(false); setPomoPaused(false); if (pomoMode==="focus") setPomoSessions(n=>n+1); return 0; }
-          return s - 1;
-        });
-      }, 1000);
-    } else { clearInterval(pomoRef.current); }
+    if (pomoRunning) { pomoRef.current = setInterval(() => { setPomoSec(s => { if (s<=1) { clearInterval(pomoRef.current); setPomoRunning(false); setPomoPaused(false); if (pomoMode==="focus") setPomoSessions(n=>n+1); return 0; } return s-1; }); }, 1000); }
+    else clearInterval(pomoRef.current);
     return () => clearInterval(pomoRef.current);
   }, [pomoRunning, pomoMode]);
+  const pomoProps = { modes:POMO_MODES, modeId:pomoMode, secondsLeft:pomoSec, running:pomoRunning, pinned:pomoPinned, sessions:pomoSessions, paused:pomoPaused, onStart:() => { setPomoRunning(true); setPomoPaused(false); setPomoPinned(true); }, onPause:() => { setPomoRunning(false); setPomoPaused(true); }, onReset:() => { clearInterval(pomoRef.current); setPomoRunning(false); setPomoPaused(false); setPomoSec(POMO_MODES[pomoMode]); setPomoPinned(false); }, onSwitchMode:(m) => { clearInterval(pomoRef.current); setPomoMode(m); setPomoSec(POMO_MODES[m]); setPomoRunning(false); setPomoPaused(false); }, onTogglePin:() => setPomoPinned(p=>!p) };
 
-  const pomoProps = {
-    modes: POMO_MODES, modeId: pomoMode, secondsLeft: pomoSec, running: pomoRunning,
-    pinned: pomoPinned, sessions: pomoSessions, paused: pomoPaused,
-    onStart:      () => { setPomoRunning(true); setPomoPaused(false); setPomoPinned(true); },
-    onPause:      () => { setPomoRunning(false); setPomoPaused(true); },
-    onReset:      () => { clearInterval(pomoRef.current); setPomoRunning(false); setPomoPaused(false); setPomoSec(POMO_MODES[pomoMode]); setPomoPinned(false); },
-    onSwitchMode: (m) => { clearInterval(pomoRef.current); setPomoMode(m); setPomoSec(POMO_MODES[m]); setPomoRunning(false); setPomoPaused(false); },
-    onTogglePin:  () => setPomoPinned(p => !p),
-  };
-
-  /* ── Lifted Deadline state ── */
-  const [dlLabel, setDlLabel]   = useState("");
-  const [dlTarget, setDlTarget] = useState("");
-  const [dlPinned, setDlPinned] = useState(false);
+  /* ── Deadline ── */
+  const [dlLabel, setDlLabel]     = useState("");
+  const [dlTarget, setDlTarget]   = useState("");
+  const [dlPinned, setDlPinned]   = useState(false);
   const [dlRunning, setDlRunning] = useState(false);
-  const dlRef = useRef(null);
-  const [dlTick, setDlTick]     = useState(0);
+  const dlRef = useRef(null); const [dlTick, setDlTick] = useState(0);
+  useEffect(() => { if (dlRunning) { dlRef.current = setInterval(() => setDlTick(t=>t+1), 1000); } else clearInterval(dlRef.current); return () => clearInterval(dlRef.current); }, [dlRunning]);
+  const dlProps = { label:dlLabel, setLabel:setDlLabel, target:dlTarget, setTarget:setDlTarget, pinned:dlPinned, running:dlRunning, tick:dlTick, onTogglePin:() => setDlPinned(p=>!p), onStart:() => setDlRunning(true), onStop:() => setDlRunning(false) };
 
-  useEffect(() => {
-    if (dlRunning) { dlRef.current = setInterval(() => setDlTick(t => t+1), 1000); }
-    else { clearInterval(dlRef.current); }
-    return () => clearInterval(dlRef.current);
-  }, [dlRunning]);
-
-  const dlProps = {
-    label: dlLabel, setLabel: setDlLabel, target: dlTarget, setTarget: setDlTarget,
-    pinned: dlPinned, running: dlRunning, tick: dlTick,
-    onTogglePin: () => setDlPinned(p => !p),
-    onStart: () => setDlRunning(true),
-    onStop:  () => setDlRunning(false),
-  };
-
-  /* ── Floating widget state ── */
+  /* ── Widgets ── */
   const [widgets, setWidgets]       = useState([]);
   const [activePill, setActivePill] = useState(null);
-
   useEffect(() => {
-    // Sync Pomodoro widget
-    if (pomoPinned && pomoRunning) {
-      const mm = Math.floor(pomoSec/60).toString().padStart(2,"0");
-      const ss = (pomoSec%60).toString().padStart(2,"0");
-      setWidgets(w => { const existing = w.find(x=>x.id==="pomodoro"); if (existing) return w.map(x=>x.id==="pomodoro"?{...x,label:`🍅 ${mm}:${ss}`}:x); return [...w, { id:"pomodoro", icon:"🍅", color:"#e85d04", label:`🍅 ${mm}:${ss}`, toolId:"pomodoro" }]; });
-    } else if (pomoPinned && pomoPaused) {
-      const mm = Math.floor(pomoSec/60).toString().padStart(2,"0");
-      const ss = (pomoSec%60).toString().padStart(2,"0");
-      setWidgets(w => w.map(x=>x.id==="pomodoro"?{...x,label:`🍅 ${mm}:${ss} ⏸`}:x));
-    } else if (!pomoPinned) {
-      setWidgets(w => w.filter(x=>x.id!=="pomodoro"));
-    }
+    if (pomoPinned && pomoRunning) { const mm=Math.floor(pomoSec/60).toString().padStart(2,"0"); const ss=(pomoSec%60).toString().padStart(2,"0"); setWidgets(w => { const e=w.find(x=>x.id==="pomodoro"); if(e) return w.map(x=>x.id==="pomodoro"?{...x,label:`🍅 ${mm}:${ss}`}:x); return [...w,{id:"pomodoro",icon:"🍅",color:"#e85d04",label:`🍅 ${mm}:${ss}`,toolId:"pomodoro"}]; }); }
+    else if (pomoPinned && pomoPaused) { const mm=Math.floor(pomoSec/60).toString().padStart(2,"0"); const ss=(pomoSec%60).toString().padStart(2,"0"); setWidgets(w=>w.map(x=>x.id==="pomodoro"?{...x,label:`🍅 ${mm}:${ss} ⏸`}:x)); }
+    else if (!pomoPinned) setWidgets(w=>w.filter(x=>x.id!=="pomodoro"));
   }, [pomoPinned, pomoRunning, pomoPaused, pomoSec]);
-
   useEffect(() => {
-    // Sync Deadline widget
-    if (dlPinned && dlTarget) {
-      const diff = new Date(dlTarget) - new Date();
-      if (diff > 0) {
-        const d = Math.floor(diff/86400000); const h = Math.floor((diff%86400000)/3600000);
-        const lbl = d > 0 ? `🗓 ${d}d ${h}h` : `🗓 ${h}h`;
-        setWidgets(w => { const existing = w.find(x=>x.id==="deadline"); if (existing) return w.map(x=>x.id==="deadline"?{...x,label:lbl}:x); return [...w, { id:"deadline", icon:"🗓", color:T.purple, label:lbl, toolId:"deadline" }]; });
-      }
-    } else if (!dlPinned) {
-      setWidgets(w => w.filter(x=>x.id!=="deadline"));
-    }
+    if (dlPinned && dlTarget) { const diff=new Date(dlTarget)-new Date(); if (diff>0) { const d=Math.floor(diff/86400000); const h=Math.floor((diff%86400000)/3600000); const lbl=d>0?`🗓 ${d}d ${h}h`:`🗓 ${h}h`; setWidgets(w => { const e=w.find(x=>x.id==="deadline"); if(e) return w.map(x=>x.id==="deadline"?{...x,label:lbl}:x); return [...w,{id:"deadline",icon:"🗓",color:T.purple,label:lbl,toolId:"deadline"}]; }); } }
+    else if (!dlPinned) setWidgets(w=>w.filter(x=>x.id!=="deadline"));
   }, [dlPinned, dlTarget, dlTick]);
+  const removeWidget = id => { setWidgets(w=>w.filter(x=>x.id!==id)); if (id==="pomodoro") setPomoPinned(false); if (id==="deadline") setDlPinned(false); if (activePill===id) setActivePill(null); };
 
-  const removeWidget = (id) => {
-    setWidgets(w => w.filter(x=>x.id!==id));
-    if (id==="pomodoro") setPomoPinned(false);
-    if (id==="deadline") setDlPinned(false);
-    if (activePill===id) setActivePill(null);
-  };
-
-  const handleTokenUpdate = (t) => { setProToken(t); localStorage.setItem("tf_pro_token", JSON.stringify(t)); };
+  /* ── Misc ── */
+  const handleTokenUpdate = t => { setProToken(t); localStorage.setItem("tf_pro_token", JSON.stringify(t)); };
   useEffect(() => { injectFonts(); }, []);
-
   const params = new URLSearchParams(window.location.search);
   const orderId = params.get("order_id");
-  if (orderId) return <SuccessPage orderId={orderId} onDone={() => { window.history.replaceState({}, "", "/"); try { const s = localStorage.getItem("tf_pro_token"); if (s) setProToken(JSON.parse(s)); } catch {} window.location.reload(); }} />;
-  if (showFaq)    return <FAQPage    onBack={() => { setShowFaq(false);    window.history.pushState({}, "", "/"); }} onTos={() => { setShowFaq(false); setShowTos(true); }} onRefund={() => { setShowFaq(false); setShowRefund(true); }} />;
-  if (showTos)    return <TosPage    onBack={() => { setShowTos(false);    window.history.pushState({}, "", "/"); }} onFaq={() => { setShowTos(false); setShowFaq(true); }} onRefund={() => { setShowTos(false); setShowRefund(true); }} />;
-  if (showRefund) return <RefundPage onBack={() => { setShowRefund(false); window.history.pushState({}, "", "/"); }} onFaq={() => { setShowRefund(false); setShowFaq(true); }} onTos={() => { setShowRefund(false); setShowTos(true); }} />;
 
-  const toggleCollapse = (id) => setCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
-  const filtered = ALL_TOOLS.filter(t =>
-    (activeCat==="all" || t.catId===activeCat) &&
-    (t.name.toLowerCase().includes(search.toLowerCase()) || t.desc.toLowerCase().includes(search.toLowerCase()))
+  /* ── Special pages ── */
+  if (orderId) return <SuccessPage orderId={orderId} onDone={() => { window.history.replaceState({},"","/"); try { const s=localStorage.getItem("tf_pro_token"); if(s) setProToken(JSON.parse(s)); } catch {} window.location.reload(); }} />;
+  if (showFaq)    return <FAQPage    onBack={() => { setShowFaq(false);    window.history.pushState({},"","/"); }} onTos={() => { setShowFaq(false); setShowTos(true); }} onRefund={() => { setShowFaq(false); setShowRefund(true); }} />;
+  if (showTos)    return <TosPage    onBack={() => { setShowTos(false);    window.history.pushState({},"","/"); }} onFaq={() => { setShowTos(false); setShowFaq(true); }} onRefund={() => { setShowTos(false); setShowRefund(true); }} />;
+  if (showRefund) return <RefundPage onBack={() => { setShowRefund(false); window.history.pushState({},"","/"); }} onFaq={() => { setShowRefund(false); setShowFaq(true); }} onTos={() => { setShowRefund(false); setShowTos(true); }} />;
+
+  /* ── Dark toggle button ── */
+  const DarkToggle = () => (
+    <button onClick={toggleDark} title={isDark ? "Light mode" : "Dark mode"}
+      style={{ display:"flex", alignItems:"center", padding:"5px 9px", borderRadius:8, border:`1px solid ${TH.border}`, background:TH.bg, cursor:"pointer", fontSize:13, transition:"all 0.2s" }}>
+      {isDark ? "☀️" : "🌙"}
+    </button>
   );
-  const gridStyle = { display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8 };
-  const responsiveGrid = `@media (max-width:400px) { .tf-grid { grid-template-columns: repeat(2,1fr) !important; } }`;
 
-  /* ── Games view ── */
+  /* ── Filtered tool list (used in desktop middle panel + mobile grid) ── */
+  const middleTools = (activeCat === "all" ? ALL_TOOLS : ALL_TOOLS.filter(t => t.catId === activeCat))
+    .filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase()) || t.desc.toLowerCase().includes(search.toLowerCase()));
+
+  /* ══════════════════════════════════
+     DESKTOP
+  ══════════════════════════════════ */
+  if (isDesktop) {
+    const hStyle = (id) => ({ id, width:5, flexShrink:0, background:TH.border, cursor:"col-resize", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.15s", zIndex:10 });
+
+    const rightContent = () => {
+      if (showGames) return <div style={{ padding:24, overflowY:"auto", flex:1 }}><GamesSection proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} onBack={() => setShowGames(false)} /></div>;
+      if (!activeTool) return (
+        <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:40, textAlign:"center" }}>
+          <div style={{ fontSize:48, marginBottom:16, opacity:0.2, color:TH.accent }}>✦</div>
+          <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:17, color:TH.ink, marginBottom:8 }}>Select a tool</div>
+          <div style={{ fontSize:13, color:TH.muted, maxWidth:260, lineHeight:1.6 }}>Choose any tool from the list to get started.</div>
+        </div>
+      );
+      return <div style={{ padding:24, overflowY:"auto", flex:1 }}><ToolView tool={activeTool} hideBack onBack={() => setActiveTool(null)} proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} pomoProps={pomoProps} dlProps={dlProps} /></div>;
+    };
+
+    return (
+      <div style={{ display:"flex", flexDirection:"column", height:"100vh", background:TH.bg, fontFamily:"DM Sans, sans-serif", overflow:"hidden" }}>
+
+        {/* Nav */}
+        <div style={{ background:TH.card, borderBottom:`1px solid ${TH.border}`, padding:"8px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, zIndex:50 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+            <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:16, color:TH.ink }}>Tool<span style={{ color:TH.accent }}>Forge</span></span>
+            <span style={{ background:TH.accentDim, color:TH.accent, fontSize:9, padding:"2px 8px", borderRadius:5, fontFamily:"Syne, sans-serif", fontWeight:700 }}>{ALL_TOOLS.length} FREE TOOLS</span>
+          </div>
+          <div style={{ display:"flex", gap:12, alignItems:"center" }}>
+            <span onClick={() => { setShowFaq(true); window.history.pushState({},"","/faq"); }} style={{ fontSize:11, color:TH.muted, cursor:"pointer", fontFamily:"DM Sans, sans-serif" }}>FAQ</span>
+            <a href="https://toolforge.lemonsqueezy.com" target="_blank" rel="noreferrer" style={{ fontSize:11, color:TH.muted, textDecoration:"none", fontFamily:"DM Sans, sans-serif" }}>Pricing</a>
+            <DarkToggle />
+            {proToken && proToken.generations_left > 0
+              ? <div style={{ background:TH.goldDim, border:`1px solid ${TH.gold}`, borderRadius:8, padding:"4px 11px", fontSize:10, color:TH.gold, fontFamily:"Syne, sans-serif", fontWeight:700 }}>✦ {proToken.generations_left} left</div>
+              : <button onClick={() => setShowUpgrade(true)} style={{ background:TH.accent, color:"white", fontSize:11, padding:"5px 13px", borderRadius:8, border:"none", fontFamily:"Syne, sans-serif", fontWeight:700, cursor:"pointer" }}>✦ Upgrade</button>
+            }
+          </div>
+        </div>
+
+        {/* Hero strip */}
+        <div style={{ background:TH.card, borderBottom:`1px solid ${TH.border}`, padding:"10px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
+          <div>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:15, color:TH.ink, marginBottom:2 }}>27 free tools for work & study</div>
+            <div style={{ fontSize:11, color:TH.muted }}>Calculators, AI writing, converters — no sign-up needed.</div>
+          </div>
+          <div style={{ display:"flex", gap:20, flexShrink:0, marginLeft:20 }}>
+            <div style={{ textAlign:"center" }}><div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:14, color:TH.accent }}>{ALL_TOOLS.length}</div><div style={{ fontSize:9, color:TH.muted }}>free tools</div></div>
+            <div style={{ textAlign:"center" }}><div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:14, color:TH.ink }}>100%</div><div style={{ fontSize:9, color:TH.muted }}>no sign-up</div></div>
+            <div style={{ textAlign:"center" }}><div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:14, color:TH.gold }}>✦ AI</div><div style={{ fontSize:9, color:TH.muted }}>powered</div></div>
+          </div>
+        </div>
+
+        {/* Three panels */}
+        <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
+
+          {/* Sidebar */}
+          <div style={{ width:sideW, flexShrink:0, background:TH.card, borderRight:`1px solid ${TH.border}`, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+            <div style={{ padding:"10px 10px 0", flexShrink:0 }}>
+              <div style={{ position:"relative", marginBottom:10 }}>
+                <span style={{ position:"absolute", left:9, top:"50%", transform:"translateY(-50%)", fontSize:12, color:TH.muted, pointerEvents:"none" }}>🔍</span>
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tools…" style={{ ...inputStyle, paddingLeft:30, fontSize:11, background:TH.bg, border:`1px solid ${TH.border}`, color:TH.ink }} />
+              </div>
+              <div style={{ fontSize:9, color:TH.muted, letterSpacing:0.6, marginBottom:6, fontFamily:"Syne, sans-serif", fontWeight:700, paddingLeft:2 }}>CATEGORIES</div>
+              {[{ id:"all", label:"All Tools", icon:"✦" }, ...CATEGORIES].map(c => (
+                <div key={c.id} onClick={() => { setActiveCat(c.id); setSearch(""); }}
+                  style={{ padding:"7px 10px", borderRadius:8, marginBottom:2, background:activeCat===c.id&&!search?TH.accentDim:"transparent", color:activeCat===c.id&&!search?TH.accent:TH.muted, fontSize:11, fontFamily:activeCat===c.id&&!search?"Syne, sans-serif":"DM Sans, sans-serif", fontWeight:activeCat===c.id&&!search?700:400, cursor:"pointer", transition:"all 0.15s" }}>
+                  {c.icon}&nbsp;&nbsp;{c.label}
+                </div>
+              ))}
+            </div>
+            {!proToken && <div style={{ padding:"6px 10px" }}><RestoreToken onRestore={handleTokenUpdate} /></div>}
+            {/* Take a Break — bottom of sidebar */}
+            <div style={{ marginTop:"auto", padding:10, borderTop:`1px solid ${TH.border}` }}>
+              <div onClick={() => { setShowGames(true); setActiveTool(null); }}
+                style={{ background:"linear-gradient(90deg,#4f46e5,#7c3aed)", borderRadius:10, padding:"10px 12px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }}>
+                <div>
+                  <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:"white" }}>🎮 Take a Break</div>
+                  <div style={{ fontSize:10, color:"rgba(255,255,255,0.75)", marginTop:1 }}>Mini games</div>
+                </div>
+                <span style={{ color:"rgba(255,255,255,0.8)", fontSize:14 }}>→</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Handle 1 */}
+          <div style={hStyle("tf-h1")} id="tf-h1" onMouseEnter={e=>e.currentTarget.style.background=TH.muted} onMouseLeave={e=>e.currentTarget.style.background=TH.border}>
+            <div style={{ display:"flex", flexDirection:"column", gap:3, pointerEvents:"none" }}>{[0,1,2].map(i=><div key={i} style={{ width:3,height:3,borderRadius:"50%",background:TH.muted,opacity:0.5 }}/>)}</div>
+          </div>
+
+          {/* Middle tool list */}
+          <div style={{ width:midW, flexShrink:0, background:TH.bg, borderRight:`1px solid ${TH.border}`, overflowY:"auto", padding:"10px 8px" }}>
+            <div style={{ fontSize:9, color:TH.muted, letterSpacing:0.6, marginBottom:8, fontFamily:"Syne, sans-serif", fontWeight:700, paddingLeft:2 }}>
+              {search ? `${middleTools.length} RESULT${middleTools.length!==1?"S":""}` : activeCat==="all" ? `ALL ${ALL_TOOLS.length} TOOLS` : `${CATEGORIES.find(c=>c.id===activeCat)?.label?.toUpperCase()} — ${middleTools.length}`}
+            </div>
+            {middleTools.map(tool => (
+              <div key={tool.id} onClick={() => { setActiveTool(tool); setShowGames(false); }}
+                style={{ padding:"8px 10px", borderRadius:8, border:`1px solid ${activeTool?.id===tool.id?tool.catColor:TH.border}`, background:activeTool?.id===tool.id?tool.catColorDim:TH.card, display:"flex", alignItems:"center", gap:8, cursor:"pointer", marginBottom:4, transition:"all 0.15s" }}>
+                <span style={{ fontSize:14, flexShrink:0 }}>{tool.icon}</span>
+                <div style={{ minWidth:0 }}>
+                  <div style={{ fontSize:11, color:activeTool?.id===tool.id?tool.catColor:TH.ink, fontWeight:activeTool?.id===tool.id?600:400, fontFamily:"DM Sans, sans-serif", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{tool.name}</div>
+                  {AI_TOOLS.includes(tool.name) && <div style={{ fontSize:9, color:TH.accent, fontFamily:"Syne, sans-serif", fontWeight:700 }}>✦ AI</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Handle 2 */}
+          <div style={hStyle("tf-h2")} id="tf-h2" onMouseEnter={e=>e.currentTarget.style.background=TH.muted} onMouseLeave={e=>e.currentTarget.style.background=TH.border}>
+            <div style={{ display:"flex", flexDirection:"column", gap:3, pointerEvents:"none" }}>{[0,1,2].map(i=><div key={i} style={{ width:3,height:3,borderRadius:"50%",background:TH.muted,opacity:0.5 }}/>)}</div>
+          </div>
+
+          {/* Right panel */}
+          <div style={{ flex:1, minWidth:0, background:TH.card, overflowY:"auto", display:"flex", flexDirection:"column" }}>
+            {rightContent()}
+            {activeTool && proToken && proToken.generations_left > 0 && (
+              <div style={{ padding:"8px 16px", borderTop:`1px solid ${TH.border}`, background:TH.goldDim, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
+                <span style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:11, color:TH.gold }}>✦ {proToken.type==="pro"?"Pro Active":"Pack Active"}</span>
+                <span style={{ fontSize:11, color:TH.gold }}>{proToken.generations_left} Claude generations left</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={toolId => { setActiveTool(ALL_TOOLS.find(t=>t.id===toolId)); setShowGames(false); }} />
+        {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════
+     MOBILE
+  ══════════════════════════════════ */
+  const mobileGrid = { display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:8 };
+
   if (showGames) return (
     <>
-      <style>{responsiveGrid}</style>
-      <div style={{ maxWidth:480, margin:"0 auto", padding:20, background:T.bg, minHeight:"100vh" }}>
-        <div style={{ background:T.card, borderRadius:16, padding:20, border:`1px solid ${T.border}`, boxShadow:"0 2px 24px #0f0f0d0a" }}>
+      <div style={{ maxWidth:480, margin:"0 auto", padding:20, background:TH.bg, minHeight:"100vh" }}>
+        <div style={{ background:TH.card, borderRadius:16, padding:20, border:`1px solid ${TH.border}` }}>
           <GamesSection proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} onBack={() => setShowGames(false)} />
         </div>
       </div>
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
-      <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={(toolId) => { setShowGames(false); setActiveTool(ALL_TOOLS.find(t=>t.id===toolId)); }} />
+      <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={toolId => { setShowGames(false); setActiveTool(ALL_TOOLS.find(t=>t.id===toolId)); }} />
     </>
   );
 
-  /* ── Tool view ── */
   if (activeTool) return (
     <>
-      <style>{responsiveGrid}</style>
-      <div style={{ maxWidth:480, margin:"0 auto", padding:20, background:T.bg, minHeight:"100vh" }}>
-        <div style={{ background:T.card, borderRadius:16, padding:20, border:`1px solid ${T.border}`, boxShadow:"0 2px 24px #0f0f0d0a" }}>
+      <div style={{ maxWidth:480, margin:"0 auto", padding:20, background:TH.bg, minHeight:"100vh" }}>
+        <div style={{ background:TH.card, borderRadius:16, padding:20, border:`1px solid ${TH.border}` }}>
           <ToolView tool={activeTool} onBack={() => setActiveTool(null)} proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} pomoProps={pomoProps} dlProps={dlProps} />
         </div>
         {proToken && proToken.generations_left > 0 && (
-          <div style={{ marginTop:12, padding:"10px 14px", borderRadius:10, background:T.goldDim, border:`1px solid ${T.gold}44`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:11, color:T.gold }}>✦ {proToken.type==="pro"?"Pro Active":"Pack Active"}</div>
-            <div style={{ fontSize:11, color:T.gold, fontFamily:"DM Sans, sans-serif" }}>{proToken.generations_left} Claude generations left</div>
+          <div style={{ marginTop:12, padding:"10px 14px", borderRadius:10, background:TH.goldDim, border:`1px solid ${TH.gold}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:11, color:TH.gold }}>✦ {proToken.type==="pro"?"Pro Active":"Pack Active"}</div>
+            <div style={{ fontSize:11, color:TH.gold }}>{proToken.generations_left} Claude generations left</div>
           </div>
         )}
       </div>
-      <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={(toolId) => setActiveTool(ALL_TOOLS.find(t=>t.id===toolId))} />
+      <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={toolId => setActiveTool(ALL_TOOLS.find(t=>t.id===toolId))} />
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
     </>
   );
 
-  /* ── Home view ── */
+  const filtered = ALL_TOOLS.filter(t =>
+    (activeCat==="all" || t.catId===activeCat) &&
+    (t.name.toLowerCase().includes(search.toLowerCase()) || t.desc.toLowerCase().includes(search.toLowerCase()))
+  );
+
   return (
     <>
-      <style>{responsiveGrid}</style>
-
-      {/* Sticky upgrade banner */}
       {!proToken && (
-        <div onClick={() => setShowUpgrade(true)} style={{ position:"sticky", top:0, zIndex:100, background:`linear-gradient(90deg,${T.gold},${T.accent})`, padding:"10px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }}>
+        <div onClick={() => setShowUpgrade(true)} style={{ position:"sticky", top:0, zIndex:100, background:`linear-gradient(90deg,${TH.gold},${TH.accent})`, padding:"10px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }}>
           <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:"white" }}>✦ Unlock Claude Sonnet AI — from $2.99</div>
           <div style={{ fontSize:11, color:"rgba(255,255,255,0.85)", fontFamily:"DM Sans, sans-serif", whiteSpace:"nowrap" }}>Better outputs →</div>
         </div>
       )}
 
-      <div style={{ maxWidth:480, margin:"0 auto", minHeight:"100vh", background:T.bg, fontFamily:"DM Sans, sans-serif" }}>
+      <div style={{ maxWidth:480, margin:"0 auto", minHeight:"100vh", background:TH.bg, fontFamily:"DM Sans, sans-serif" }}>
 
-        {/* Header */}
-        <div style={{ padding:"24px 20px 16px", borderBottom:`1px solid ${T.border}`, background:T.card }}>
-          <div style={{ display:"flex", alignItems:"baseline", gap:8, marginBottom:4 }}>
-            <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:26, color:T.ink, letterSpacing:-0.5 }}>Tool</span>
-            <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:26, color:T.accent, letterSpacing:-0.5 }}>Forge</span>
-            <span style={{ fontSize:11, color:T.muted, marginLeft:4, fontWeight:400, letterSpacing:1 }}>{ALL_TOOLS.length} FREE TOOLS</span>
-          </div>
-          <div style={{ fontSize:13, color:T.muted, marginBottom:10 }}>Every tool you need — writing, calculators, planning & more.</div>
-          {proToken && proToken.generations_left > 0 && (
-            <div style={{ marginBottom:10, padding:"6px 12px", borderRadius:99, background:T.goldDim, border:`1px solid ${T.gold}44`, display:"inline-flex", alignItems:"center", gap:6 }}>
-              <span style={{ fontSize:10, fontFamily:"Syne, sans-serif", fontWeight:700, color:T.gold }}>✦ {proToken.type==="pro"?"PRO":"PACK"}</span>
-              <span style={{ fontSize:10, color:T.gold, fontFamily:"DM Sans, sans-serif" }}>{proToken.generations_left} Claude uses left</span>
+        {/* Mobile header */}
+        <div style={{ padding:"20px 20px 14px", borderBottom:`1px solid ${TH.border}`, background:TH.card }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
+            <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
+              <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:24, color:TH.ink }}>Tool</span>
+              <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:24, color:TH.accent }}>Forge</span>
+              <span style={{ fontSize:10, color:TH.muted, fontWeight:400, letterSpacing:1, marginLeft:2 }}>{ALL_TOOLS.length} FREE</span>
             </div>
-          )}
+            <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+              <DarkToggle />
+              {proToken && proToken.generations_left > 0
+                ? <div style={{ background:TH.goldDim, border:`1px solid ${TH.gold}`, borderRadius:8, padding:"4px 9px", fontSize:10, color:TH.gold, fontFamily:"Syne, sans-serif", fontWeight:700 }}>✦ {proToken.generations_left}</div>
+                : <button onClick={() => setShowUpgrade(true)} style={{ background:TH.accent, color:"white", fontSize:10, padding:"4px 10px", borderRadius:7, border:"none", fontFamily:"Syne, sans-serif", fontWeight:700, cursor:"pointer" }}>✦ Upgrade</button>
+              }
+            </div>
+          </div>
+          <div style={{ fontSize:12, color:TH.muted, marginBottom:10 }}>Every tool you need — writing, calculators, planning & more.</div>
           {!proToken && <RestoreToken onRestore={handleTokenUpdate} />}
-          <div style={{ position:"relative", marginTop:12 }}>
-            <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", fontSize:14, color:T.muted }}>🔍</span>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tools..." style={{ ...inputStyle, paddingLeft:36, width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}` }} />
+          <div style={{ position:"relative", marginTop:10 }}>
+            <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", fontSize:14, color:TH.muted }}>🔍</span>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tools…" style={{ ...inputStyle, paddingLeft:36, background:TH.bg, border:`1px solid ${TH.border}`, color:TH.ink }} />
           </div>
         </div>
 
         {/* Category tabs */}
-        <div style={{ padding:"10px 16px", display:"flex", gap:7, overflowX:"auto", borderBottom:`1px solid ${T.border}`, background:T.card }}>
-          {[{ id:"all", label:"All", icon:"✦", color:T.accent, colorDim:T.accentDim }, ...CATEGORIES].map(c => (
-            <button key={c.id} onClick={() => setActiveCat(c.id)} style={{ flexShrink:0, display:"flex", alignItems:"center", gap:5, padding:"6px 13px", borderRadius:99, border:`1px solid ${activeCat===c.id?c.color:T.border}`, background:activeCat===c.id?c.colorDim||T.accentDim:"white", color:activeCat===c.id?c.color:T.muted, fontSize:12, fontFamily:"Syne, sans-serif", fontWeight:600, cursor:"pointer", whiteSpace:"nowrap", transition:"all 0.15s" }}>
+        <div style={{ padding:"10px 16px", display:"flex", gap:7, overflowX:"auto", borderBottom:`1px solid ${TH.border}`, background:TH.card }}>
+          {[{ id:"all", label:"All", icon:"✦", color:TH.accent, colorDim:TH.accentDim }, ...CATEGORIES].map(c => (
+            <button key={c.id} onClick={() => setActiveCat(c.id)}
+              style={{ flexShrink:0, display:"flex", alignItems:"center", gap:5, padding:"6px 13px", borderRadius:99, border:`1px solid ${activeCat===c.id?c.color||TH.accent:TH.border}`, background:activeCat===c.id?c.colorDim||TH.accentDim:TH.card, color:activeCat===c.id?c.color||TH.accent:TH.muted, fontSize:12, fontFamily:"Syne, sans-serif", fontWeight:600, cursor:"pointer", whiteSpace:"nowrap", transition:"all 0.15s" }}>
               {c.icon} {c.label}
             </button>
           ))}
         </div>
 
-        {/* 🎮 Take a Break banner — between tabs and tool grid */}
-        <div onClick={() => setShowGames(true)} style={{ margin:"12px 16px 0", padding:"14px 18px", borderRadius:14, background:`linear-gradient(135deg, ${G_COLOR}, #7c3aed)`, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between", boxShadow:`0 4px 20px ${G_COLOR}30` }}>
+        {/* 🎮 Take a Break — between category tabs and tool grid */}
+        <div onClick={() => setShowGames(true)} style={{ margin:"12px 16px 0", padding:"14px 18px", borderRadius:14, background:`linear-gradient(135deg,${G_COLOR},#7c3aed)`, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between", boxShadow:`0 4px 20px ${G_COLOR}30` }}>
           <div>
             <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:14, color:"white", marginBottom:2 }}>🎮 Take a Break</div>
             <div style={{ fontSize:11, color:"rgba(255,255,255,0.8)", fontFamily:"DM Sans, sans-serif" }}>Free games + premium unlocks · resets daily</div>
@@ -527,32 +661,28 @@ export default function ToolForge() {
           <div style={{ fontSize:18, color:"rgba(255,255,255,0.7)" }}>→</div>
         </div>
 
-        {/* Tool grid */}
+        {/* Tool grid — 2 columns */}
         <div style={{ padding:16 }}>
           {search ? (
             <>
-              <div style={{ fontSize:12, color:T.muted, marginBottom:12 }}>{filtered.length} result{filtered.length!==1?"s":""} for "{search}"</div>
-              <div className="tf-grid" style={gridStyle}>
-                {filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}
-              </div>
+              <div style={{ fontSize:12, color:TH.muted, marginBottom:12 }}>{filtered.length} result{filtered.length!==1?"s":""} for "{search}"</div>
+              <div style={mobileGrid}>{filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}</div>
             </>
           ) : activeCat !== "all" ? (
-            <div className="tf-grid" style={gridStyle}>
-              {filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}
-            </div>
+            <div style={mobileGrid}>{filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}</div>
           ) : (
             CATEGORIES.map(cat => (
               <div key={cat.id} style={{ marginBottom:20 }}>
-                <div onClick={() => toggleCollapse(cat.id)} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:collapsed[cat.id]?0:10, cursor:"pointer", padding:"6px 0" }}>
+                <div onClick={() => setCollapsed(prev => ({ ...prev, [cat.id]: !prev[cat.id] }))} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:collapsed[cat.id]?0:10, cursor:"pointer", padding:"6px 0" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                     <div style={{ width:28, height:28, borderRadius:8, background:cat.colorDim, display:"flex", alignItems:"center", justifyContent:"center", fontSize:15 }}>{cat.icon}</div>
-                    <span style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:14, color:T.ink }}>{cat.label}</span>
-                    <span style={{ fontSize:10, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>{cat.tools.length} tools</span>
+                    <span style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:14, color:TH.ink }}>{cat.label}</span>
+                    <span style={{ fontSize:10, color:TH.muted }}>{cat.tools.length} tools</span>
                   </div>
-                  <span style={{ fontSize:14, color:T.muted, transform:collapsed[cat.id]?"rotate(-90deg)":"rotate(0deg)", transition:"transform 0.2s", display:"inline-block" }}>▾</span>
+                  <span style={{ fontSize:14, color:TH.muted, transform:collapsed[cat.id]?"rotate(-90deg)":"rotate(0deg)", transition:"transform 0.2s", display:"inline-block" }}>▾</span>
                 </div>
                 {!collapsed[cat.id] && (
-                  <div className="tf-grid" style={gridStyle}>
+                  <div style={mobileGrid}>
                     {cat.tools.map(tool => (
                       <ToolCard key={tool.id} tool={{ ...tool, catId:cat.id, catColor:cat.color, catColorDim:cat.colorDim }} onClick={() => setActiveTool({ ...tool, catId:cat.id, catColor:cat.color, catColorDim:cat.colorDim })} />
                     ))}
@@ -561,24 +691,23 @@ export default function ToolForge() {
               </div>
             ))
           )}
-
-          <div style={{ marginTop:10, padding:16, borderRadius:14, background:`linear-gradient(135deg,${T.accentDim},${T.blueDim})`, border:`1px solid ${T.border}`, textAlign:"center" }}>
-            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.ink, marginBottom:4 }}>✦ More tools dropping weekly</div>
-            <div style={{ fontSize:12, color:T.muted }}>Debt payoff · Resume bullets · Pricing guide · and 20+ more</div>
+          <div style={{ marginTop:10, padding:16, borderRadius:14, background:`linear-gradient(135deg,${TH.accentDim},${TH.blueDim})`, border:`1px solid ${TH.border}`, textAlign:"center" }}>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:TH.ink, marginBottom:4 }}>✦ More tools dropping weekly</div>
+            <div style={{ fontSize:12, color:TH.muted }}>Debt payoff · Resume bullets · Pricing guide · and 20+ more</div>
           </div>
         </div>
 
       </div>
 
       <div style={{ maxWidth:480, margin:"0 auto" }}>
-        <Footer
-          onFaq={()    => { setShowFaq(true);    window.history.pushState({}, "", "/faq"); }}
-          onTos={()    => { setShowTos(true);    window.history.pushState({}, "", "/terms"); }}
-          onRefund={()=> { setShowRefund(true);  window.history.pushState({}, "", "/refund"); }}
+        <Footer TH={TH}
+          onFaq={()    => { setShowFaq(true);    window.history.pushState({},"","/faq"); }}
+          onTos={()    => { setShowTos(true);    window.history.pushState({},"","/terms"); }}
+          onRefund={()=> { setShowRefund(true);  window.history.pushState({},"","/refund"); }}
         />
       </div>
 
-      <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={(toolId) => setActiveTool(ALL_TOOLS.find(t=>t.id===toolId))} />
+      <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={toolId => setActiveTool(ALL_TOOLS.find(t=>t.id===toolId))} />
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
     </>
   );
