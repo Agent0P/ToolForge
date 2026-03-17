@@ -278,8 +278,9 @@ const FAQ_ITEMS = [
   { q:"Will there be ads on ToolForge?", a:"Not right now. The site is funded by the paid AI plans. If ads are ever introduced in the future, they'll be minimal and non-intrusive." },
 ];
 
-function FAQPage({ onBack, onTos, onRefund, onPricing }) {
+function FAQPage({ onBack, onTos, onRefund, proToken }) {
   const [open, setOpen] = useState(null);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   return (
     <div style={{ maxWidth:480, margin:"0 auto", minHeight:"100vh", background:T.bg, fontFamily:"DM Sans, sans-serif" }}>
       <div style={{ padding:"24px 20px 20px", borderBottom:`1px solid ${T.border}`, background:T.card }}>
@@ -303,12 +304,14 @@ function FAQPage({ onBack, onTos, onRefund, onPricing }) {
           </div>
         ))}
       </div>
-      <Footer onFaq={() => {}} onTos={onTos} onRefund={onRefund} onPricing={onPricing} />
+      <Footer onFaq={() => {}} onTos={onTos} onRefund={onRefund} onPricing={() => setShowUpgrade(true)} />
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} />}
     </div>
   );
 }
 
-function TosPage({ onBack, onFaq, onRefund, onPricing }) {
+function TosPage({ onBack, onFaq, onRefund, proToken }) {
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const sections = [
     { title:"1. Acceptance of Terms", body:"By using ToolForge you agree to these terms. If you do not agree, please do not use the service." },
     { title:"2. Description of Service", body:"ToolForge provides a collection of free and premium online tools for productivity, writing, and calculation. AI-powered features require a paid token balance." },
@@ -335,12 +338,14 @@ function TosPage({ onBack, onFaq, onRefund, onPricing }) {
           </div>
         ))}
       </div>
-      <Footer onFaq={onFaq} onTos={() => {}} onRefund={onRefund} onPricing={onPricing} />
+      <Footer onFaq={onFaq} onTos={() => {}} onRefund={onRefund} onPricing={() => setShowUpgrade(true)} />
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} />}
     </div>
   );
 }
 
-function RefundPage({ onBack, onFaq, onTos, onPricing }) {
+function RefundPage({ onBack, onFaq, onTos, proToken }) {
+  const [showUpgrade, setShowUpgrade] = useState(false);
   return (
     <div style={{ maxWidth:480, margin:"0 auto", minHeight:"100vh", background:T.bg, fontFamily:"DM Sans, sans-serif" }}>
       <div style={{ padding:"24px 20px 20px", borderBottom:`1px solid ${T.border}`, background:T.card }}>
@@ -362,7 +367,8 @@ function RefundPage({ onBack, onFaq, onTos, onPricing }) {
           </div>
         ))}
       </div>
-      <Footer onFaq={onFaq} onTos={onTos} onRefund={() => {}} onPricing={onPricing} />
+      <Footer onFaq={onFaq} onTos={onTos} onRefund={() => {}} onPricing={() => setShowUpgrade(true)} />
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} />}
     </div>
   );
 }
@@ -479,9 +485,9 @@ export default function ToolForge() {
 
   /* ── Special pages ── */
   if (orderId) return <SuccessPage orderId={orderId} onDone={() => { window.history.replaceState({},"","/"); try { const s=localStorage.getItem("tf_pro_token"); if(s) setProToken(JSON.parse(s)); } catch {} window.location.reload(); }} />;
-  if (showFaq)    return <FAQPage    onBack={() => { setShowFaq(false);    window.history.pushState({},"","/"); }} onTos={() => { setShowFaq(false); setShowTos(true); }} onRefund={() => { setShowFaq(false); setShowRefund(true); }} onPricing={() => { setShowFaq(false); setShowUpgrade(true); }} />;
-  if (showTos)    return <TosPage    onBack={() => { setShowTos(false);    window.history.pushState({},"","/"); }} onFaq={() => { setShowTos(false); setShowFaq(true); }} onRefund={() => { setShowTos(false); setShowRefund(true); }} onPricing={() => { setShowTos(false); setShowUpgrade(true); }} />;
-  if (showRefund) return <RefundPage onBack={() => { setShowRefund(false); window.history.pushState({},"","/"); }} onFaq={() => { setShowRefund(false); setShowFaq(true); }} onTos={() => { setShowRefund(false); setShowTos(true); }} onPricing={() => { setShowRefund(false); setShowUpgrade(true); }} />;
+  if (showFaq)    return <FAQPage    onBack={() => { setShowFaq(false);    window.history.pushState({},"","/"); }} onTos={() => { setShowFaq(false); setShowTos(true); }} onRefund={() => { setShowFaq(false); setShowRefund(true); }} proToken={proToken} />;
+  if (showTos)    return <TosPage    onBack={() => { setShowTos(false);    window.history.pushState({},"","/"); }} onFaq={() => { setShowTos(false); setShowFaq(true); }} onRefund={() => { setShowTos(false); setShowRefund(true); }} proToken={proToken} />;
+  if (showRefund) return <RefundPage onBack={() => { setShowRefund(false); window.history.pushState({},"","/"); }} onFaq={() => { setShowRefund(false); setShowFaq(true); }} onTos={() => { setShowRefund(false); setShowTos(true); }} proToken={proToken} />;
 
   /* ── Dark toggle button ── */
   const DarkToggle = () => (
