@@ -427,11 +427,95 @@ export function TimezoneConverter() {
 }
 
 export function UnitConverter() {
-  const cats = { Length: { units: ["mm","cm","m","km","in","ft","yd","mi"], toBase: { mm:.001,cm:.01,m:1,km:1000,in:.0254,ft:.3048,yd:.9144,mi:1609.34 } }, Weight: { units: ["mg","g","kg","oz","lb"], toBase: { mg:.000001,g:.001,kg:1,oz:.0283495,lb:.453592 } }, Temperature: { units: ["°C","°F","K"], toBase: null }, Volume: { units: ["ml","L","fl oz","cup","gal"], toBase: { ml:.001,L:1,"fl oz":.0295735,cup:.236588,gal:3.78541 } } };
-  const [catKey, setCatKey] = useState("Length"); const [fromUnit, setFromUnit] = useState("m"); const [toUnit, setToUnit] = useState("ft"); const [value, setValue] = useState(1);
-  const cat = cats[catKey];
-  const convert = () => { const v = Number(value); if (catKey === "Temperature") { if (fromUnit===toUnit) return String(v); if (fromUnit==="°C"&&toUnit==="°F") return (v*9/5+32).toFixed(2); if (fromUnit==="°C"&&toUnit==="K") return (v+273.15).toFixed(2); if (fromUnit==="°F"&&toUnit==="°C") return ((v-32)*5/9).toFixed(2); if (fromUnit==="°F"&&toUnit==="K") return ((v-32)*5/9+273.15).toFixed(2); if (fromUnit==="K"&&toUnit==="°C") return (v-273.15).toFixed(2); if (fromUnit==="K"&&toUnit==="°F") return ((v-273.15)*9/5+32).toFixed(2); } return (v*cat.toBase[fromUnit]/cat.toBase[toUnit]).toFixed(6).replace(/\.?0+$/,""); };
-  return <div><Row label="Category"><div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>{Object.keys(cats).map(k => <button key={k} onClick={() => { setCatKey(k); setFromUnit(cats[k].units[0]); setToUnit(cats[k].units[1]); }} style={{ padding:"6px 12px", borderRadius:8, border:`1px solid ${catKey===k?T.accent:T.border}`, background:catKey===k?T.accentDim:"white", color:catKey===k?T.accent:T.muted, fontSize:12, fontFamily:"DM Sans, sans-serif", cursor:"pointer" }}>{k}</button>)}</div></Row><Row label="Value"><NumInput val={value} set={setValue} /></Row><div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:8, alignItems:"end", marginBottom:10 }}><Row label="From"><select value={fromUnit} onChange={e=>setFromUnit(e.target.value)} style={inputStyle}>{cat.units.map(u=><option key={u}>{u}</option>)}</select></Row><div style={{ fontSize:18, color:T.muted, paddingBottom:4, textAlign:"center" }}>→</div><Row label="To"><select value={toUnit} onChange={e=>setToUnit(e.target.value)} style={inputStyle}>{cat.units.map(u=><option key={u}>{u}</option>)}</select></Row></div><Result label={`${value} ${fromUnit} =`} value={`${convert()} ${toUnit}`} /><CopyButton text={`${value} ${fromUnit} = ${convert()} ${toUnit} — ToolForge`} /></div>;
+  const CATS = {
+    "📏 Length":      { icon:"📏", units:["mm","cm","m","km","in","ft","yd","mi","nmi"], toBase:{ mm:.001,cm:.01,m:1,km:1000,in:.0254,ft:.3048,yd:.9144,mi:1609.344,nmi:1852 } },
+    "⚖️ Weight":      { icon:"⚖️", units:["mg","g","kg","t","oz","lb","st"], toBase:{ mg:1e-6,g:.001,kg:1,t:1000,oz:.0283495,lb:.453592,st:6.35029 } },
+    "🌡️ Temperature": { icon:"🌡️", units:["°C","°F","K"], toBase:null },
+    "💧 Volume":      { icon:"💧", units:["ml","cl","dl","L","fl oz","cup","pt","qt","gal","tbsp","tsp"], toBase:{ ml:.001,cl:.01,dl:.1,L:1,"fl oz":.0295735,cup:.236588,pt:.473176,qt:.946353,gal:3.78541,tbsp:.0147868,tsp:.00492892 } },
+    "📐 Area":        { icon:"📐", units:["mm²","cm²","m²","km²","in²","ft²","yd²","acre","ha"], toBase:{ "mm²":1e-6,"cm²":.0001,"m²":1,"km²":1e6,"in²":.00064516,"ft²":.092903,"yd²":.836127,acre:4046.86,ha:10000 } },
+    "💨 Speed":       { icon:"💨", units:["m/s","km/h","mph","knots","ft/s"], toBase:{ "m/s":1,"km/h":1/3.6,mph:0.44704,knots:0.514444,"ft/s":0.3048 } },
+    "💾 Data":        { icon:"💾", units:["bit","B","KB","MB","GB","TB","PB"], toBase:{ bit:1,B:8,KB:8192,MB:8388608,GB:8589934592,TB:8796093022208,PB:9007199254740992 } },
+    "🍳 Cooking":     { icon:"🍳", units:["tsp","tbsp","fl oz","cup","pt","qt","gal","ml","L"], toBase:{ tsp:.00492892,tbsp:.0147868,"fl oz":.0295735,cup:.236588,pt:.473176,qt:.946353,gal:3.78541,ml:.001,L:1 } },
+  };
+
+  const [catKey, setCatKey] = useState("📏 Length");
+  const [fromUnit, setFromUnit] = useState("m");
+  const [toUnit, setToUnit] = useState("ft");
+  const [value, setValue] = useState("1");
+
+  const cat = CATS[catKey];
+
+  const switchCat = (k) => {
+    setCatKey(k);
+    setFromUnit(CATS[k].units[0]);
+    setToUnit(CATS[k].units[1]);
+    setValue("1");
+  };
+
+  const swapUnits = () => { setFromUnit(toUnit); setToUnit(fromUnit); };
+
+  const convert = () => {
+    const v = Number(value);
+    if (isNaN(v) || value === "") return "—";
+    if (catKey === "🌡️ Temperature") {
+      if (fromUnit === toUnit) return String(v);
+      if (fromUnit === "°C" && toUnit === "°F") return (v * 9/5 + 32).toFixed(4).replace(/\.?0+$/, "");
+      if (fromUnit === "°C" && toUnit === "K")  return (v + 273.15).toFixed(4).replace(/\.?0+$/, "");
+      if (fromUnit === "°F" && toUnit === "°C") return ((v - 32) * 5/9).toFixed(4).replace(/\.?0+$/, "");
+      if (fromUnit === "°F" && toUnit === "K")  return ((v - 32) * 5/9 + 273.15).toFixed(4).replace(/\.?0+$/, "");
+      if (fromUnit === "K"  && toUnit === "°C") return (v - 273.15).toFixed(4).replace(/\.?0+$/, "");
+      if (fromUnit === "K"  && toUnit === "°F") return ((v - 273.15) * 9/5 + 32).toFixed(4).replace(/\.?0+$/, "");
+    }
+    if (catKey === "💾 Data") {
+      const inBits = v * cat.toBase[fromUnit];
+      const result = inBits / cat.toBase[toUnit];
+      return result >= 1000 ? result.toFixed(4).replace(/\.?0+$/, "") : result.toPrecision(6).replace(/\.?0+$/, "");
+    }
+    const result = v * cat.toBase[fromUnit] / cat.toBase[toUnit];
+    if (Math.abs(result) < 0.000001 && result !== 0) return result.toExponential(4);
+    return result.toFixed(6).replace(/\.?0+$/, "");
+  };
+
+  const result = convert();
+
+  return (
+    <div>
+      {/* Category tabs */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 11, color: T.muted, marginBottom: 8, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.3 }}>Category</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {Object.keys(CATS).map(k => (
+            <button key={k} onClick={() => switchCat(k)} style={{ padding: "6px 11px", borderRadius: 9, border: `1.5px solid ${catKey === k ? T.accent : T.border}`, background: catKey === k ? T.accentDim : "white", color: catKey === k ? T.accent : T.muted, fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+              {k}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Value input */}
+      <Row label="Value">
+        <input type="number" value={value} onChange={e => setValue(e.target.value)} style={inputStyle} />
+      </Row>
+
+      {/* From / Swap / To */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 36px 1fr", gap: 8, alignItems: "end", marginBottom: 14 }}>
+        <Row label="From">
+          <select value={fromUnit} onChange={e => setFromUnit(e.target.value)} style={inputStyle}>
+            {cat.units.map(u => <option key={u}>{u}</option>)}
+          </select>
+        </Row>
+        <button onClick={swapUnits} style={{ height: 38, marginBottom: 0, borderRadius: 9, border: `1.5px solid ${T.border}`, background: "white", color: T.muted, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>⇄</button>
+        <Row label="To">
+          <select value={toUnit} onChange={e => setToUnit(e.target.value)} style={inputStyle}>
+            {cat.units.map(u => <option key={u}>{u}</option>)}
+          </select>
+        </Row>
+      </div>
+
+      <Result label={`${value || 0} ${fromUnit} =`} value={`${result} ${toUnit}`} />
+      <CopyButton text={`${value} ${fromUnit} = ${result} ${toUnit} — ToolForge`} />
+    </div>
+  );
 }
 
 export function StudyPlanner() {
