@@ -19,11 +19,132 @@ export function ProjectEstimator() {
 }
 
 export function GPACalc() {
-  const grades = [["A+",4.3],["A",4.0],["A-",3.7],["B+",3.3],["B",3.0],["B-",2.7],["C+",2.3],["C",2.0],["D",1.0],["F",0]];
-  const [courses, setCourses] = useState([{ name: "Math", grade: "A", credits: 3 }, { name: "English", grade: "B+", credits: 3 }]);
-  const totalCredits = courses.reduce((s, c) => s + Number(c.credits), 0);
-  const gpa = totalCredits ? (courses.reduce((s, c) => s + (grades.find(g => g[0] === c.grade)?.[1] || 0) * Number(c.credits), 0) / totalCredits).toFixed(2) : "0.00";
-  return <div>{courses.map((c, i) => <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}><input value={c.name} onChange={e => setCourses(cs => cs.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} style={inputStyle} placeholder="Course" /><select value={c.grade} onChange={e => setCourses(cs => cs.map((x, j) => j === i ? { ...x, grade: e.target.value } : x))} style={{ ...inputStyle, width: 75 }}>{grades.map(g => <option key={g[0]}>{g[0]}</option>)}</select><input type="number" value={c.credits} onChange={e => setCourses(cs => cs.map((x, j) => j === i ? { ...x, credits: e.target.value } : x))} style={{ ...inputStyle, width: 60 }} placeholder="cr" /></div>)}<button onClick={() => setCourses(cs => [...cs, { name: "", grade: "B", credits: 3 }])} style={addBtnStyle}>+ Add Course</button><Result label="Your Current GPA" value={gpa} /><CopyButton text={`My GPA is ${gpa} — ToolForge`} /></div>;
+  const GRADES = [["A+",4.3],["A",4.0],["A-",3.7],["B+",3.3],["B",3.0],["B-",2.7],["C+",2.3],["C",2.0],["C-",1.7],["D+",1.3],["D",1.0],["D-",0.7],["F",0]];
+  const toPoints = g => GRADES.find(x => x[0] === g)?.[1] ?? 0;
+
+  const [courses, setCourses] = useState([
+    { id:1, name: "", grade: "A", credits: 3 },
+    { id:2, name: "", grade: "B+", credits: 3 },
+  ]);
+  const [showTarget, setShowTarget] = useState(false);
+  const [targetGPA, setTargetGPA]   = useState("3.5");
+  const [newCredits, setNewCredits] = useState(3);
+  const nextId = useRef(3);
+
+  const addCourse   = () => { setCourses(cs => [...cs, { id: nextId.current++, name: "", grade: "B", credits: 3 }]); };
+  const delCourse   = id  => setCourses(cs => cs.filter(c => c.id !== id));
+  const updateField = (id, field, val) => setCourses(cs => cs.map(c => c.id === id ? { ...c, [field]: val } : c));
+
+  const totalCredits  = courses.reduce((s, c) => s + Number(c.credits || 0), 0);
+  const totalPoints   = courses.reduce((s, c) => s + toPoints(c.grade) * Number(c.credits || 0), 0);
+  const gpa           = totalCredits ? (totalPoints / totalCredits).toFixed(2) : "0.00";
+  const gpaNum        = parseFloat(gpa);
+  const gpaColor      = gpaNum >= 3.7 ? T.green : gpaNum >= 3.0 ? T.blue : gpaNum >= 2.0 ? T.accent : "#dc2626";
+  const gpaLabel      = gpaNum >= 3.7 ? "Dean's List 🎓" : gpaNum >= 3.0 ? "Good Standing ✓" : gpaNum >= 2.0 ? "Satisfactory" : "At Risk ⚠️";
+
+  // "What grade do I need?" calculator
+  const tgt = parseFloat(targetGPA) || 0;
+  const nc  = Number(newCredits) || 0;
+  const neededPoints = tgt * (totalCredits + nc) - totalPoints;
+  const neededPPU    = nc > 0 ? neededPoints / nc : null;
+  const neededGrade  = neededPPU === null ? null
+    : neededPPU <= 0   ? "Any grade works! 🎉"
+    : neededPPU > 4.3  ? "Not achievable this semester"
+    : GRADES.slice().reverse().find(g => g[1] >= neededPPU)?.[0] ?? "A+";
+
+  const rowStyle = { display:"flex", gap:8, marginBottom:8, alignItems:"center" };
+  const delBtn   = { background:"none", border:`1px solid ${T.border}`, borderRadius:8, width:30, height:36, cursor:"pointer", fontSize:14, color:T.muted, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" };
+
+  return (
+    <div>
+      {/* Course column headers */}
+      <div style={{ display:"flex", gap:8, marginBottom:4, paddingRight:38 }}>
+        <div style={{ flex:1, fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, paddingLeft:2 }}>COURSE (OPTIONAL)</div>
+        <div style={{ width:80, fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700 }}>GRADE</div>
+        <div style={{ width:60, fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700 }}>CREDITS</div>
+      </div>
+
+      {/* Course rows */}
+      {courses.map(c => (
+        <div key={c.id} style={rowStyle}>
+          <input value={c.name} onChange={e => updateField(c.id, "name", e.target.value)}
+            style={{ ...inputStyle, flex:1 }} placeholder="e.g. Math 101" />
+          <select value={c.grade} onChange={e => updateField(c.id, "grade", e.target.value)}
+            style={{ ...inputStyle, width:80, paddingLeft:8 }}>
+            {GRADES.map(g => <option key={g[0]}>{g[0]}</option>)}
+          </select>
+          <input type="number" value={c.credits} min={0} max={12}
+            onChange={e => updateField(c.id, "credits", e.target.value)}
+            style={{ ...inputStyle, width:60, textAlign:"center" }} placeholder="3" />
+          <button onClick={() => delCourse(c.id)} style={delBtn} title="Remove">✕</button>
+        </div>
+      ))}
+
+      <button onClick={addCourse} style={addBtnStyle}>+ Add Course</button>
+
+      {/* GPA result */}
+      {totalCredits > 0 && (
+        <div style={{ marginTop:16, padding:"16px 18px", borderRadius:14, background:T.card, border:`2px solid ${gpaColor}22` }}>
+          <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:4 }}>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.muted }}>YOUR GPA</div>
+            <div style={{ fontSize:11, color:gpaColor, fontFamily:"Syne, sans-serif", fontWeight:700 }}>{gpaLabel}</div>
+          </div>
+          <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:42, color:gpaColor, lineHeight:1 }}>{gpa}</div>
+          <div style={{ fontSize:11, color:T.muted, marginTop:6, fontFamily:"DM Sans, sans-serif" }}>{totalCredits} credit hours · {courses.length} course{courses.length !== 1 ? "s" : ""}</div>
+        </div>
+      )}
+
+      {/* What grade do I need? */}
+      <div style={{ marginTop:12, borderRadius:12, border:`1px solid ${T.border}`, overflow:"hidden" }}>
+        <div onClick={() => setShowTarget(t => !t)}
+          style={{ padding:"11px 14px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer", background:showTarget ? T.purpleDim : T.card }}>
+          <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:T.purple }}>🎯 What grade do I need?</div>
+          <span style={{ fontSize:13, color:T.muted, transform:showTarget?"rotate(180deg)":"rotate(0deg)", transition:"transform 0.2s", display:"inline-block" }}>▾</span>
+        </div>
+        {showTarget && (
+          <div style={{ padding:"14px 14px 16px", background:T.card, borderTop:`1px solid ${T.border}` }}>
+            <div style={{ fontSize:12, color:T.muted, marginBottom:12, fontFamily:"DM Sans, sans-serif", lineHeight:1.5 }}>
+              Enter your target GPA and how many credits your next course is worth — we'll tell you what grade you need.
+            </div>
+            <div style={{ display:"flex", gap:10, marginBottom:12 }}>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:4 }}>TARGET GPA</div>
+                <input type="number" value={targetGPA} min="0" max="4.3" step="0.1"
+                  onChange={e => setTargetGPA(e.target.value)}
+                  style={{ ...inputStyle, textAlign:"center" }} placeholder="e.g. 3.5" />
+              </div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:4 }}>NEXT COURSE CREDITS</div>
+                <input type="number" value={newCredits} min={1} max={12}
+                  onChange={e => setNewCredits(e.target.value)}
+                  style={{ ...inputStyle, textAlign:"center" }} placeholder="3" />
+              </div>
+            </div>
+            {neededGrade && totalCredits > 0 && (
+              <div style={{ padding:"12px 14px", borderRadius:10, background:T.purpleDim, border:`1px solid ${T.purple}33`, textAlign:"center" }}>
+                <div style={{ fontSize:11, color:T.purple, fontFamily:"DM Sans, sans-serif", marginBottom:4 }}>You need at least</div>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:32, color:T.purple, lineHeight:1 }}>
+                  {neededGrade.length <= 2 ? neededGrade : neededGrade}
+                </div>
+                {neededGrade.length <= 2 && (
+                  <div style={{ fontSize:11, color:T.purple, opacity:0.8, marginTop:4, fontFamily:"DM Sans, sans-serif" }}>
+                    in your next {newCredits}-credit course
+                  </div>
+                )}
+              </div>
+            )}
+            {totalCredits === 0 && (
+              <div style={{ fontSize:12, color:T.muted, textAlign:"center", padding:"8px 0", fontFamily:"DM Sans, sans-serif" }}>Add at least one course above first</div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div style={{ marginTop:10 }}>
+        <CopyButton text={`My GPA is ${gpa} (${totalCredits} credit hours) — calculated on ToolForge`} />
+      </div>
+    </div>
+  );
 }
 
 export function TipSplitter() {
