@@ -525,10 +525,151 @@ export function StudyPlanner() {
   return <div><Row label="Subject / Topic"><input value={subject} onChange={e=>setSubject(e.target.value)} style={inputStyle} /></Row><Row label="Total Study Hours Needed"><NumInput val={hours} set={setHours} /></Row><Row label="Days Available"><NumInput val={days} set={setDays} /></Row><Row label="Study Technique">{Object.entries(techniques).map(([k,v]) => <div key={k} onClick={()=>setTech(k)} style={{ padding:"9px 12px", borderRadius:8, marginBottom:6, border:`1px solid ${technique===k?T.purple:T.border}`, background:technique===k?T.purpleDim:"white", cursor:"pointer", fontSize:12, color:technique===k?T.purple:T.muted, fontFamily:"DM Sans, sans-serif" }}>{v.label}</div>)}</Row><div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:8 }}><MiniResult label="Sessions Needed" value={sessions} /><MiniResult label="Per Day" value={perDay} /></div><Result label={`Daily Plan for ${subject}`} value={`${perDay} × ${t.mins}min`} color={T.purple} /><CopyButton text={`Study plan: ${perDay} sessions/day for ${subject} — ToolForge`} /><Tip>Consistency beats cramming.</Tip></div>;
 }
 
-export function CitationFormatter() {
-  const [style, setStyle] = useState("APA"); const [type, setType] = useState("book"); const [author, setAuthor] = useState("Smith, J."); const [title, setTitle] = useState("The Art of Learning"); const [year, setYear] = useState("2023"); const [publisher, setPub] = useState("Penguin Press"); const [url, setUrl] = useState("");
-  const cite = () => { if (style==="APA") return type==="website"?`${author} (${year}). ${title}. Retrieved from ${url}`:`${author} (${year}). *${title}*. ${publisher}.`; if (style==="MLA") return type==="website"?`${author} "${title}." ${year}${url ? ", " + url : ""}.`:`${author} *${title}*. ${publisher}, ${year}.`; return type==="website"?`${author} "${title}." Accessed ${year}${url ? ". " + url : ""}.`:`${author} *${title}*. ${publisher}, ${year}.`; };
-  return <div><Row label="Citation Style"><div style={{ display:"flex", gap:6 }}>{["APA","MLA","Chicago"].map(s => <button key={s} onClick={()=>setStyle(s)} style={{ flex:1, padding:"7px 0", borderRadius:8, border:`1px solid ${style===s?T.purple:T.border}`, background:style===s?T.purpleDim:"white", color:style===s?T.purple:T.muted, fontSize:12, fontFamily:"Syne, sans-serif", fontWeight:600, cursor:"pointer" }}>{s}</button>)}</div></Row><Row label="Source Type"><div style={{ display:"flex", gap:6 }}>{["book","website"].map(tp => <button key={tp} onClick={()=>setType(tp)} style={{ flex:1, padding:"7px 0", borderRadius:8, border:`1px solid ${type===tp?T.purple:T.border}`, background:type===tp?T.purpleDim:"white", color:type===tp?T.purple:T.muted, fontSize:12, fontFamily:"DM Sans, sans-serif", cursor:"pointer" }}>{tp.charAt(0).toUpperCase()+tp.slice(1)}</button>)}</div></Row><Row label="Author (Last, F.)"><input value={author} onChange={e=>setAuthor(e.target.value)} style={inputStyle} /></Row><Row label="Title"><input value={title} onChange={e=>setTitle(e.target.value)} style={inputStyle} /></Row><Row label="Year"><input value={year} onChange={e=>setYear(e.target.value)} style={inputStyle} /></Row>{type==="book"&&<Row label="Publisher"><input value={publisher} onChange={e=>setPub(e.target.value)} style={inputStyle} /></Row>}{type==="website"&&<Row label="URL"><input value={url} onChange={e=>setUrl(e.target.value)} style={inputStyle} placeholder="https://..." /></Row>}<div style={{ marginTop:14, padding:14, borderRadius:10, background:T.purpleDim, border:`1px solid ${T.purple}33`, fontSize:13, color:T.ink, fontFamily:"DM Sans, sans-serif", lineHeight:1.6 }}>{cite()}</div><CopyButton text={cite()} /></div>;
+export function CitationFormatter({ proToken, onNeedUpgrade, onTokenUpdate }) {
+  const [style, setStyle]       = useState("APA");
+  const [type, setType]         = useState("website");
+  const [author, setAuthor]     = useState("");
+  const [title, setTitle]       = useState("");
+  const [year, setYear]         = useState("");
+  const [publisher, setPub]     = useState("");
+  const [journal, setJournal]   = useState("");
+  const [volume, setVolume]     = useState("");
+  const [pages, setPages]       = useState("");
+  const [url, setUrl]           = useState("");
+  const [autoUrl, setAutoUrl]   = useState("");
+  const [loadingAuto, setLoadingAuto] = useState(false);
+  const [autoError, setAutoError]     = useState("");
+
+  const hasClaude = proToken && proToken.generations_left >= 1;
+
+  const SOURCE_TYPES = [
+    { id:"website",  label:"🌐 Website"  },
+    { id:"book",     label:"📖 Book"     },
+    { id:"journal",  label:"📄 Journal"  },
+    { id:"youtube",  label:"▶️ YouTube"  },
+  ];
+
+  const cite = () => {
+    const a  = author    || "Author, A.";
+    const t  = title     || "Title";
+    const y  = year      || "n.d.";
+    const p  = publisher || "Publisher";
+    const j  = journal   || "Journal Name";
+    const v  = volume    || "1";
+    const pg = pages     || "1–10";
+    const u  = url;
+
+    if (style === "APA") {
+      if (type === "website") return `${a} (${y}). ${t}. ${u ? u : ""}`.trim();
+      if (type === "book")    return `${a} (${y}). *${t}*. ${p}.`;
+      if (type === "journal") return `${a} (${y}). ${t}. *${j}*, *${v}*, ${pg}.`;
+      if (type === "youtube") return `${a} [${a}]. (${y}). *${t}* [Video]. YouTube. ${u}`;
+    }
+    if (style === "MLA") {
+      if (type === "website") return `${a} "${t}." ${y}${u ? ", " + u : ""}.`;
+      if (type === "book")    return `${a} *${t}*. ${p}, ${y}.`;
+      if (type === "journal") return `${a} "${t}." *${j}*, vol. ${v}, ${y}, pp. ${pg}.`;
+      if (type === "youtube") return `${a} "${t}." *YouTube*, ${y}, ${u}.`;
+    }
+    if (style === "Chicago") {
+      if (type === "website") return `${a} "${t}." Accessed ${y}. ${u}`;
+      if (type === "book")    return `${a} *${t}*. ${p}, ${y}.`;
+      if (type === "journal") return `${a} "${t}." *${j}* ${v} (${y}): ${pg}.`;
+      if (type === "youtube") return `${a} "${t}." YouTube video. ${y}. ${u}`;
+    }
+    return "";
+  };
+
+  const autoFill = async () => {
+    if (!autoUrl.trim()) return;
+    if (!hasClaude) { onNeedUpgrade(); return; }
+    setLoadingAuto(true); setAutoError("");
+    const prompt = `Extract citation metadata from this URL: ${autoUrl}
+
+If you can infer the page content from the URL itself (e.g. a Wikipedia article, news site, YouTube video), do so. Otherwise use what you know.
+
+Return ONLY a JSON object with these fields (use empty string "" if unknown):
+{
+  "author": "Last, F. format if possible",
+  "title": "page or article title",
+  "year": "publication year as 4-digit string",
+  "publisher": "website name or publisher",
+  "type": "website | book | journal | youtube"
+}
+
+No explanation, no markdown, just the raw JSON object.`;
+    try {
+      const res  = await fetch("/api/generate-claude", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ token:proToken.token, toolName:"Citation Formatter", userInput:prompt, tokensToDeduct:1 }) });
+      const data = await res.json();
+      if (!res.ok) { setAutoError(data.error || "Auto-fill failed."); setLoadingAuto(false); return; }
+      const raw  = data.result.replace(/```json|```/g,"").trim();
+      const obj  = JSON.parse(raw);
+      if (obj.author)    setAuthor(obj.author);
+      if (obj.title)     setTitle(obj.title);
+      if (obj.year)      setYear(obj.year);
+      if (obj.publisher) setPub(obj.publisher);
+      if (obj.type && SOURCE_TYPES.find(s => s.id === obj.type)) setType(obj.type);
+      setUrl(autoUrl);
+      onTokenUpdate({ ...proToken, generations_left: data.generations_left });
+    } catch { setAutoError("Couldn't parse response. Fill in fields manually."); }
+    setLoadingAuto(false);
+  };
+
+  const citation = cite();
+
+  return (
+    <div>
+      {/* Auto-fill from URL */}
+      <div style={{ marginBottom:16, padding:14, borderRadius:12, border:`2px solid ${T.purple}44`, background:T.purpleDim }}>
+        <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:13, color:T.purple, marginBottom:4 }}>✦ Auto-fill from URL</div>
+        <div style={{ fontSize:12, color:T.purple, fontFamily:"DM Sans, sans-serif", marginBottom:10, opacity:0.8 }}>Paste any URL and Claude will extract the citation fields for you.</div>
+        <div style={{ display:"flex", gap:8 }}>
+          <input value={autoUrl} onChange={e=>setAutoUrl(e.target.value)} placeholder="https://..." style={{ ...inputStyle, flex:1, margin:0 }} onKeyDown={e=>e.key==="Enter"&&autoFill()} />
+          <button onClick={autoFill} disabled={loadingAuto || !autoUrl.trim()} style={{ padding:"0 14px", borderRadius:9, border:"none", background:(!autoUrl.trim()||loadingAuto)?T.border:T.purple, color:(!autoUrl.trim()||loadingAuto)?T.muted:"white", fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, cursor:autoUrl.trim()&&!loadingAuto?"pointer":"default", whiteSpace:"nowrap" }}>
+            {loadingAuto ? "Filling…" : hasClaude ? "Auto-fill · 1 token" : "Unlock"}
+          </button>
+        </div>
+        {autoError && <div style={{ marginTop:8, fontSize:11, color:"#dc2626", fontFamily:"DM Sans, sans-serif" }}>{autoError}</div>}
+      </div>
+
+      {/* Style */}
+      <div style={{ marginBottom:14 }}>
+        <div style={{ fontSize:11, color:T.muted, marginBottom:6, fontFamily:"DM Sans, sans-serif", letterSpacing:0.3 }}>Citation Style</div>
+        <div style={{ display:"flex", gap:6 }}>
+          {["APA","MLA","Chicago"].map(s => (
+            <button key={s} onClick={()=>setStyle(s)} style={{ flex:1, padding:"8px 0", borderRadius:9, border:`1.5px solid ${style===s?T.purple:T.border}`, background:style===s?T.purpleDim:"white", color:style===s?T.purple:T.muted, fontSize:12, fontFamily:"Syne, sans-serif", fontWeight:700, cursor:"pointer" }}>{s}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Source Type */}
+      <div style={{ marginBottom:14 }}>
+        <div style={{ fontSize:11, color:T.muted, marginBottom:6, fontFamily:"DM Sans, sans-serif", letterSpacing:0.3 }}>Source Type</div>
+        <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+          {SOURCE_TYPES.map(tp => (
+            <button key={tp.id} onClick={()=>setType(tp.id)} style={{ padding:"7px 12px", borderRadius:9, border:`1.5px solid ${type===tp.id?T.purple:T.border}`, background:type===tp.id?T.purpleDim:"white", color:type===tp.id?T.purple:T.muted, fontSize:11, fontFamily:"Syne, sans-serif", fontWeight:700, cursor:"pointer" }}>{tp.label}</button>
+          ))}
+        </div>
+      </div>
+
+      <Row label="Author (Last, F.)"><input value={author} onChange={e=>setAuthor(e.target.value)} placeholder="e.g. Smith, J." style={inputStyle} /></Row>
+      <Row label="Title"><input value={title} onChange={e=>setTitle(e.target.value)} placeholder="e.g. The Art of Learning" style={inputStyle} /></Row>
+      <Row label="Year"><input value={year} onChange={e=>setYear(e.target.value)} placeholder="e.g. 2023" style={inputStyle} /></Row>
+
+      {type === "book"    && <Row label="Publisher"><input value={publisher} onChange={e=>setPub(e.target.value)} placeholder="e.g. Penguin Press" style={inputStyle} /></Row>}
+      {type === "journal" && <>
+        <Row label="Journal Name"><input value={journal} onChange={e=>setJournal(e.target.value)} placeholder="e.g. Nature" style={inputStyle} /></Row>
+        <Row label="Volume"><input value={volume} onChange={e=>setVolume(e.target.value)} placeholder="e.g. 12" style={inputStyle} /></Row>
+        <Row label="Pages"><input value={pages} onChange={e=>setPages(e.target.value)} placeholder="e.g. 45–67" style={inputStyle} /></Row>
+      </>}
+      {(type === "website" || type === "youtube") && <Row label="URL"><input value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://..." style={inputStyle} /></Row>}
+
+      <div style={{ marginTop:14, padding:14, borderRadius:10, background:T.purpleDim, border:`1px solid ${T.purple}33`, fontSize:13, color:T.ink, fontFamily:"DM Sans, sans-serif", lineHeight:1.8, userSelect:"all" }}>
+        {citation}
+      </div>
+      <CopyButton text={citation} />
+    </div>
+  );
 }
 
 export function WordCounter() {
