@@ -247,7 +247,7 @@ function SuccessPage({ orderId, onDone }) {
   );
 }
 
-function Footer({ onFaq, onTos, onRefund, TH: th }) {
+function Footer({ onFaq, onTos, onRefund, onPricing, TH: th }) {
   const theme = th || T;
   return (
     <div style={{ borderTop:`1px solid ${theme.border}`, padding:"20px 20px", background:theme.card, textAlign:"center" }}>
@@ -255,7 +255,7 @@ function Footer({ onFaq, onTos, onRefund, TH: th }) {
       <div style={{ fontSize:11, color:theme.muted, fontFamily:"DM Sans, sans-serif", marginBottom:12 }}>Free tools for freelancers, students & small businesses.</div>
       <div style={{ display:"flex", justifyContent:"center", gap:20, flexWrap:"wrap" }}>
         <span onClick={onFaq}    style={{ fontSize:11, color:theme.accent, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>FAQ & About</span>
-        <a href="https://toolforge.lemonsqueezy.com" target="_blank" rel="noreferrer" style={{ fontSize:11, color:theme.muted, fontFamily:"DM Sans, sans-serif", textDecoration:"none" }}>Pricing</a>
+        <span onClick={onPricing} style={{ fontSize:11, color:theme.muted, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>Pricing</span>
         <span onClick={onTos}    style={{ fontSize:11, color:theme.muted, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>Terms of Service</span>
         <span onClick={onRefund} style={{ fontSize:11, color:theme.muted, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>Refund Policy</span>
       </div>
@@ -278,7 +278,7 @@ const FAQ_ITEMS = [
   { q:"Will there be ads on ToolForge?", a:"Not right now. The site is funded by the paid AI plans. If ads are ever introduced in the future, they'll be minimal and non-intrusive." },
 ];
 
-function FAQPage({ onBack, onTos, onRefund }) {
+function FAQPage({ onBack, onTos, onRefund, onPricing }) {
   const [open, setOpen] = useState(null);
   return (
     <div style={{ maxWidth:480, margin:"0 auto", minHeight:"100vh", background:T.bg, fontFamily:"DM Sans, sans-serif" }}>
@@ -303,12 +303,12 @@ function FAQPage({ onBack, onTos, onRefund }) {
           </div>
         ))}
       </div>
-      <Footer onFaq={() => {}} onTos={onTos} onRefund={onRefund} />
+      <Footer onFaq={() => {}} onTos={onTos} onRefund={onRefund} onPricing={onPricing} />
     </div>
   );
 }
 
-function TosPage({ onBack, onFaq, onRefund }) {
+function TosPage({ onBack, onFaq, onRefund, onPricing }) {
   const sections = [
     { title:"1. Acceptance of Terms", body:"By using ToolForge you agree to these terms. If you do not agree, please do not use the service." },
     { title:"2. Description of Service", body:"ToolForge provides a collection of free and premium online tools for productivity, writing, and calculation. AI-powered features require a paid token balance." },
@@ -335,12 +335,12 @@ function TosPage({ onBack, onFaq, onRefund }) {
           </div>
         ))}
       </div>
-      <Footer onFaq={onFaq} onTos={() => {}} onRefund={onRefund} />
+      <Footer onFaq={onFaq} onTos={() => {}} onRefund={onRefund} onPricing={onPricing} />
     </div>
   );
 }
 
-function RefundPage({ onBack, onFaq, onTos }) {
+function RefundPage({ onBack, onFaq, onTos, onPricing }) {
   return (
     <div style={{ maxWidth:480, margin:"0 auto", minHeight:"100vh", background:T.bg, fontFamily:"DM Sans, sans-serif" }}>
       <div style={{ padding:"24px 20px 20px", borderBottom:`1px solid ${T.border}`, background:T.card }}>
@@ -362,7 +362,7 @@ function RefundPage({ onBack, onFaq, onTos }) {
           </div>
         ))}
       </div>
-      <Footer onFaq={onFaq} onTos={onTos} onRefund={() => {}} />
+      <Footer onFaq={onFaq} onTos={onTos} onRefund={() => {}} onPricing={onPricing} />
     </div>
   );
 }
@@ -479,9 +479,9 @@ export default function ToolForge() {
 
   /* ── Special pages ── */
   if (orderId) return <SuccessPage orderId={orderId} onDone={() => { window.history.replaceState({},"","/"); try { const s=localStorage.getItem("tf_pro_token"); if(s) setProToken(JSON.parse(s)); } catch {} window.location.reload(); }} />;
-  if (showFaq)    return <FAQPage    onBack={() => { setShowFaq(false);    window.history.pushState({},"","/"); }} onTos={() => { setShowFaq(false); setShowTos(true); }} onRefund={() => { setShowFaq(false); setShowRefund(true); }} />;
-  if (showTos)    return <TosPage    onBack={() => { setShowTos(false);    window.history.pushState({},"","/"); }} onFaq={() => { setShowTos(false); setShowFaq(true); }} onRefund={() => { setShowTos(false); setShowRefund(true); }} />;
-  if (showRefund) return <RefundPage onBack={() => { setShowRefund(false); window.history.pushState({},"","/"); }} onFaq={() => { setShowRefund(false); setShowFaq(true); }} onTos={() => { setShowRefund(false); setShowTos(true); }} />;
+  if (showFaq)    return <FAQPage    onBack={() => { setShowFaq(false);    window.history.pushState({},"","/"); }} onTos={() => { setShowFaq(false); setShowTos(true); }} onRefund={() => { setShowFaq(false); setShowRefund(true); }} onPricing={() => { setShowFaq(false); setShowUpgrade(true); }} />;
+  if (showTos)    return <TosPage    onBack={() => { setShowTos(false);    window.history.pushState({},"","/"); }} onFaq={() => { setShowTos(false); setShowFaq(true); }} onRefund={() => { setShowTos(false); setShowRefund(true); }} onPricing={() => { setShowTos(false); setShowUpgrade(true); }} />;
+  if (showRefund) return <RefundPage onBack={() => { setShowRefund(false); window.history.pushState({},"","/"); }} onFaq={() => { setShowRefund(false); setShowFaq(true); }} onTos={() => { setShowRefund(false); setShowTos(true); }} onPricing={() => { setShowRefund(false); setShowUpgrade(true); }} />;
 
   /* ── Dark toggle button ── */
   const DarkToggle = () => (
@@ -881,9 +881,10 @@ export default function ToolForge() {
 
       <div style={{ maxWidth:480, margin:"0 auto" }}>
         <Footer TH={TH}
-          onFaq={()    => { setShowFaq(true);    window.history.pushState({},"","/faq"); }}
-          onTos={()    => { setShowTos(true);    window.history.pushState({},"","/terms"); }}
-          onRefund={()=> { setShowRefund(true);  window.history.pushState({},"","/refund"); }}
+          onFaq={()      => { setShowFaq(true);    window.history.pushState({},"","/faq"); }}
+          onTos={()      => { setShowTos(true);    window.history.pushState({},"","/terms"); }}
+          onRefund={()   => { setShowRefund(true); window.history.pushState({},"","/refund"); }}
+          onPricing={()  => setShowUpgrade(true)}
         />
       </div>
 
