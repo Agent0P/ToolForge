@@ -205,6 +205,40 @@ export const injectStyles = () => {
       vertical-align: middle;
       margin-right: 8px;
     }
+
+    /* ── Dark mode: inputs, selects, textareas ── */
+    body.dark input,
+    body.dark select,
+    body.dark textarea {
+      background: #221f1a !important;
+      color: #f2ede6 !important;
+      border-color: rgba(242,237,230,0.12) !important;
+    }
+    body.dark input::placeholder,
+    body.dark textarea::placeholder {
+      color: #504e48 !important;
+    }
+    body.dark option {
+      background: #221f1a;
+      color: #f2ede6;
+    }
+    body.dark .tf-tool-card {
+      background: #252018;
+      border-color: rgba(242,237,230,0.07);
+    }
+    body.dark .tf-result-glow {
+      box-shadow: 0 4px 20px rgba(240,100,40,0.1);
+    }
+    body.dark .tf-mini-result {
+      background: #221f1a !important;
+    }
+    body.dark button:not(.tf-cta):not(.tf-btn-accent) {
+      background-color: transparent;
+    }
+    body.dark .tf-tip {
+      background: #041509 !important;
+      border-color: rgba(45,202,116,0.2) !important;
+    }
   `;
   document.head.appendChild(s);
 };
@@ -321,7 +355,7 @@ export function Result({ label, value, color = T.accent }) {
 
 export function MiniResult({ label, value }) {
   return (
-    <div style={{ padding:"13px 10px", borderRadius:11, background:T.bg, border:`1px solid ${T.border2}`, textAlign:"center" }}>
+    <div className="tf-mini-result" style={{ padding:"13px 10px", borderRadius:11, background:T.bg, border:`1px solid ${T.border2}`, textAlign:"center" }}>
       <div style={{ fontSize:10, color:T.hint, marginBottom:4, fontFamily:"Inter, sans-serif", letterSpacing:"0.07em", fontWeight:600, textTransform:"uppercase" }}>{label}</div>
       <div style={{ fontSize:19, fontWeight:700, color:T.ink, fontFamily:"Syne, sans-serif" }}>{value}</div>
     </div>
@@ -330,7 +364,7 @@ export function MiniResult({ label, value }) {
 
 export function Tip({ children }) {
   return (
-    <div style={{ marginTop:12, padding:"10px 14px", borderRadius:10, background:T.greenDim, border:`1px solid #a7f3c0`, fontSize:12, color:T.green, fontFamily:"Inter, DM Sans, sans-serif", lineHeight:1.6 }}>
+    <div className="tf-tip" style={{ marginTop:12, padding:"10px 14px", borderRadius:10, background:T.greenDim, border:`1px solid #a7f3c0`, fontSize:12, color:T.green, fontFamily:"Inter, DM Sans, sans-serif", lineHeight:1.6 }}>
       💡 {children}
     </div>
   );
