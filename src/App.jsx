@@ -120,7 +120,8 @@ function ToolCard({ tool, onClick, TH: th }) {
 }
 
 /* ── Modals & pages ── */
-function UpgradeModal({ onClose, proToken }) {
+function UpgradeModal({ onClose, proToken, thm }) {
+  if (!thm) thm = T;
   const onetimeUrl = import.meta.env.VITE_LS_ONETIME_URL || "#";
   const proUrl     = import.meta.env.VITE_LS_PRO_URL     || "#";
   const topupUrl   = import.meta.env.VITE_LS_TOPUP_URL   || "#";
@@ -137,28 +138,28 @@ function UpgradeModal({ onClose, proToken }) {
     : "Claude produces noticeably better cover letters, proposals, and emails — polished enough to send to real clients.";
 
   return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(15,15,13,0.6)", zIndex:1000, display:"flex", alignItems:"flex-end", justifyContent:"center", padding:16 }} onClick={e => { if (e.target===e.currentTarget) onClose(); }}>
-      <div style={{ background:T.card, borderRadius:20, padding:24, width:"100%", maxWidth:440, boxShadow:"0 -8px 40px rgba(0,0,0,0.15)" }}>
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.7)", zIndex:1000, display:"flex", alignItems:"flex-end", justifyContent:"center", padding:16 }} onClick={e => { if (e.target===e.currentTarget) onClose(); }}>
+      <div style={{ background:thm.card, borderRadius:20, padding:24, width:"100%", maxWidth:440, boxShadow:"0 -8px 48px rgba(0,0,0,0.3)", border:`1px solid ${thm.border2}` }}>
 
         {/* Header */}
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
           <div>
-            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.ink }}>{title}</div>
-            <div style={{ fontSize:12, color:T.muted, fontFamily:"DM Sans, sans-serif", marginTop:3, lineHeight:1.5 }}>{subtitle}</div>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:thm.ink }}>{title}</div>
+            <div style={{ fontSize:12, color:thm.muted, fontFamily:"DM Sans, sans-serif", marginTop:3, lineHeight:1.5 }}>{subtitle}</div>
           </div>
-          <button onClick={onClose} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer", color:T.muted, marginLeft:12, flexShrink:0 }}>✕</button>
+          <button onClick={onClose} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer", color:thm.muted, marginLeft:12, flexShrink:0 }}>✕</button>
         </div>
 
         {/* Top-Up — ONLY for existing subscribers (pro or pack) */}
         {hasToken && (
           <a href={topupUrl} style={{ textDecoration:"none", display:"block", marginBottom:10 }}>
-            <div style={{ padding:16, borderRadius:14, border:`2px solid ${T.green}`, background:T.greenDim, cursor:"pointer", position:"relative" }}>
+            <div style={{ padding:16, borderRadius:14, border:`2px solid ${thm.green}`, background:thm.greenDim, cursor:"pointer", position:"relative" }}>
               <div style={{ position:"absolute", top:-10, right:12, fontSize:9, padding:"3px 9px", borderRadius:99, background:T.green, color:"white", fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.5 }}>REFILL</div>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
-                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:T.green }}>Top-Up Pack</div>
-                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.green }}>$2.99</div>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:thm.green }}>Top-Up Pack</div>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:thm.green }}>$2.99</div>
               </div>
-              <div style={{ fontSize:12, color:T.green, fontFamily:"DM Sans, sans-serif" }}>+100 Claude generations · Added to your current balance instantly</div>
+              <div style={{ fontSize:12, color:thm.green, fontFamily:"DM Sans, sans-serif" }}>+100 Claude generations · Added to your current balance instantly</div>
             </div>
           </a>
         )}
@@ -166,12 +167,12 @@ function UpgradeModal({ onClose, proToken }) {
         {/* One-Time Pack — only for non-subscribers */}
         {!hasToken && (
           <a href={onetimeUrl} style={{ textDecoration:"none", display:"block", marginBottom:10 }}>
-            <div style={{ padding:16, borderRadius:14, border:`2px solid ${T.accent}`, background:T.accentDim, cursor:"pointer" }}>
+            <div style={{ padding:16, borderRadius:14, border:`2px solid ${thm.accent}`, background:thm.accentDim, cursor:"pointer" }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
-                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:T.accent }}>One-Time Pack</div>
-                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.accent }}>$2.99</div>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:thm.accent }}>One-Time Pack</div>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:thm.accent }}>$2.99</div>
               </div>
-              <div style={{ fontSize:12, color:T.accent, fontFamily:"DM Sans, sans-serif" }}>50 Claude generations · Never expires · No subscription</div>
+              <div style={{ fontSize:12, color:thm.accent, fontFamily:"DM Sans, sans-serif" }}>50 Claude generations · Never expires · No subscription</div>
             </div>
           </a>
         )}
@@ -179,25 +180,25 @@ function UpgradeModal({ onClose, proToken }) {
         {/* Pro Monthly — only for non-pro users */}
         {!isPro && (
           <a href={proUrl} style={{ textDecoration:"none", display:"block", marginBottom:14 }}>
-            <div style={{ padding:16, borderRadius:14, border:`2px solid ${T.gold}`, background:T.goldDim, cursor:"pointer", position:"relative" }}>
+            <div style={{ padding:16, borderRadius:14, border:`2px solid ${thm.gold}`, background:thm.goldDim, cursor:"pointer", position:"relative" }}>
               <div style={{ position:"absolute", top:-10, right:12, fontSize:9, padding:"3px 9px", borderRadius:99, background:T.gold, color:"white", fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.5 }}>BEST VALUE</div>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
-                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:T.gold }}>Pro Monthly</div>
-                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:T.gold }}>$7.99<span style={{ fontSize:12, fontWeight:400 }}>/mo</span></div>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:thm.gold }}>Pro Monthly</div>
+                <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:thm.gold }}>$7.99<span style={{ fontSize:12, fontWeight:400 }}>/mo</span></div>
               </div>
-              <div style={{ fontSize:12, color:T.gold, fontFamily:"DM Sans, sans-serif" }}>400 Claude generations/month · No ads · Cancel anytime</div>
+              <div style={{ fontSize:12, color:thm.gold, fontFamily:"DM Sans, sans-serif" }}>400 Claude generations/month · No ads · Cancel anytime</div>
             </div>
           </a>
         )}
 
         {/* Restore hint — only for non-subscribers */}
         {!hasToken && (
-          <div style={{ marginBottom:12, padding:"10px 12px", borderRadius:8, background:"#f0f9ff", border:"1px solid #bae6fd", fontSize:11, color:"#0369a1", fontFamily:"DM Sans, sans-serif", lineHeight:1.6 }}>
+          <div style={{ marginBottom:12, padding:"10px 12px", borderRadius:8, background:thm.bg2, border:`1px solid ${thm.border2}`, fontSize:11, color:thm.ink2||thm.muted, fontFamily:"DM Sans, sans-serif", lineHeight:1.6 }}>
             💡 <strong>Already purchased?</strong> Click "Restore Access" on the home screen and enter your purchase email.
           </div>
         )}
 
-        <div style={{ textAlign:"center", fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>Secure payment via Lemon Squeezy · Activated instantly</div>
+        <div style={{ textAlign:"center", fontSize:11, color:thm.muted, fontFamily:"DM Sans, sans-serif" }}>Secure payment via Lemon Squeezy · Activated instantly</div>
       </div>
     </div>
   );
@@ -275,39 +276,52 @@ const FAQ_ITEMS = [
   { q:"Will there be ads on ToolForge?", a:"Not right now. The site is funded by the paid AI plans. If ads are ever introduced in the future, they'll be minimal and non-intrusive." },
 ];
 
-function FAQPage({ onBack, onTos, onRefund, proToken }) {
+function FAQPage({ onBack, onTos, onRefund, proToken, thm }) {
+  const th = thm || T;
   const [open, setOpen] = useState(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   return (
-    <div style={{ maxWidth:480, margin:"0 auto", minHeight:"100vh", background:T.bg, fontFamily:"DM Sans, sans-serif" }}>
-      <div style={{ padding:"24px 20px 20px", borderBottom:`1px solid ${T.border}`, background:T.card }}>
-        <button onClick={onBack} style={{ background:"none", border:"none", color:T.accent, fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, cursor:"pointer", marginBottom:12, padding:0 }}>← Back to ToolForge</button>
-        <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:24, color:T.ink, marginBottom:6 }}>FAQ & About</div>
-        <div style={{ fontSize:13, color:T.muted }}>Everything you need to know about ToolForge.</div>
+    <div style={{ minHeight:"100vh", background:th.bg, fontFamily:"Inter, sans-serif" }}>
+      {/* Nav bar */}
+      <div style={{ height:52, background:th.card, borderBottom:`1px solid ${th.border}`, display:"flex", alignItems:"center", padding:"0 20px", justifyContent:"space-between", position:"sticky", top:0, zIndex:10, boxShadow:th.shadow }}>
+        <button onClick={onBack} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", color:th.accent, fontFamily:"Inter, sans-serif", fontWeight:600, fontSize:13, cursor:"pointer", padding:0 }}>← Back</button>
+        <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:15, color:th.ink }}>FAQ & About</span>
+        <div style={{ width:60 }} />
       </div>
-      <div style={{ margin:16, padding:20, borderRadius:16, background:T.card, border:`1px solid ${T.border}` }}>
-        <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:15, color:T.ink, marginBottom:8 }}>✦ About ToolForge</div>
-        <div style={{ fontSize:13, color:T.muted, lineHeight:1.7 }}>ToolForge was built to give freelancers, students, job seekers and small business owners access to powerful tools — for free. No accounts, no paywalls on the essentials, no bloat.<br /><br />AI-powered tools use Groq (free, fast) or Claude Sonnet AI (premium, higher quality). New tools are added every week.</div>
-      </div>
-      <div style={{ padding:"0 16px 24px" }}>
-        <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:14, color:T.ink, marginBottom:12 }}>Frequently Asked Questions</div>
+      <div style={{ maxWidth:680, margin:"0 auto", padding:"28px 20px 48px" }}>
+        {/* About card */}
+        <div style={{ marginBottom:24, padding:20, borderRadius:14, background:th.card, border:`1px solid ${th.border}`, boxShadow:th.shadow }}>
+          <div style={{ fontSize:10, fontWeight:600, color:th.accent, letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:8 }}>✦ About ToolForge</div>
+          <div style={{ fontSize:13, color:th.muted, lineHeight:1.75 }}>ToolForge was built to give freelancers, students, job seekers and small business owners access to powerful tools — for free. No accounts, no paywalls on the essentials, no bloat.<br /><br />AI-powered tools use Groq (free, fast) or Claude Sonnet AI (premium, higher quality). New tools are added every week.</div>
+        </div>
+        {/* FAQ items */}
+        <div style={{ fontSize:11, fontWeight:600, color:th.muted, letterSpacing:"0.07em", textTransform:"uppercase", marginBottom:12 }}>Frequently Asked Questions</div>
         {FAQ_ITEMS.map((item, i) => (
-          <div key={i} onClick={() => setOpen(open===i?null:i)} style={{ marginBottom:8, borderRadius:12, border:`1px solid ${open===i?T.accent:T.border}`, background:T.card, overflow:"hidden", cursor:"pointer", transition:"border 0.15s" }}>
-            <div style={{ padding:"13px 16px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:12 }}>
-              <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.ink, lineHeight:1.4 }}>{item.q}</div>
-              <span style={{ fontSize:14, color:T.muted, flexShrink:0, transform:open===i?"rotate(180deg)":"rotate(0deg)", transition:"transform 0.2s", display:"inline-block" }}>▾</span>
+          <div key={i} onClick={() => setOpen(open===i?null:i)}
+            style={{ marginBottom:6, borderRadius:11, border:`1px solid ${open===i?th.accent:th.border}`, background:th.card, overflow:"hidden", cursor:"pointer", transition:"border-color 0.15s", boxShadow:th.shadowSm }}>
+            <div style={{ padding:"14px 16px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:12 }}>
+              <div style={{ fontFamily:"Inter, sans-serif", fontWeight:600, fontSize:13, color:th.ink, lineHeight:1.4 }}>{item.q}</div>
+              <span style={{ fontSize:14, color:th.muted, flexShrink:0, transform:open===i?"rotate(180deg)":"rotate(0deg)", transition:"transform 0.2s", display:"inline-block" }}>▾</span>
             </div>
-            {open===i && <div style={{ padding:"0 16px 14px 16px", paddingTop:12, fontSize:12, color:T.muted, lineHeight:1.7, borderTop:`1px solid ${T.border}` }}>{item.a}</div>}
+            {open===i && <div style={{ padding:"0 16px 14px", paddingTop:0, fontSize:12, color:th.muted, lineHeight:1.75, borderTop:`1px solid ${th.border}` }}>{item.a}</div>}
           </div>
         ))}
+        {/* Pricing CTA */}
+        <div style={{ marginTop:24, padding:"14px 18px", borderRadius:12, background:th.goldDim, border:`1px solid ${th.gold}`, display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }} onClick={() => setShowUpgrade(true)}>
+          <div>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:th.gold }}>✦ Upgrade to Claude Sonnet AI</div>
+            <div style={{ fontSize:11, color:th.gold, opacity:0.75, marginTop:2 }}>Plans from $2.99 · No subscription required</div>
+          </div>
+          <span style={{ fontSize:16, color:th.gold }}>→</span>
+        </div>
       </div>
-      <Footer onFaq={() => {}} onTos={onTos} onRefund={onRefund} onPricing={() => setShowUpgrade(true)} />
-      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} />}
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} thm={th} />}
     </div>
   );
 }
 
-function TosPage({ onBack, onFaq, onRefund, proToken }) {
+function TosPage({ onBack, onFaq, onRefund, proToken, thm }) {
+  const th = thm || T;
   const [showUpgrade, setShowUpgrade] = useState(false);
   const sections = [
     { title:"1. Acceptance of Terms", body:"By using ToolForge you agree to these terms. If you do not agree, please do not use the service." },
@@ -321,36 +335,38 @@ function TosPage({ onBack, onFaq, onRefund, proToken }) {
     { title:"9. Contact", body:"For questions about these terms, contact us at toolforgesupport@gmail.com." },
   ];
   return (
-    <div style={{ maxWidth:480, margin:"0 auto", minHeight:"100vh", background:T.bg, fontFamily:"DM Sans, sans-serif" }}>
-      <div style={{ padding:"24px 20px 20px", borderBottom:`1px solid ${T.border}`, background:T.card }}>
-        <button onClick={onBack} style={{ background:"none", border:"none", color:T.accent, fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, cursor:"pointer", marginBottom:12, padding:0 }}>← Back to ToolForge</button>
-        <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:24, color:T.ink, marginBottom:4 }}>Terms of Service</div>
-        <div style={{ fontSize:12, color:T.muted }}>Last updated: March 2025</div>
+    <div style={{ minHeight:"100vh", background:th.bg, fontFamily:"Inter, sans-serif" }}>
+      <div style={{ height:52, background:th.card, borderBottom:`1px solid ${th.border}`, display:"flex", alignItems:"center", padding:"0 20px", justifyContent:"space-between", position:"sticky", top:0, zIndex:10, boxShadow:th.shadow }}>
+        <button onClick={onBack} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", color:th.accent, fontFamily:"Inter, sans-serif", fontWeight:600, fontSize:13, cursor:"pointer", padding:0 }}>← Back</button>
+        <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:15, color:th.ink }}>Terms of Service</span>
+        <div style={{ width:60 }} />
       </div>
-      <div style={{ padding:"16px 16px 32px" }}>
+      <div style={{ maxWidth:680, margin:"0 auto", padding:"28px 20px 48px" }}>
+        <div style={{ fontSize:11, color:th.muted, marginBottom:20 }}>Last updated: March 2025</div>
         {sections.map((s, i) => (
-          <div key={i} style={{ marginBottom:16, padding:16, borderRadius:12, background:T.card, border:`1px solid ${T.border}` }}>
-            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.ink, marginBottom:6 }}>{s.title}</div>
-            <div style={{ fontSize:12, color:T.muted, lineHeight:1.7 }}>{s.body}</div>
+          <div key={i} style={{ marginBottom:8, padding:"14px 16px", borderRadius:11, background:th.card, border:`1px solid ${th.border}`, boxShadow:th.shadowSm }}>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:th.ink, marginBottom:5 }}>{s.title}</div>
+            <div style={{ fontSize:12, color:th.muted, lineHeight:1.75 }}>{s.body}</div>
           </div>
         ))}
       </div>
-      <Footer onFaq={onFaq} onTos={() => {}} onRefund={onRefund} onPricing={() => setShowUpgrade(true)} />
-      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} />}
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} thm={th} />}
     </div>
   );
 }
 
-function RefundPage({ onBack, onFaq, onTos, proToken }) {
+function RefundPage({ onBack, onFaq, onTos, proToken, thm }) {
+  const th = thm || T;
   const [showUpgrade, setShowUpgrade] = useState(false);
   return (
-    <div style={{ maxWidth:480, margin:"0 auto", minHeight:"100vh", background:T.bg, fontFamily:"DM Sans, sans-serif" }}>
-      <div style={{ padding:"24px 20px 20px", borderBottom:`1px solid ${T.border}`, background:T.card }}>
-        <button onClick={onBack} style={{ background:"none", border:"none", color:T.accent, fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, cursor:"pointer", marginBottom:12, padding:0 }}>← Back to ToolForge</button>
-        <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:24, color:T.ink, marginBottom:4 }}>Refund Policy</div>
-        <div style={{ fontSize:12, color:T.muted }}>Last updated: March 2025</div>
+    <div style={{ minHeight:"100vh", background:th.bg, fontFamily:"Inter, sans-serif" }}>
+      <div style={{ height:52, background:th.card, borderBottom:`1px solid ${th.border}`, display:"flex", alignItems:"center", padding:"0 20px", justifyContent:"space-between", position:"sticky", top:0, zIndex:10, boxShadow:th.shadow }}>
+        <button onClick={onBack} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", color:th.accent, fontFamily:"Inter, sans-serif", fontWeight:600, fontSize:13, cursor:"pointer", padding:0 }}>← Back</button>
+        <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:15, color:th.ink }}>Refund Policy</span>
+        <div style={{ width:60 }} />
       </div>
-      <div style={{ padding:"16px 16px 32px" }}>
+      <div style={{ maxWidth:680, margin:"0 auto", padding:"28px 20px 48px" }}>
+        <div style={{ fontSize:11, color:th.muted, marginBottom:20 }}>Last updated: March 2025</div>
         {[
           { title:"Eligibility", body:"Refunds are available within 3 days of purchase, provided that no AI generations have been used from the purchased pack or plan." },
           { title:"Non-Refundable", body:"Once any AI generation has been used, or after 3 days have passed since purchase, the transaction is non-refundable." },
@@ -358,14 +374,13 @@ function RefundPage({ onBack, onFaq, onTos, proToken }) {
           { title:"How to Request a Refund", body:"To request a refund, email us at toolforgesupport@gmail.com and include:\n• Your purchase email address\n• Your order ID (found in your Lemon Squeezy receipt email)\n\nWe will verify your eligibility and process approved refunds within 3 business days." },
           { title:"Questions", body:"If you have any questions about this policy, contact us at toolforgesupport@gmail.com." },
         ].map((s, i) => (
-          <div key={i} style={{ marginBottom:16, padding:16, borderRadius:12, background:T.card, border:`1px solid ${T.border}` }}>
-            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.ink, marginBottom:6 }}>{s.title}</div>
-            <div style={{ fontSize:12, color:T.muted, lineHeight:1.7, whiteSpace:"pre-line" }}>{s.body}</div>
+          <div key={i} style={{ marginBottom:8, padding:"14px 16px", borderRadius:11, background:th.card, border:`1px solid ${th.border}`, boxShadow:th.shadowSm }}>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:th.ink, marginBottom:5 }}>{s.title}</div>
+            <div style={{ fontSize:12, color:th.muted, lineHeight:1.75, whiteSpace:"pre-line" }}>{s.body}</div>
           </div>
         ))}
       </div>
-      <Footer onFaq={onFaq} onTos={onTos} onRefund={() => {}} onPricing={() => setShowUpgrade(true)} />
-      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} />}
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} thm={th} />}
     </div>
   );
 }
@@ -493,9 +508,9 @@ export default function ToolForge() {
 
   /* ── Special pages ── */
   if (orderId) return <SuccessPage orderId={orderId} onDone={() => { window.history.replaceState({},"","/"); try { const s=localStorage.getItem("tf_pro_token"); if(s) setProToken(JSON.parse(s)); } catch {} window.location.reload(); }} />;
-  if (showFaq)    return <FAQPage    onBack={() => { setShowFaq(false);    window.history.pushState({},"","/"); }} onTos={() => { setShowFaq(false); setShowTos(true); }} onRefund={() => { setShowFaq(false); setShowRefund(true); }} proToken={proToken} />;
-  if (showTos)    return <TosPage    onBack={() => { setShowTos(false);    window.history.pushState({},"","/"); }} onFaq={() => { setShowTos(false); setShowFaq(true); }} onRefund={() => { setShowTos(false); setShowRefund(true); }} proToken={proToken} />;
-  if (showRefund) return <RefundPage onBack={() => { setShowRefund(false); window.history.pushState({},"","/"); }} onFaq={() => { setShowRefund(false); setShowFaq(true); }} onTos={() => { setShowRefund(false); setShowTos(true); }} proToken={proToken} />;
+  if (showFaq)    return <FAQPage    onBack={() => { setShowFaq(false);    window.history.pushState({},"","/"); }} onTos={() => { setShowFaq(false); setShowTos(true); }} onRefund={() => { setShowFaq(false); setShowRefund(true); }} proToken={proToken} thm={TH} />;
+  if (showTos)    return <TosPage    onBack={() => { setShowTos(false);    window.history.pushState({},"","/"); }} onFaq={() => { setShowTos(false); setShowFaq(true); }} onRefund={() => { setShowTos(false); setShowRefund(true); }} proToken={proToken} thm={TH} />;
+  if (showRefund) return <RefundPage onBack={() => { setShowRefund(false); window.history.pushState({},"","/"); }} onFaq={() => { setShowRefund(false); setShowFaq(true); }} onTos={() => { setShowRefund(false); setShowTos(true); }} proToken={proToken} thm={TH} />;
 
   /* ── Dark toggle button ── */
   const DarkToggle = () => (
@@ -570,10 +585,7 @@ export default function ToolForge() {
               <span style={{ fontSize:14, color:TH.hint, flexShrink:0 }}>⌕</span>
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or describe what you need…"
                 className="tf-input" style={{ ...inputStyle, background:"transparent", border:"none", padding:0, fontSize:13, color:TH.ink, boxShadow:"none" }} />
-              <div style={{ display:"flex", gap:3, flexShrink:0 }}>
-                <span style={{ padding:"2px 5px", borderRadius:4, background:TH.card, border:`1px solid ${TH.border2}`, fontSize:9, color:TH.hint, fontFamily:"monospace" }}>⌘</span>
-                <span style={{ padding:"2px 5px", borderRadius:4, background:TH.card, border:`1px solid ${TH.border2}`, fontSize:9, color:TH.hint, fontFamily:"monospace" }}>K</span>
-              </div>
+
             </div>
           </div>
         </div>
@@ -659,19 +671,26 @@ export default function ToolForge() {
               CATEGORIES.map(cat => {
                 const catTools = middleTools.filter(t => t.catId === cat.id);
                 if (catTools.length === 0) return null;
+                const isCatCollapsed = collapsed[cat.id];
                 return (
                   <div key={cat.id} style={{ marginBottom:14 }}>
                     {!MID_SLIM && (
-                      <div style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 8px", marginBottom:5, borderRadius:7, background:cat.colorDim, border:`1px solid ${cat.color}22` }}>
+                      <div onClick={() => setCollapsed(prev => ({ ...prev, [cat.id]: !prev[cat.id] }))}
+                        style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 8px", marginBottom:isCatCollapsed?0:5, borderRadius:7, background:cat.colorDim, border:`1px solid ${cat.color}22`, cursor:"pointer", userSelect:"none" }}>
                         <span style={{ fontSize:12 }}>{cat.icon}</span>
                         <span style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:10, color:cat.color, flex:1 }}>{cat.label}</span>
-                        <span style={{ fontSize:9, color:cat.color, opacity:0.7 }}>{catTools.length}</span>
+                        <span style={{ fontSize:9, color:cat.color, opacity:0.6 }}>{catTools.length}</span>
+                        <span style={{ fontSize:10, color:cat.color, opacity:0.6, transform:isCatCollapsed?"rotate(-90deg)":"rotate(0deg)", transition:"transform 0.18s", display:"inline-block" }}>▾</span>
                       </div>
                     )}
                     {MID_SLIM && (
-                      <div style={{ padding:"3px 6px", marginBottom:4, fontSize:10, color:cat.color, fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.4 }}>{cat.icon} {cat.label}</div>
+                      <div onClick={() => setCollapsed(prev => ({ ...prev, [cat.id]: !prev[cat.id] }))}
+                        style={{ padding:"3px 6px", marginBottom:isCatCollapsed?0:4, fontSize:10, color:cat.color, fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.4, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                        <span>{cat.icon} {cat.label}</span>
+                        <span style={{ transform:isCatCollapsed?"rotate(-90deg)":"rotate(0deg)", transition:"transform 0.18s", display:"inline-block", opacity:0.6 }}>▾</span>
+                      </div>
                     )}
-                    {catTools.map(tool => (
+                    {!isCatCollapsed && catTools.map(tool => (
                       <div key={tool.id} onClick={() => { setActiveTool(tool); setShowGames(false); }}
                         style={{ padding: MID_SLIM ? "7px 8px" : "9px 10px", borderRadius:8, border:`1px solid ${activeTool?.id===tool.id?tool.catColor:TH.border}`, background:activeTool?.id===tool.id?tool.catColorDim:TH.card, display:"flex", alignItems:"flex-start", gap:8, cursor:"pointer", marginBottom:4, transition:"all 0.15s" }}>
                         <span style={{ fontSize:15, flexShrink:0, marginTop:1 }}>{tool.icon}</span>
@@ -770,7 +789,7 @@ export default function ToolForge() {
         )}
 
         <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={toolId => { setActiveTool(ALL_TOOLS.find(t=>t.id===toolId)); setShowGames(false); }} />
-        {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} />}
+        {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} thm={TH} />}
       </div>
     );
   }
@@ -787,7 +806,7 @@ export default function ToolForge() {
           <GamesSection proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} onBack={() => setShowGames(false)} />
         </div>
       </div>
-      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} />}
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} thm={TH} />}
       <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={toolId => { setShowGames(false); setActiveTool(ALL_TOOLS.find(t=>t.id===toolId)); }} />
     </>
   );
@@ -806,7 +825,7 @@ export default function ToolForge() {
         )}
       </div>
       <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={toolId => setActiveTool(ALL_TOOLS.find(t=>t.id===toolId))} />
-      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} />}
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} thm={TH} />}
     </>
   );
 
@@ -844,7 +863,7 @@ export default function ToolForge() {
             }
             {/* Hamburger */}
             <button onClick={() => setShowDrawer(d => !d)} className="tf-btn"
-              style={{ width:32, height:32, borderRadius:8, border:`1px solid ${TH.border2}`, background:TH.bg2, color:TH.muted, fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              style={{ width:32, height:32, borderRadius:8, border:`1px solid ${TH.border2}`, background:TH.bg2, color:TH.ink, fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700 }}>
               ☰
             </button>
           </div>
@@ -898,7 +917,7 @@ export default function ToolForge() {
             </div>
             {/* Stats */}
             <div style={{ display:"flex", gap:0, marginTop:20, borderTop:`1px solid ${TH.border}`, paddingTop:18 }}>
-              {[{n:"27",l:"Free tools"},{n:"0",l:"Sign-ups"},{n:"✦ AI",l:"Powered",c:TH.gold}].map((s,i) => (
+              {[{n:"27",l:"Free tools"},{n:"100%",l:"Free"},{n:"✦ AI",l:"Powered",c:TH.gold}].map((s,i) => (
                 <div key={i} style={{ flex:1, padding:"0 14px", borderRight: i<2 ? `1px solid ${TH.border}` : "none", ...(i===0?{paddingLeft:0}:{}) }}>
                   <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:s.c||TH.ink, letterSpacing:"-0.2px" }}>{s.n}</div>
                   <div style={{ fontSize:9, color:TH.hint, fontWeight:500, letterSpacing:"0.05em", textTransform:"uppercase", marginTop:2 }}>{s.l}</div>
@@ -912,14 +931,14 @@ export default function ToolForge() {
         <div style={{ padding:"12px 16px", display:"flex", gap:5, overflowX:"auto", borderBottom:`1px solid ${TH.border}`, background:TH.card }}>
           {[{ id:"all", label:"All", icon:"✦" }, ...CATEGORIES].map(c => (
             <button key={c.id} onClick={() => setActiveCat(c.id)} className="tf-cat-tab"
-              style={{ flexShrink:0, padding:"6px 14px", borderRadius:99, border:`1px solid ${activeCat===c.id?TH.border2:"transparent"}`, background:activeCat===c.id?TH.ink:"transparent", color:activeCat===c.id?TH.bg:TH.muted, fontSize:12, fontFamily:"Inter, sans-serif", fontWeight:activeCat===c.id?600:400, cursor:"pointer", whiteSpace:"nowrap" }}>
+              style={{ flexShrink:0, padding:"6px 14px", borderRadius:99, border:`1px solid ${activeCat===c.id?TH.border2:TH.border}`, background:activeCat===c.id?TH.ink:TH.card, color:activeCat===c.id?TH.bg:TH.muted, fontSize:12, fontFamily:"Inter, sans-serif", fontWeight:activeCat===c.id?600:400, cursor:"pointer", whiteSpace:"nowrap", transition:"all 0.15s" }}>
               {c.icon} {c.label||"All"}
             </button>
           ))}
         </div>
 
         {/* 🎮 Take a Break — between category tabs and tool grid */}
-        <div onClick={() => setShowGames(true)} className="tf-game-banner" style={{ margin:"12px 16px 0", padding:"14px 18px", borderRadius:14, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div onClick={() => setShowGames(true)} style={{ margin:"12px 16px 0", padding:"14px 18px", borderRadius:14, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between", background:"linear-gradient(135deg,#2d268a,#5b21b6,#7c3aed)", boxShadow:"0 4px 20px rgba(91,33,182,0.28),0 10px 36px rgba(91,33,182,0.16)" }}>
           <div>
             <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:14, color:"white", marginBottom:2 }}>🎮 Take a Break</div>
             <div style={{ fontSize:11, color:"rgba(255,255,255,0.8)", fontFamily:"DM Sans, sans-serif" }}>Free games + premium unlocks · resets daily</div>
@@ -978,7 +997,7 @@ export default function ToolForge() {
       </div>
 
       <FloatingWidget widgets={widgets} removeWidget={removeWidget} activePill={activePill} setActivePill={setActivePill} onOpenTool={toolId => setActiveTool(ALL_TOOLS.find(t=>t.id===toolId))} />
-      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} />}
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} proToken={proToken} thm={TH} />}
     </>
   );
 }
