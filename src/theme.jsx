@@ -228,14 +228,74 @@ export const injectStyles = () => {
     body.dark .tf-tip { background: #041509 !important; border-color: rgba(45,202,116,0.18) !important; }
     body.dark .tf-result-glow { box-shadow: 0 4px 20px rgba(240,100,40,0.1); }
 
-    /* ── Dark mode: tool inner cards / white boxes ── */
-    body.dark [style*="background: white"],
-    body.dark [style*="background:white"],
-    body.dark [style*='background: "white"'] { background: #252018 !important; }
+    /* ── Dark mode: neutralize ALL hardcoded T.* light colors ── */
 
-    /* ── Dark mode: toggle buttons inside tools ── */
-    body.dark button[style*="background: white"],
-    body.dark button[style*="background:white"] { background: #252018 !important; color: #8a8780 !important; border-color: rgba(242,237,230,0.10) !important; }
+    /* white / #ffffff backgrounds → dark card */
+    body.dark [style*="background: white"] { background: #252018 !important; }
+    body.dark [style*="background:white"] { background: #252018 !important; }
+    body.dark [style*="background: rgb(255, 255, 255)"] { background: #252018 !important; }
+    body.dark button[style*="background: white"] { background: #2a2620 !important; color: #8a8780 !important; }
+    body.dark button[style*="background:white"] { background: #2a2620 !important; color: #8a8780 !important; }
+
+    /* T.card = #ffffff */
+    body.dark [style*="background: #ffffff"] { background: #252018 !important; }
+    body.dark [style*="background:#ffffff"] { background: #252018 !important; }
+
+    /* T.purpleDim = #f0ebff */
+    body.dark [style*="background: #f0ebff"] { background: #100828 !important; }
+    body.dark [style*="background:#f0ebff"] { background: #100828 !important; }
+    body.dark [style*="rgb(240, 235, 255)"] { background: #100828 !important; }
+
+    /* T.accentDim = #fff0e8 */
+    body.dark [style*="background: #fff0e8"] { background: #1e0e05 !important; }
+    body.dark [style*="background:#fff0e8"] { background: #1e0e05 !important; }
+
+    /* T.greenDim = #edfaf4 */
+    body.dark [style*="background: #edfaf4"] { background: #041509 !important; }
+    body.dark [style*="background:#edfaf4"] { background: #041509 !important; }
+
+    /* T.tealDim = #e4faf8 */
+    body.dark [style*="background: #e4faf8"] { background: #031412 !important; }
+    body.dark [style*="background:#e4faf8"] { background: #031412 !important; }
+
+    /* T.blueDim = #edf2ff */
+    body.dark [style*="background: #edf2ff"] { background: #060e20 !important; }
+    body.dark [style*="background:#edf2ff"] { background: #060e20 !important; }
+
+    /* T.goldDim = #fff5e0 */
+    body.dark [style*="background: #fff5e0"] { background: #1a1000 !important; }
+    body.dark [style*="background:#fff5e0"] { background: #1a1000 !important; }
+
+    /* T.bg = #f7f5f0 — used as MiniResult bg etc */
+    body.dark [style*="background: #f7f5f0"] { background: #221f1a !important; }
+    body.dark [style*="background:#f7f5f0"] { background: #221f1a !important; }
+
+    /* T.bg2 = #f0ede6 */
+    body.dark [style*="background: #f0ede6"] { background: #2a2620 !important; }
+    body.dark [style*="background:#f0ede6"] { background: #2a2620 !important; }
+
+    /* light error/red backgrounds */
+    body.dark [style*="background: #fef2f2"] { background: #200808 !important; }
+    body.dark [style*="background: #fee2e2"] { background: #200808 !important; }
+    body.dark [style*="background: #f0f9ff"] { background: #060e20 !important; }
+
+    /* FloatingWidget white bg */
+    body.dark [style*="background: white"][style*="border-radius: 16px"],
+    body.dark [style*="background:white"][style*="border-radius: 16px"] { background: #252018 !important; }
+
+
+    /* ── Specific component dark overrides ── */
+    body.dark .tf-citation-result { background: #100828 !important; color: #f2ede6 !important; border-color: rgba(160,123,250,0.2) !important; }
+    body.dark .tf-floating-widget { background: #252018 !important; border-color: rgba(242,237,230,0.08) !important; }
+    body.dark .tf-bmi-result { filter: brightness(0.25) !important; }
+    body.dark .tf-bmi-result div[style*="color:"] { filter: brightness(4) !important; }
+    /* Fix text on dark dim backgrounds — ensure ink colors work */
+    body.dark [style*="color: #1a1814"] { color: #f2ede6 !important; }
+    body.dark [style*="color:#1a1814"] { color: #f2ede6 !important; }
+    body.dark [style*="color: rgb(26, 24, 20)"] { color: #f2ede6 !important; }
+
+    /* borders that used light colors */
+    body.dark [style*="border: 1px solid rgb(240, 235, 255)"] { border-color: rgba(160,123,250,0.2) !important; }
   `;
   document.head.appendChild(s);
 };
