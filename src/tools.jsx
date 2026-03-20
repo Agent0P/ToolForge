@@ -557,7 +557,7 @@ export function FloatingWidget({ widgets, removeWidget, activePill, setActivePil
   const activeId = widgets[activePill] ? activePill : keys[0];
 
   return (
-    <div style={{ position: "fixed", bottom: 16, left: "50%", transform: "translateX(-50%)", zIndex: 200, maxWidth: 440, width: "calc(100% - 32px)", background: "white", borderRadius: 16, border: `1px solid ${T.border}`, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", padding: "10px 12px" }}>
+    <div className="tf-floating-widget" style={{ position: "fixed", bottom: 16, left: "50%", transform: "translateX(-50%)", zIndex: 200, maxWidth: 440, width: "calc(100% - 32px)", background: "white", borderRadius: 16, border: `1px solid ${T.border}`, boxShadow: "0 8px 32px rgba(0,0,0,0.12)", padding: "10px 12px" }}>
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
         {keys.map(id => {
           const w = widgets[id];
@@ -1306,7 +1306,7 @@ No explanation, no markdown, just the raw JSON object.`;
       </>}
       {(type === "website" || type === "youtube") && <Row label="URL"><input value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://..." style={inputStyle} /></Row>}
 
-      <div style={{ marginTop:14, padding:14, borderRadius:10, background:T.purpleDim, border:`1px solid ${T.purple}33`, fontSize:13, color:T.ink, fontFamily:"DM Sans, sans-serif", lineHeight:1.8, userSelect:"all" }}>
+      <div className="tf-citation-result" style={{ marginTop:14, padding:14, borderRadius:10, background:T.purpleDim, border:`1px solid ${T.purple}33`, fontSize:13, color:T.ink, fontFamily:"DM Sans, sans-serif", lineHeight:1.8, userSelect:"all" }}>
         {citation}
       </div>
       <CopyButton text={citation} />
@@ -1398,7 +1398,7 @@ export function BMICalculator() {
       )}
       <button onClick={calculate} style={{ width: "100%", marginTop: 6, padding: "12px 0", background: T.accent, color: "white", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: "Syne, sans-serif", cursor: "pointer" }}>Calculate BMI</button>
       {bmi && cat && (
-        <div style={{ marginTop: 20, background: cat.bg, border: `1.5px solid ${cat.color}44`, borderRadius: 12, padding: 20, textAlign: "center" }}>
+        <div className="tf-bmi-result" style={{ marginTop: 20, background: cat.bg, border: `1.5px solid ${cat.color}44`, borderRadius: 12, padding: 20, textAlign: "center" }}>
           <div style={{ fontSize: 48, fontWeight: 800, color: cat.color, fontFamily: "Syne, sans-serif", lineHeight: 1 }}>{bmi}</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: cat.color, marginTop: 6, fontFamily: "Syne, sans-serif" }}>{cat.label}</div>
           <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", height: 8, marginTop: 16, marginBottom: 4 }}>
