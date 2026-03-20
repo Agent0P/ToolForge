@@ -228,74 +228,107 @@ export const injectStyles = () => {
     body.dark .tf-tip { background: #041509 !important; border-color: rgba(45,202,116,0.18) !important; }
     body.dark .tf-result-glow { box-shadow: 0 4px 20px rgba(240,100,40,0.1); }
 
-    /* ── Dark mode: neutralize ALL hardcoded T.* light colors ── */
+    /* ── Dark mode: comprehensive overrides ── */
 
-    /* white / #ffffff backgrounds → dark card */
+    /* 1. All inputs/selects/textareas — text must be visible */
+    body.dark input,
+    body.dark select,
+    body.dark textarea {
+      background: #221f1a !important;
+      color: #f2ede6 !important;
+      border-color: rgba(242,237,230,0.18) !important;
+    }
+    body.dark input::placeholder,
+    body.dark textarea::placeholder { color: #504e48 !important; }
+    body.dark option { background: #221f1a; color: #f2ede6; }
+    body.dark .tf-input {
+      background: #221f1a !important;
+      color: #f2ede6 !important;
+      border-color: rgba(242,237,230,0.18) !important;
+    }
+    body.dark .tf-input::placeholder { color: #504e48 !important; }
+
+    /* 2. All white/card backgrounds in tool panels */
     body.dark [style*="background: white"] { background: #252018 !important; }
     body.dark [style*="background:white"] { background: #252018 !important; }
     body.dark [style*="background: rgb(255, 255, 255)"] { background: #252018 !important; }
-    body.dark button[style*="background: white"] { background: #2a2620 !important; color: #8a8780 !important; }
-    body.dark button[style*="background:white"] { background: #2a2620 !important; color: #8a8780 !important; }
-
-    /* T.card = #ffffff */
     body.dark [style*="background: #ffffff"] { background: #252018 !important; }
-    body.dark [style*="background:#ffffff"] { background: #252018 !important; }
 
-    /* T.purpleDim = #f0ebff */
+    /* 3. T.bg, T.bg2, T.bg3 */
+    body.dark [style*="background: #f7f5f0"] { background: #1a1814 !important; }
+    body.dark [style*="background: #f0ede6"] { background: #221f1a !important; }
+    body.dark [style*="background: #e8e4dc"] { background: #2a2620 !important; }
+
+    /* 4. Dim backgrounds — map to dark equivalents */
     body.dark [style*="background: #f0ebff"] { background: #100828 !important; }
-    body.dark [style*="background:#f0ebff"] { background: #100828 !important; }
-    body.dark [style*="rgb(240, 235, 255)"] { background: #100828 !important; }
-
-    /* T.accentDim = #fff0e8 */
     body.dark [style*="background: #fff0e8"] { background: #1e0e05 !important; }
-    body.dark [style*="background:#fff0e8"] { background: #1e0e05 !important; }
-
-    /* T.greenDim = #edfaf4 */
+    body.dark [style*="background: #fff1ea"] { background: #1e0e05 !important; }
     body.dark [style*="background: #edfaf4"] { background: #041509 !important; }
-    body.dark [style*="background:#edfaf4"] { background: #041509 !important; }
-
-    /* T.tealDim = #e4faf8 */
     body.dark [style*="background: #e4faf8"] { background: #031412 !important; }
-    body.dark [style*="background:#e4faf8"] { background: #031412 !important; }
-
-    /* T.blueDim = #edf2ff */
     body.dark [style*="background: #edf2ff"] { background: #060e20 !important; }
-    body.dark [style*="background:#edf2ff"] { background: #060e20 !important; }
-
-    /* T.goldDim = #fff5e0 */
     body.dark [style*="background: #fff5e0"] { background: #1a1000 !important; }
-    body.dark [style*="background:#fff5e0"] { background: #1a1000 !important; }
-
-    /* T.bg = #f7f5f0 — used as MiniResult bg etc */
-    body.dark [style*="background: #f7f5f0"] { background: #221f1a !important; }
-    body.dark [style*="background:#f7f5f0"] { background: #221f1a !important; }
-
-    /* T.bg2 = #f0ede6 */
-    body.dark [style*="background: #f0ede6"] { background: #2a2620 !important; }
-    body.dark [style*="background:#f0ede6"] { background: #2a2620 !important; }
-
-    /* light error/red backgrounds */
+    body.dark [style*="background: #fef3c7"] { background: #1a1000 !important; }
     body.dark [style*="background: #fef2f2"] { background: #200808 !important; }
     body.dark [style*="background: #fee2e2"] { background: #200808 !important; }
     body.dark [style*="background: #f0f9ff"] { background: #060e20 !important; }
+    body.dark [style*="background: #dcfce7"] { background: #041509 !important; }
+    body.dark [style*="background: #dbeafe"] { background: #060e20 !important; }
+    body.dark [style*="background: #ede9fe"] { background: #100828 !important; }
+    body.dark [style*="background: #ccfbf1"] { background: #031412 !important; }
 
-    /* FloatingWidget white bg */
-    body.dark [style*="background: white"][style*="border-radius: 16px"],
-    body.dark [style*="background:white"][style*="border-radius: 16px"] { background: #252018 !important; }
+    /* 5. T.card used as bg in tool inner sections */
+    body.dark [style*="background: #ffffff"][style*="border-radius"] { background: #252018 !important; }
 
+    /* 6. Text colors — T.ink on light dims now needs to be light */
+    body.dark [style*="background: #100828"] [style*="color: #1a1814"],
+    body.dark [style*="background: #041509"] [style*="color: #1a1814"],
+    body.dark [style*="background: #031412"] [style*="color: #1a1814"],
+    body.dark [style*="background: #060e20"] [style*="color: #1a1814"] { color: #f2ede6 !important; }
 
-    /* ── Specific component dark overrides ── */
+    /* 7. Buttons with white bg */
+    body.dark button[style*="background: white"] { background: #2a2620 !important; color: #8a8780 !important; border-color: rgba(242,237,230,0.12) !important; }
+    body.dark button[style*="background:white"] { background: #2a2620 !important; color: #8a8780 !important; border-color: rgba(242,237,230,0.12) !important; }
+
+    /* 8. Borders — make them visible */
+    body.dark [style*="border: 1px solid rgba(15,12,8,"] { border-color: rgba(242,237,230,0.14) !important; }
+    body.dark [style*="border: 1.5px solid rgba(15,12,8,"] { border-color: rgba(242,237,230,0.16) !important; }
+    body.dark [style*="border: 2px solid rgba(15,12,8,"] { border-color: rgba(242,237,230,0.18) !important; }
+    body.dark [style*="border-top: 1px solid rgba(15,12,8,"] { border-top-color: rgba(242,237,230,0.12) !important; }
+    body.dark [style*="border-bottom: 1px solid rgba(15,12,8,"] { border-bottom-color: rgba(242,237,230,0.12) !important; }
+
+    /* 9. Specific components */
     body.dark .tf-citation-result { background: #100828 !important; color: #f2ede6 !important; border-color: rgba(160,123,250,0.2) !important; }
     body.dark .tf-floating-widget { background: #252018 !important; border-color: rgba(242,237,230,0.08) !important; }
-    body.dark .tf-bmi-result { filter: brightness(0.25) !important; }
-    body.dark .tf-bmi-result div[style*="color:"] { filter: brightness(4) !important; }
-    /* Fix text on dark dim backgrounds — ensure ink colors work */
+    body.dark .tf-mini-result { background: #221f1a !important; border-color: rgba(242,237,230,0.10) !important; }
+    body.dark .tf-mini-result > div { color: #f2ede6 !important; }
+    body.dark .tf-tip { background: #041509 !important; border-color: rgba(45,202,116,0.18) !important; }
+    body.dark .tf-result-glow { box-shadow: 0 4px 20px rgba(240,100,40,0.1); }
+
+    /* 10. Word counter textarea explicit override */
+    body.dark textarea[style*="background"] { background: #221f1a !important; color: #f2ede6 !important; }
+
+    /* 11. T.card color text (T.ink = #1a1814) — ensure visibility on dark cards */
     body.dark [style*="color: #1a1814"] { color: #f2ede6 !important; }
     body.dark [style*="color:#1a1814"] { color: #f2ede6 !important; }
-    body.dark [style*="color: rgb(26, 24, 20)"] { color: #f2ede6 !important; }
 
-    /* borders that used light colors */
-    body.dark [style*="border: 1px solid rgb(240, 235, 255)"] { border-color: rgba(160,123,250,0.2) !important; }
+    /* 12. T.muted = #6b6860 — keep readable */
+    body.dark [style*="color: #6b6860"] { color: #8a8780 !important; }
+
+    /* 13. WordCounter textarea special bg */
+    body.dark [style*="background: #fdfcfb"] { background: #221f1a !important; color: #f2ede6 !important; }
+    body.dark [style*="background: #fafcfb"] { background: #221f1a !important; color: #f2ede6 !important; }
+
+    /* 14. Upload area T.bg dashed border */
+    body.dark label[style*="background: #f7f5f0"] { background: #221f1a !important; border-color: rgba(242,237,230,0.2) !important; }
+
+    /* 15. NUCLEAR OPTION — any element with T.ink text color on a now-dark background */
+    body.dark .tf-tool-card * { border-color: rgba(242,237,230,0.12); }
+
+    /* 16. Ensure all textarea text is visible regardless */
+    body.dark textarea { color: #f2ede6 !important; }
+    body.dark textarea::placeholder { color: #504e48 !important; }
+
+
   `;
   document.head.appendChild(s);
 };
