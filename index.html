@@ -14,7 +14,7 @@
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://toolforge.pro" />
 
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://toolforge.pro" />
     <meta property="og:title" content="ToolForge — 27 Free Tools For Freelancers, Students & Small Business" />
@@ -29,16 +29,28 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>" />
 
+    <!-- Preconnect fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
     <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { -webkit-font-smoothing: antialiased; }
-    body {
-      background: #f7f5f0;
-      background-image: radial-gradient(circle at 1px 1px, rgba(15,15,13,0.04) 1px, transparent 0);
-      background-size: 24px 24px;
-    }
-    #root { min-height: 100vh; }
-  </style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+      body {
+        background: #f7f5f0;
+        background-image:
+          radial-gradient(circle at 1px 1px, rgba(15,12,8,0.045) 1px, transparent 0);
+        background-size: 22px 22px;
+        min-height: 100vh;
+      }
+      #root { min-height: 100vh; }
+      /* Dark mode body */
+      body.dark {
+        background-color: #1a1814;
+        background-image:
+          radial-gradient(circle at 1px 1px, rgba(242,237,230,0.04) 1px, transparent 0);
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
