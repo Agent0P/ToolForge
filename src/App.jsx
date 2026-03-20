@@ -426,23 +426,16 @@ export default function ToolForge() {
   const setSideW = w => { sideWRef.current = w; _setSideW(w); try { localStorage.setItem("tf_sideW", w); } catch {} };
   const setMidW  = w => { midWRef.current  = w; _setMidW(w);  try { localStorage.setItem("tf_midW",  w); } catch {} };
 
-  useEffect(() => {
-    if (!isDesktop) return;
-    const h1 = document.getElementById("tf-h1");
-    const h2 = document.getElementById("tf-h2");
-    if (!h1 || !h2) return;
-    const attach = (el, getW, setW, min, max) => {
-      let active = false, sx = 0, sw = 0;
-      const down = e => { active = true; sx = e.clientX; sw = getW(); document.body.style.cursor = "col-resize"; document.body.style.userSelect = "none"; e.preventDefault(); };
-      const move = e => { if (!active) return; setW(Math.max(min, Math.min(max, sw + e.clientX - sx))); };
-      const up   = () => { if (!active) return; active = false; document.body.style.cursor = ""; document.body.style.userSelect = ""; };
-      el.addEventListener("mousedown", down); document.addEventListener("mousemove", move); document.addEventListener("mouseup", up);
-      return () => { el.removeEventListener("mousedown", down); document.removeEventListener("mousemove", move); document.removeEventListener("mouseup", up); };
-    };
-    const c1 = attach(h1, () => sideWRef.current, setSideW, 48, 300);
-    const c2 = attach(h2, () => midWRef.current,  setMidW,  52, 340);
-    return () => { c1(); c2(); };
-  }, [isDesktop]);
+  const makeDrag = (getW, setW, min, max) => (e) => {
+    e.preventDefault();
+    const sx = e.clientX; const sw = getW();
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    const move = (ev) => setW(Math.max(min, Math.min(max, sw + ev.clientX - sx)));
+    const up   = () => { document.body.style.cursor = ""; document.body.style.userSelect = ""; document.removeEventListener("mousemove", move); document.removeEventListener("mouseup", up); };
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
+  };
 
   /* ── Pomodoro ── */
   const POMO_MODES = [
@@ -528,7 +521,7 @@ export default function ToolForge() {
      DESKTOP
   ══════════════════════════════════ */
   if (isDesktop) {
-    const hStyle = (id) => ({ id, width:5, flexShrink:0, background:TH.border, cursor:"col-resize", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.15s", zIndex:10 });
+
 
     /* ── Collapse thresholds ── */
     const SIDE_ICON = sideW < 100;  // sidebar icon-only
@@ -556,8 +549,10 @@ export default function ToolForge() {
             <span style={{ background:TH.accentDim, color:TH.accent, fontSize:9, padding:"2px 8px", borderRadius:5, fontFamily:"Syne, sans-serif", fontWeight:700 }}>{ALL_TOOLS.length} FREE TOOLS</span>
           </div>
           <div style={{ display:"flex", gap:12, alignItems:"center" }}>
-            <span onClick={() => { setShowFaq(true); window.history.pushState({},"","/faq"); }} style={{ fontSize:11, color:TH.muted, cursor:"pointer", fontFamily:"DM Sans, sans-serif" }}>FAQ</span>
-            <span onClick={() => setShowUpgrade(true)} style={{ fontSize:11, color:TH.muted, cursor:"pointer", fontFamily:"DM Sans, sans-serif" }}>Pricing</span>
+            <span onClick={() => { setShowFaq(true); window.history.pushState({},"","/faq"); }} style={{ fontSize:11, color:TH.muted, cursor:"pointer", fontFamily:"Inter, sans-serif", fontWeight:400 }}>FAQ</span>
+            <span onClick={() => setShowUpgrade(true)} style={{ fontSize:11, color:TH.muted, cursor:"pointer", fontFamily:"Inter, sans-serif", fontWeight:400 }}>Pricing</span>
+            <span onClick={() => { setShowTos(true); window.history.pushState({},"","/terms"); }} style={{ fontSize:11, color:TH.muted, cursor:"pointer", fontFamily:"Inter, sans-serif", fontWeight:400 }}>Terms</span>
+            <span onClick={() => { setShowRefund(true); window.history.pushState({},"","/refund"); }} style={{ fontSize:11, color:TH.muted, cursor:"pointer", fontFamily:"Inter, sans-serif", fontWeight:400 }}>Refund</span>
             <DarkToggle />
             {proToken && proToken.generations_left > 0
               ? <div style={{ background:TH.goldDim, border:`1px solid ${TH.gold}`, borderRadius:8, padding:"4px 11px", fontSize:10, color:TH.gold, fontFamily:"Syne, sans-serif", fontWeight:700 }}>✦ {proToken.generations_left} left</div>
@@ -643,7 +638,9 @@ export default function ToolForge() {
           </div>
 
           {/* Handle 1 */}
-          <div style={hStyle("tf-h1")} id="tf-h1" onMouseEnter={e=>e.currentTarget.style.background=TH.muted} onMouseLeave={e=>e.currentTarget.style.background=TH.border}>
+          <div onMouseDown={makeDrag(() => sideWRef.current, setSideW, 48, 300)}
+            onMouseEnter={e=>e.currentTarget.style.background=TH.border2} onMouseLeave={e=>e.currentTarget.style.background=TH.border}
+            style={{ width:6, flexShrink:0, background:TH.border, cursor:"col-resize", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.15s", zIndex:10 }}>
             <div style={{ display:"flex", flexDirection:"column", gap:3, pointerEvents:"none" }}>{[0,1,2].map(i=><div key={i} style={{ width:3,height:3,borderRadius:"50%",background:TH.muted,opacity:0.5 }}/>)}</div>
           </div>
 
@@ -736,7 +733,9 @@ export default function ToolForge() {
           </div>
 
           {/* Handle 2 */}
-          <div style={hStyle("tf-h2")} id="tf-h2" onMouseEnter={e=>e.currentTarget.style.background=TH.muted} onMouseLeave={e=>e.currentTarget.style.background=TH.border}>
+          <div onMouseDown={makeDrag(() => midWRef.current, setMidW, 52, 340)}
+            onMouseEnter={e=>e.currentTarget.style.background=TH.border2} onMouseLeave={e=>e.currentTarget.style.background=TH.border}
+            style={{ width:6, flexShrink:0, background:TH.border, cursor:"col-resize", display:"flex", alignItems:"center", justifyContent:"center", transition:"background 0.15s", zIndex:10 }}>
             <div style={{ display:"flex", flexDirection:"column", gap:3, pointerEvents:"none" }}>{[0,1,2].map(i=><div key={i} style={{ width:3,height:3,borderRadius:"50%",background:TH.muted,opacity:0.5 }}/>)}</div>
           </div>
 
@@ -863,7 +862,7 @@ export default function ToolForge() {
             }
             {/* Hamburger */}
             <button onClick={() => setShowDrawer(d => !d)} className="tf-btn"
-              style={{ width:32, height:32, borderRadius:8, border:`1px solid ${TH.border2}`, background:TH.bg2, color:TH.ink, fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700 }}>
+              style={{ width:34, height:34, borderRadius:8, border:`1.5px solid ${TH.border2}`, background:showDrawer ? TH.accentDim : TH.bg3, color:showDrawer ? TH.accent : TH.ink, fontSize:15, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, letterSpacing:1, transition:"all 0.15s" }}>
               ☰
             </button>
           </div>
