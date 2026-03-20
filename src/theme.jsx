@@ -86,6 +86,12 @@ export const injectStyles = () => {
       box-shadow: 0 0 0 3px rgba(217,79,8,0.12) !important;
       outline: none !important;
     }
+    body.dark .tf-input {
+      background: #221f1a !important;
+      color: #f2ede6 !important;
+      border-color: rgba(242,237,230,0.13) !important;
+    }
+    body.dark .tf-input::placeholder { color: #504e48 !important; }
 
     /* ── Buttons ── */
     .tf-btn { transition: all 0.14s ease; }
@@ -206,39 +212,30 @@ export const injectStyles = () => {
       margin-right: 8px;
     }
 
-    /* ── Dark mode: inputs, selects, textareas ── */
-    body.dark input,
-    body.dark select,
-    body.dark textarea {
-      background: #221f1a !important;
-      color: #f2ede6 !important;
-      border-color: rgba(242,237,230,0.12) !important;
-    }
-    body.dark input::placeholder,
-    body.dark textarea::placeholder {
-      color: #504e48 !important;
-    }
-    body.dark option {
-      background: #221f1a;
-      color: #f2ede6;
-    }
-    body.dark .tf-tool-card {
-      background: #252018;
-      border-color: rgba(242,237,230,0.07);
-    }
-    body.dark .tf-result-glow {
-      box-shadow: 0 4px 20px rgba(240,100,40,0.1);
-    }
-    body.dark .tf-mini-result {
-      background: #221f1a !important;
-    }
-    body.dark button:not(.tf-cta):not(.tf-btn-accent) {
-      background-color: transparent;
-    }
-    body.dark .tf-tip {
-      background: #041509 !important;
-      border-color: rgba(45,202,116,0.2) !important;
-    }
+    /* ── Dark mode: all inputs, selects, textareas ── */
+    body.dark input { background: #221f1a !important; color: #f2ede6 !important; border-color: rgba(242,237,230,0.13) !important; }
+    body.dark select { background: #221f1a !important; color: #f2ede6 !important; border-color: rgba(242,237,230,0.13) !important; }
+    body.dark textarea { background: #221f1a !important; color: #f2ede6 !important; border-color: rgba(242,237,230,0.13) !important; }
+    body.dark input::placeholder { color: #504e48 !important; }
+    body.dark textarea::placeholder { color: #504e48 !important; }
+    body.dark option { background: #221f1a; color: #f2ede6; }
+
+    /* ── Dark mode: tool UI components ── */
+    body.dark .tf-tool-card { background: #252018 !important; border-color: rgba(242,237,230,0.07) !important; }
+    body.dark .tf-mini-result { background: #221f1a !important; border-color: rgba(242,237,230,0.10) !important; }
+    body.dark .tf-mini-result > div:last-child { color: #f2ede6 !important; }
+    body.dark .tf-mini-result > div:first-child { color: #504e48 !important; }
+    body.dark .tf-tip { background: #041509 !important; border-color: rgba(45,202,116,0.18) !important; }
+    body.dark .tf-result-glow { box-shadow: 0 4px 20px rgba(240,100,40,0.1); }
+
+    /* ── Dark mode: tool inner cards / white boxes ── */
+    body.dark [style*="background: white"],
+    body.dark [style*="background:white"],
+    body.dark [style*='background: "white"'] { background: #252018 !important; }
+
+    /* ── Dark mode: toggle buttons inside tools ── */
+    body.dark button[style*="background: white"],
+    body.dark button[style*="background:white"] { background: #252018 !important; color: #8a8780 !important; border-color: rgba(242,237,230,0.10) !important; }
   `;
   document.head.appendChild(s);
 };
