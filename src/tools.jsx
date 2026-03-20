@@ -1017,7 +1017,7 @@ export function UnitConverter() {
       {/* Category tabs */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 11, color: T.muted, marginBottom: 8, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.3 }}>Category</div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        <div className="tf-btn-group" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {Object.keys(CATS).map(k => (
             <button key={k} onClick={() => switchCat(k)} style={{ padding: "6px 11px", borderRadius: 9, border: `1.5px solid ${catKey === k ? T.accent : T.border}`, background: catKey === k ? T.accentDim : "white", color: catKey === k ? T.accent : T.muted, fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
               {k}
@@ -1262,7 +1262,7 @@ No explanation, no markdown, just the raw JSON object.`;
   return (
     <div>
       {/* Auto-fill from URL */}
-      <div style={{ marginBottom:16, padding:14, borderRadius:12, border:`2px solid ${T.purple}44`, background:T.purpleDim }}>
+      <div className="tf-autofill-box" style={{ marginBottom:16, padding:14, borderRadius:12, border:`2px solid ${T.purple}44`, background:T.purpleDim }}>
         <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:13, color:T.purple, marginBottom:4 }}>✦ Auto-fill from URL</div>
         <div style={{ fontSize:12, color:T.purple, fontFamily:"DM Sans, sans-serif", marginBottom:10, opacity:0.8 }}>Paste any URL and Claude will extract the citation fields for you.</div>
         <div style={{ display:"flex", gap:8 }}>
