@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { T, inputStyle, injectFonts, RestoreToken, CopyButton } from "./theme";
+import { T, inputStyle, injectFonts, injectStyles, RestoreToken, CopyButton } from "./theme";
 import {
   RateCalc, ProjectEstimator, GPACalc, TipSplitter, MarginCalc, BreakEvenCalc,
   DeadlineCountdown, PomodoroTimer, FloatingWidget,
@@ -109,15 +109,21 @@ function ToolView({ tool, onBack, hideBack, proToken, onNeedUpgrade, onTokenUpda
 }
 
 function ToolCard({ tool, onClick }) {
-  const [hov, setHov] = useState(false);
   const isAI = AI_TOOLS.includes(tool.name);
+  const topClass = { writing:"tf-card-top-writing", calculators:"tf-card-top-calc", planning:"tf-card-top-planning", utilities:"tf-card-top-utils" }[tool.catId] || "tf-card-top-writing";
   return (
-    <div onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ padding:"14px 13px", borderRadius:13, border:`1px solid ${hov?tool.catColor:T.border}`, background:hov?tool.catColorDim:T.card, cursor:"pointer", transition:"all 0.18s", boxShadow:hov?`0 4px 20px ${tool.catColor}18`:"0 1px 6px #0f0f0d08" }}>
-      <div style={{ fontSize:22, marginBottom:8 }}>{tool.icon}</div>
+    <div onClick={onClick} className="tf-tool-card tf-fade-up"
+      style={{ padding:"16px 14px 14px", borderRadius:14, border:`1px solid ${T.border}`, background:T.card, cursor:"pointer", boxShadow:"0 1px 4px rgba(15,15,13,0.05)" }}>
+      {/* Category color stripe */}
+      <div className={topClass} style={{ position:"absolute", top:0, left:0, right:0, height:3, borderRadius:"14px 14px 0 0" }} />
+      <div style={{ fontSize:24, marginBottom:10, marginTop:4 }}>{tool.icon}</div>
       <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:T.ink, marginBottom:4, lineHeight:1.3 }}>{tool.name}</div>
-      <div style={{ fontSize:11, color:T.muted, lineHeight:1.4, marginBottom:isAI?8:0 }}>{tool.desc}</div>
-      {isAI && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:99, background:T.accentDim, color:T.accent, fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.5 }}>AI POWERED</span>}
+      <div style={{ fontSize:11, color:T.muted, lineHeight:1.5, marginBottom:isAI?8:0 }}>{tool.desc}</div>
+      {isAI && (
+        <span className="tf-ai-badge" style={{ fontSize:9, padding:"2px 8px", borderRadius:99, background:T.accentDim, color:T.accent, fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.5, display:"inline-block" }}>
+          ✦ AI POWERED
+        </span>
+      )}
     </div>
   );
 }
@@ -479,7 +485,7 @@ export default function ToolForge() {
 
   /* ── Misc ── */
   const handleTokenUpdate = t => { setProToken(t); localStorage.setItem("tf_pro_token", JSON.stringify(t)); };
-  useEffect(() => { injectFonts(); }, []);
+  useEffect(() => { injectFonts(); injectStyles(); }, []);
   const params = new URLSearchParams(window.location.search);
   const orderId = params.get("order_id");
 
@@ -514,8 +520,8 @@ export default function ToolForge() {
 
     const rightContent = () => {
       if (!activeTool) return (
-        <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:40, textAlign:"center" }}>
-          <div style={{ fontSize:48, marginBottom:16, opacity:0.2, color:TH.accent }}>✦</div>
+        <div className="tf-fade-in" style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:40, textAlign:"center" }}>
+          <div style={{ fontSize:52, marginBottom:16, opacity:0.15, color:TH.accent, animation:"tf-float 4s ease infinite" }}>✦</div>
           <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:17, color:TH.ink, marginBottom:8 }}>Select a tool</div>
           <div style={{ fontSize:13, color:TH.muted, maxWidth:260, lineHeight:1.6 }}>Choose any tool from the list to get started.</div>
         </div>
@@ -527,7 +533,7 @@ export default function ToolForge() {
       <div style={{ display:"flex", flexDirection:"column", height:"100vh", background:TH.bg, fontFamily:"DM Sans, sans-serif", overflow:"hidden" }}>
 
         {/* Nav */}
-        <div style={{ background:TH.card, borderBottom:`1px solid ${TH.border}`, padding:"8px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, zIndex:50 }}>
+        <div className="tf-glass" style={{ borderBottom:`1px solid ${TH.border}55`, padding:"8px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, zIndex:50, position:"sticky", top:0 }}>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:16, color:TH.ink }}>Tool<span style={{ color:TH.accent }}>Forge</span></span>
             <span style={{ background:TH.accentDim, color:TH.accent, fontSize:9, padding:"2px 8px", borderRadius:5, fontFamily:"Syne, sans-serif", fontWeight:700 }}>{ALL_TOOLS.length} FREE TOOLS</span>
@@ -544,7 +550,7 @@ export default function ToolForge() {
         </div>
 
         {/* Hero strip */}
-        <div style={{ background:TH.card, borderBottom:`1px solid ${TH.border}`, padding:"10px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
+        <div className="tf-desktop-hero" style={{ borderBottom:`1px solid ${TH.border}`, padding:"10px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
           <div>
             <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:15, color:TH.ink, marginBottom:2 }}>27 free tools for work & study</div>
             <div style={{ fontSize:11, color:TH.muted }}>Calculators, AI writing, converters — no sign-up needed.</div>
@@ -596,7 +602,7 @@ export default function ToolForge() {
                 {!proToken && <div style={{ padding:"6px 10px" }}><RestoreToken onRestore={handleTokenUpdate} /></div>}
                 <div style={{ marginTop:"auto", padding:10, borderTop:`1px solid ${TH.border}` }}>
                   <div onClick={() => setShowGames(true)}
-                    style={{ background:"linear-gradient(90deg,#4f46e5,#7c3aed)", borderRadius:10, padding:"10px 12px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }}>
+                    className="tf-game-banner" style={{ borderRadius:10, padding:"10px 12px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }}>
                     <div>
                       <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:"white" }}>🎮 Take a Break</div>
                       <div style={{ fontSize:10, color:"rgba(255,255,255,0.75)", marginTop:1 }}>Mini games</div>
@@ -773,7 +779,7 @@ export default function ToolForge() {
   if (activeTool) return (
     <>
       <div style={{ maxWidth:480, margin:"0 auto", padding:20, background:TH.bg, minHeight:"100vh" }}>
-        <div style={{ background:TH.card, borderRadius:16, padding:20, border:`1px solid ${TH.border}` }}>
+        <div className="tf-pop" style={{ background:TH.card, borderRadius:16, padding:20, border:`1px solid ${TH.border}`, boxShadow:"0 2px 20px rgba(0,0,0,0.06)" }}>
           <ToolView tool={activeTool} onBack={() => setActiveTool(null)} proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} pomoProps={pomoProps} dlProps={dlProps} />
         </div>
         {proToken && proToken.generations_left > 0 && (
@@ -796,7 +802,7 @@ export default function ToolForge() {
   return (
     <>
       {!proToken && (
-        <div onClick={() => setShowUpgrade(true)} style={{ position:"sticky", top:0, zIndex:100, background:`linear-gradient(90deg,${TH.gold},${TH.accent})`, padding:"10px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }}>
+        <div onClick={() => setShowUpgrade(true)} className="tf-upgrade-banner" style={{ position:"sticky", top:0, zIndex:100, padding:"10px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }}>
           <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:"white" }}>✦ Unlock Claude Sonnet AI — from $2.99</div>
           <div style={{ fontSize:11, color:"rgba(255,255,255,0.85)", fontFamily:"DM Sans, sans-serif", whiteSpace:"nowrap" }}>Better outputs →</div>
         </div>
@@ -805,7 +811,7 @@ export default function ToolForge() {
       <div style={{ maxWidth:480, margin:"0 auto", minHeight:"100vh", background:TH.bg, fontFamily:"DM Sans, sans-serif" }}>
 
         {/* Mobile header */}
-        <div style={{ padding:"20px 20px 14px", borderBottom:`1px solid ${TH.border}`, background:TH.card }}>
+        <div className="tf-mobile-hero" style={{ padding:"20px 20px 14px", borderBottom:`1px solid ${TH.border}` }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
             <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
               <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:24, color:TH.ink }}>Tool</span>
@@ -839,7 +845,7 @@ export default function ToolForge() {
         </div>
 
         {/* 🎮 Take a Break — between category tabs and tool grid */}
-        <div onClick={() => setShowGames(true)} style={{ margin:"12px 16px 0", padding:"14px 18px", borderRadius:14, background:`linear-gradient(135deg,${G_COLOR},#7c3aed)`, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between", boxShadow:`0 4px 20px ${G_COLOR}30` }}>
+        <div onClick={() => setShowGames(true)} className="tf-game-banner" style={{ margin:"12px 16px 0", padding:"14px 18px", borderRadius:14, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <div>
             <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:14, color:"white", marginBottom:2 }}>🎮 Take a Break</div>
             <div style={{ fontSize:11, color:"rgba(255,255,255,0.8)", fontFamily:"DM Sans, sans-serif" }}>Free games + premium unlocks · resets daily</div>
@@ -852,10 +858,10 @@ export default function ToolForge() {
           {search ? (
             <>
               <div style={{ fontSize:12, color:TH.muted, marginBottom:12 }}>{filtered.length} result{filtered.length!==1?"s":""} for "{search}"</div>
-              <div style={mobileGrid}>{filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}</div>
+              <div className="tf-stagger" style={mobileGrid}>{filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}</div>
             </>
           ) : activeCat !== "all" ? (
-            <div style={mobileGrid}>{filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}</div>
+            <div className="tf-stagger" style={mobileGrid}>{filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}</div>
           ) : (
             CATEGORIES.map(cat => (
               <div key={cat.id} style={{ marginBottom:20 }}>
