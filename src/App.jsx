@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { T, inputStyle, injectFonts, injectStyles, RestoreToken, CopyButton } from "./theme";
+import { T, D, inputStyle, injectFonts, injectStyles, RestoreToken, CopyButton } from "./theme";
 import {
   RateCalc, ProjectEstimator, GPACalc, TipSplitter, MarginCalc, BreakEvenCalc,
   DeadlineCountdown, PomodoroTimer, FloatingWidget,
@@ -9,16 +9,7 @@ import {
 import { SavingsCalc, SalaryHelper, ResumeReviewer, AIToolPlaceholder, DocumentSummarizer } from "./ai-tools";
 import { G_COLOR, G_DIM, GamesSection } from "./games";
 
-/* ── Dark theme ── */
-const D = {
-  bg:"#1c1a17", ink:"#f0ede8", muted:"#8a8780", border:"#2e2b27",
-  card:"#242220", accent:"#f97316", accentDim:"#431407",
-  green:"#22c55e", greenDim:"#052e16",
-  blue:"#60a5fa", blueDim:"#1e3a5f",
-  purple:"#a78bfa", purpleDim:"#2e1065",
-  teal:"#2dd4bf", tealDim:"#042f2e",
-  gold:"#fbbf24", goldDim:"#292008",
-};
+/* ── Dark theme imported from theme.jsx ── */
 
 /* ── Categories & tool registry ── */
 const CATEGORIES = [
@@ -108,19 +99,19 @@ function ToolView({ tool, onBack, hideBack, proToken, onNeedUpgrade, onTokenUpda
   );
 }
 
-function ToolCard({ tool, onClick }) {
+function ToolCard({ tool, onClick, TH: th }) {
+  const theme = th || T;
   const isAI = AI_TOOLS.includes(tool.name);
-  const topClass = { writing:"tf-card-top-writing", calculators:"tf-card-top-calc", planning:"tf-card-top-planning", utilities:"tf-card-top-utils" }[tool.catId] || "tf-card-top-writing";
+  const stripeClass = { writing:"tf-stripe-writing", calculators:"tf-stripe-calc", planning:"tf-stripe-planning", utilities:"tf-stripe-utils" }[tool.catId] || "tf-stripe-writing";
   return (
-    <div onClick={onClick} className="tf-tool-card tf-fade-up"
-      style={{ padding:"16px 14px 14px", borderRadius:14, border:`1px solid ${T.border}`, background:T.card, cursor:"pointer", boxShadow:"0 1px 4px rgba(15,15,13,0.05)" }}>
-      {/* Category color stripe */}
-      <div className={topClass} style={{ position:"absolute", top:0, left:0, right:0, height:3, borderRadius:"14px 14px 0 0" }} />
-      <div style={{ fontSize:24, marginBottom:10, marginTop:4 }}>{tool.icon}</div>
-      <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:T.ink, marginBottom:4, lineHeight:1.3 }}>{tool.name}</div>
-      <div style={{ fontSize:11, color:T.muted, lineHeight:1.5, marginBottom:isAI?8:0 }}>{tool.desc}</div>
+    <div onClick={onClick} className="tf-card tf-fade-up"
+      style={{ padding:"17px 15px 15px", borderRadius:14, border:`1px solid ${theme.border}`, background:theme.card, cursor:"pointer", boxShadow:theme.shadowSm }}>
+      <div className={stripeClass} style={{ position:"absolute", top:0, left:0, right:0, height:3.5, borderRadius:"14px 14px 0 0" }} />
+      <div style={{ fontSize:24, marginBottom:11, marginTop:3 }}>{tool.icon}</div>
+      <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:theme.ink, marginBottom:4, lineHeight:1.3, letterSpacing:"-0.1px" }}>{tool.name}</div>
+      <div style={{ fontSize:11, color:theme.muted, lineHeight:1.55, marginBottom:isAI?9:0 }}>{tool.desc}</div>
       {isAI && (
-        <span className="tf-ai-badge" style={{ fontSize:9, padding:"2px 8px", borderRadius:99, background:T.accentDim, color:T.accent, fontFamily:"Syne, sans-serif", fontWeight:700, letterSpacing:0.5, display:"inline-block" }}>
+        <span style={{ fontSize:9, padding:"3px 8px", borderRadius:5, background:theme.goldDim, color:theme.gold, border:`1px solid ${theme.goldBrd}`, fontFamily:"Inter, sans-serif", fontWeight:700, letterSpacing:"0.05em", display:"inline-block" }}>
           ✦ AI POWERED
         </span>
       )}
@@ -388,6 +379,7 @@ export default function ToolForge() {
   const [showGames, setShowGames]       = useState(false);
   const [search, setSearch]             = useState("");
   const [showUpgrade, setShowUpgrade]   = useState(false);
+  const [showDrawer, setShowDrawer]     = useState(false);
   const [collapsed, setCollapsed]       = useState({});
   const [showFaq, setShowFaq]           = useState(window.location.pathname === "/faq");
   const [showTos, setShowTos]           = useState(window.location.pathname === "/terms");
@@ -396,7 +388,12 @@ export default function ToolForge() {
 
   /* ── Dark mode ── */
   const [isDark, setIsDark] = useState(() => { try { return localStorage.getItem("tf_dark") === "1"; } catch { return false; } });
-  const toggleDark = () => setIsDark(d => { const n = !d; try { localStorage.setItem("tf_dark", n ? "1" : "0"); } catch {} return n; });
+  const toggleDark = () => setIsDark(d => {
+    const n = !d;
+    try { localStorage.setItem("tf_dark", n ? "1" : "0"); } catch {}
+    document.body.classList.toggle("dark", n);
+    return n;
+  });
   const TH = isDark ? D : T;
 
   /* ── Desktop detection ── */
@@ -485,7 +482,12 @@ export default function ToolForge() {
 
   /* ── Misc ── */
   const handleTokenUpdate = t => { setProToken(t); localStorage.setItem("tf_pro_token", JSON.stringify(t)); };
-  useEffect(() => { injectFonts(); injectStyles(); }, []);
+  useEffect(() => {
+    injectFonts();
+    injectStyles();
+    // Sync body class on initial load
+    if (isDark) document.body.classList.add("dark");
+  }, []);
   const params = new URLSearchParams(window.location.search);
   const orderId = params.get("order_id");
 
@@ -497,8 +499,8 @@ export default function ToolForge() {
 
   /* ── Dark toggle button ── */
   const DarkToggle = () => (
-    <button onClick={toggleDark} title={isDark ? "Light mode" : "Dark mode"}
-      style={{ display:"flex", alignItems:"center", padding:"5px 9px", borderRadius:8, border:`1px solid ${TH.border}`, background:TH.bg, cursor:"pointer", fontSize:13, transition:"all 0.2s" }}>
+    <button onClick={toggleDark} title={isDark ? "Light mode" : "Dark mode"} className="tf-btn"
+      style={{ width:32, height:32, borderRadius:8, border:`1px solid ${TH.border2}`, background:TH.bg2, cursor:"pointer", fontSize:14, display:"flex", alignItems:"center", justifyContent:"center", color:TH.muted, transition:"all 0.14s" }}>
       {isDark ? "☀️" : "🌙"}
     </button>
   );
@@ -520,10 +522,10 @@ export default function ToolForge() {
 
     const rightContent = () => {
       if (!activeTool) return (
-        <div className="tf-fade-in" style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:40, textAlign:"center" }}>
-          <div style={{ fontSize:52, marginBottom:16, opacity:0.15, color:TH.accent, animation:"tf-float 4s ease infinite" }}>✦</div>
-          <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:17, color:TH.ink, marginBottom:8 }}>Select a tool</div>
-          <div style={{ fontSize:13, color:TH.muted, maxWidth:260, lineHeight:1.6 }}>Choose any tool from the list to get started.</div>
+        <div className="tf-fade-in" style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:48, textAlign:"center" }}>
+          <div style={{ fontSize:48, marginBottom:16, opacity:0.12, color:TH.accent, animation:"tf-float 4s ease infinite", fontFamily:"Syne, sans-serif", fontWeight:800 }}>✦</div>
+          <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:18, color:TH.ink, marginBottom:8, letterSpacing:"-0.2px" }}>Select a tool</div>
+          <div style={{ fontSize:13, color:TH.muted, maxWidth:240, lineHeight:1.65, fontFamily:"Inter, sans-serif" }}>Choose anything from the list to get started.</div>
         </div>
       );
       return <div style={{ padding:24, overflowY:"auto", flex:1 }}><ToolView tool={activeTool} hideBack onBack={() => setActiveTool(null)} proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} pomoProps={pomoProps} dlProps={dlProps} /></div>;
@@ -549,16 +551,30 @@ export default function ToolForge() {
           </div>
         </div>
 
-        {/* Hero strip */}
-        <div className="tf-desktop-hero" style={{ borderBottom:`1px solid ${TH.border}`, padding:"10px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
-          <div>
-            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:15, color:TH.ink, marginBottom:2 }}>27 free tools for work & study</div>
-            <div style={{ fontSize:11, color:TH.muted }}>Calculators, AI writing, converters — no sign-up needed.</div>
-          </div>
-          <div style={{ display:"flex", gap:20, flexShrink:0, marginLeft:20 }}>
-            <div style={{ textAlign:"center" }}><div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:14, color:TH.accent }}>{ALL_TOOLS.length}</div><div style={{ fontSize:9, color:TH.muted }}>free tools</div></div>
-            <div style={{ textAlign:"center" }}><div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:14, color:TH.ink }}>100%</div><div style={{ fontSize:9, color:TH.muted }}>no sign-up</div></div>
-            <div style={{ textAlign:"center" }}><div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:14, color:TH.gold }}>✦ AI</div><div style={{ fontSize:9, color:TH.muted }}>powered</div></div>
+        {/* ── Desktop Hero ── */}
+        <div className="tf-hero-wrap" style={{ background:TH.card, borderBottom:`1px solid ${TH.border}`, padding:"26px 24px 20px", flexShrink:0, boxShadow:TH.shadowSm }}>
+          <div className="tf-hero-gl1"></div>
+          <div className="tf-hero-gl2"></div>
+          <div style={{ position:"relative" }}>
+            <div className="tf-eyebrow" style={{ fontSize:10, fontWeight:600, color:TH.accent, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:8, display:"flex", alignItems:"center" }}>
+              Free · No sign-up · AI-powered
+            </div>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:24, color:TH.ink, letterSpacing:"-0.5px", marginBottom:5 }}>
+              Every tool you need, <span style={{ color:TH.accent }}>right here.</span>
+            </div>
+            <div style={{ fontSize:13, color:TH.muted, lineHeight:1.6, marginBottom:14, maxWidth:500 }}>
+              27 free tools for freelancers, students & small businesses.
+            </div>
+            {/* Desktop search */}
+            <div className="tf-search" style={{ display:"flex", alignItems:"center", gap:10, background:TH.bg2, border:`1.5px solid ${TH.border2}`, borderRadius:10, padding:"10px 14px", maxWidth:420 }}>
+              <span style={{ fontSize:14, color:TH.hint, flexShrink:0 }}>⌕</span>
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or describe what you need…"
+                className="tf-input" style={{ ...inputStyle, background:"transparent", border:"none", padding:0, fontSize:13, color:TH.ink, boxShadow:"none" }} />
+              <div style={{ display:"flex", gap:3, flexShrink:0 }}>
+                <span style={{ padding:"2px 5px", borderRadius:4, background:TH.card, border:`1px solid ${TH.border2}`, fontSize:9, color:TH.hint, fontFamily:"monospace" }}>⌘</span>
+                <span style={{ padding:"2px 5px", borderRadius:4, background:TH.card, border:`1px solid ${TH.border2}`, fontSize:9, color:TH.hint, fontFamily:"monospace" }}>K</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -602,7 +618,7 @@ export default function ToolForge() {
                 {!proToken && <div style={{ padding:"6px 10px" }}><RestoreToken onRestore={handleTokenUpdate} /></div>}
                 <div style={{ marginTop:"auto", padding:10, borderTop:`1px solid ${TH.border}` }}>
                   <div onClick={() => setShowGames(true)}
-                    className="tf-game-banner" style={{ borderRadius:10, padding:"10px 12px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }}>
+                    className="tf-game" style={{ borderRadius:10, padding:"10px 12px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }}>
                     <div>
                       <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:"white" }}>🎮 Take a Break</div>
                       <div style={{ fontSize:10, color:"rgba(255,255,255,0.75)", marginTop:1 }}>Mini games</div>
@@ -762,7 +778,7 @@ export default function ToolForge() {
   /* ══════════════════════════════════
      MOBILE
   ══════════════════════════════════ */
-  const mobileGrid = { display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:8 };
+  const mobileGrid = { display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:10 };
 
   if (showGames) return (
     <>
@@ -779,7 +795,7 @@ export default function ToolForge() {
   if (activeTool) return (
     <>
       <div style={{ maxWidth:480, margin:"0 auto", padding:20, background:TH.bg, minHeight:"100vh" }}>
-        <div className="tf-pop" style={{ background:TH.card, borderRadius:16, padding:20, border:`1px solid ${TH.border}`, boxShadow:"0 2px 20px rgba(0,0,0,0.06)" }}>
+        <div className="tf-pop" style={{ background:TH.card, borderRadius:16, padding:22, border:`1px solid ${TH.border2}`, boxShadow:TH.shadow }}>
           <ToolView tool={activeTool} onBack={() => setActiveTool(null)} proToken={proToken} onNeedUpgrade={() => setShowUpgrade(true)} onTokenUpdate={handleTokenUpdate} pomoProps={pomoProps} dlProps={dlProps} />
         </div>
         {proToken && proToken.generations_left > 0 && (
@@ -802,7 +818,7 @@ export default function ToolForge() {
   return (
     <>
       {!proToken && (
-        <div onClick={() => setShowUpgrade(true)} className="tf-upgrade-banner" style={{ position:"sticky", top:0, zIndex:100, padding:"10px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }}>
+        <div onClick={() => setShowUpgrade(true)} className="tf-upgrade" style={{ position:"sticky", top:0, zIndex:100, padding:"10px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }}>
           <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:"white" }}>✦ Unlock Claude Sonnet AI — from $2.99</div>
           <div style={{ fontSize:11, color:"rgba(255,255,255,0.85)", fontFamily:"DM Sans, sans-serif", whiteSpace:"nowrap" }}>Better outputs →</div>
         </div>
@@ -811,35 +827,93 @@ export default function ToolForge() {
       <div style={{ maxWidth:480, margin:"0 auto", minHeight:"100vh", background:TH.bg, fontFamily:"DM Sans, sans-serif" }}>
 
         {/* Mobile header */}
-        <div className="tf-mobile-hero" style={{ padding:"20px 20px 14px", borderBottom:`1px solid ${TH.border}` }}>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
-            <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
-              <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:24, color:TH.ink }}>Tool</span>
-              <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:24, color:TH.accent }}>Forge</span>
-              <span style={{ fontSize:10, color:TH.muted, fontWeight:400, letterSpacing:1, marginLeft:2 }}>{ALL_TOOLS.length} FREE</span>
-            </div>
-            <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-              <DarkToggle />
-              {proToken && proToken.generations_left > 0
-                ? <div style={{ background:TH.goldDim, border:`1px solid ${TH.gold}`, borderRadius:8, padding:"4px 9px", fontSize:10, color:TH.gold, fontFamily:"Syne, sans-serif", fontWeight:700 }}>✦ {proToken.generations_left}</div>
-                : <button onClick={() => setShowUpgrade(true)} style={{ background:TH.accent, color:"white", fontSize:10, padding:"4px 10px", borderRadius:7, border:"none", fontFamily:"Syne, sans-serif", fontWeight:700, cursor:"pointer" }}>✦ Upgrade</button>
-              }
-            </div>
+        {/* ── Mobile Nav ── */}
+        <div className={isDark ? "tf-nav-dark" : "tf-nav"}
+          style={{ height:52, borderBottom:`1px solid ${TH.border2}`, display:"flex", alignItems:"center", padding:"0 16px", justifyContent:"space-between", position:"sticky", top:0, zIndex:50, boxShadow:TH.shadowSm }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <span style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:17, color:TH.ink, letterSpacing:"-0.2px" }}>
+              Tool<span style={{ color:TH.accent }}>Forge</span>
+            </span>
+            <span style={{ fontSize:9, fontWeight:700, padding:"2px 7px", borderRadius:4, background:TH.accentDim, color:TH.accent, letterSpacing:"0.05em" }}>{ALL_TOOLS.length} FREE</span>
           </div>
-          <div style={{ fontSize:12, color:TH.muted, marginBottom:10 }}>Every tool you need — writing, calculators, planning & more.</div>
-          {!proToken && <RestoreToken onRestore={handleTokenUpdate} />}
-          <div style={{ position:"relative", marginTop:10 }}>
-            <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", fontSize:14, color:TH.muted }}>🔍</span>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tools…" style={{ ...inputStyle, paddingLeft:36, background:TH.bg, border:`1px solid ${TH.border}`, color:TH.ink }} />
+          <div style={{ display:"flex", gap:5, alignItems:"center" }}>
+            <DarkToggle />
+            {proToken && proToken.generations_left > 0
+              ? <div style={{ background:TH.goldDim, border:`1px solid ${TH.goldBrd}`, borderRadius:7, padding:"4px 9px", fontSize:10, color:TH.gold, fontFamily:"Syne, sans-serif", fontWeight:700 }}>✦ {proToken.generations_left}</div>
+              : <button onClick={() => setShowUpgrade(true)} className="tf-btn tf-cta" style={{ background:TH.accent, color:"white", fontSize:11, padding:"6px 12px", borderRadius:7, border:"none", fontFamily:"Inter, sans-serif", fontWeight:600, cursor:"pointer" }}>✦ Upgrade</button>
+            }
+            {/* Hamburger */}
+            <button onClick={() => setShowDrawer(d => !d)} className="tf-btn"
+              style={{ width:32, height:32, borderRadius:8, border:`1px solid ${TH.border2}`, background:TH.bg2, color:TH.muted, fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              ☰
+            </button>
+          </div>
+          {/* Drawer */}
+          <div className={`tf-drawer${showDrawer ? " open" : ""}`}
+            style={{ position:"absolute", top:52, left:0, right:0, background:TH.card, borderBottom:`1px solid ${TH.border2}`, zIndex:60, boxShadow:TH.shadow }}>
+            {[
+              { label:"FAQ & About", sub:"Everything about ToolForge", ico:"❓", bg:TH.accentDim, action:() => { setShowFaq(true); window.history.pushState({},"","/faq"); setShowDrawer(false); } },
+              { label:"Pricing", sub:"Plans from $2.99", ico:"✦", bg:TH.goldDim, action:() => { setShowUpgrade(true); setShowDrawer(false); } },
+              { label:"Terms of Service", ico:"📄", bg:TH.bg2, action:() => { setShowTos(true); window.history.pushState({},"","/terms"); setShowDrawer(false); } },
+              { label:"Refund Policy", ico:"↩", bg:TH.bg2, action:() => { setShowRefund(true); window.history.pushState({},"","/refund"); setShowDrawer(false); } },
+            ].map((item, i) => (
+              <div key={i} onClick={item.action}
+                style={{ display:"flex", alignItems:"center", gap:12, padding:"13px 18px", borderBottom:`1px solid ${TH.border}`, cursor:"pointer" }}>
+                <div style={{ width:30, height:30, borderRadius:8, background:item.bg, display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, flexShrink:0 }}>{item.ico}</div>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:500, color:TH.ink, fontFamily:"Inter, sans-serif" }}>{item.label}</div>
+                  {item.sub && <div style={{ fontSize:11, color:TH.hint, marginTop:1 }}>{item.sub}</div>}
+                </div>
+                <span style={{ marginLeft:"auto", fontSize:14, color:TH.hint }}>›</span>
+              </div>
+            ))}
+            {!proToken && (
+              <div style={{ margin:"12px 16px", padding:"11px 14px", borderRadius:10, background:TH.goldDim, border:`1px solid ${TH.goldBrd}` }}>
+                <div style={{ fontSize:10, fontWeight:700, color:TH.gold, letterSpacing:"0.05em", marginBottom:3 }}>Already purchased?</div>
+                <RestoreToken onRestore={handleTokenUpdate} />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Mobile Hero ── */}
+        <div className="tf-hero-wrap" style={{ background:TH.card, borderBottom:`1px solid ${TH.border}`, padding:"36px 20px 28px", boxShadow:TH.shadowSm }}>
+          <div className="tf-hero-gl1"></div>
+          <div className="tf-hero-gl2"></div>
+          <div style={{ position:"relative" }}>
+            <div className="tf-eyebrow" style={{ fontSize:10, fontWeight:600, color:TH.accent, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:12, display:"flex", alignItems:"center" }}>
+              Free · No sign-up required
+            </div>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:34, color:TH.ink, lineHeight:1.07, letterSpacing:"-0.8px", marginBottom:10 }}>
+              Every tool you need,<br /><span style={{ color:TH.accent }}>right here.</span>
+            </div>
+            <div style={{ fontSize:13, color:TH.muted, lineHeight:1.65, marginBottom:20 }}>
+              27 tools for freelancers, students & small businesses.
+            </div>
+            {/* Search */}
+            <div className="tf-search" style={{ display:"flex", alignItems:"center", gap:10, background:TH.bg, border:`1.5px solid ${TH.border2}`, borderRadius:12, padding:"12px 14px", boxShadow:TH.shadow }}>
+              <span style={{ fontSize:15, color:TH.hint, flexShrink:0 }}>⌕</span>
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cover letter, GPA calc, QR code…"
+                className="tf-input" style={{ ...inputStyle, background:"transparent", border:"none", padding:0, fontSize:13, color:TH.ink, boxShadow:"none" }} />
+            </div>
+            {/* Stats */}
+            <div style={{ display:"flex", gap:0, marginTop:20, borderTop:`1px solid ${TH.border}`, paddingTop:18 }}>
+              {[{n:"27",l:"Free tools"},{n:"0",l:"Sign-ups"},{n:"✦ AI",l:"Powered",c:TH.gold}].map((s,i) => (
+                <div key={i} style={{ flex:1, padding:"0 14px", borderRight: i<2 ? `1px solid ${TH.border}` : "none", ...(i===0?{paddingLeft:0}:{}) }}>
+                  <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:18, color:s.c||TH.ink, letterSpacing:"-0.2px" }}>{s.n}</div>
+                  <div style={{ fontSize:9, color:TH.hint, fontWeight:500, letterSpacing:"0.05em", textTransform:"uppercase", marginTop:2 }}>{s.l}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Category tabs */}
-        <div style={{ padding:"10px 16px", display:"flex", gap:7, overflowX:"auto", borderBottom:`1px solid ${TH.border}`, background:TH.card }}>
-          {[{ id:"all", label:"All", icon:"✦", color:TH.accent, colorDim:TH.accentDim }, ...CATEGORIES].map(c => (
-            <button key={c.id} onClick={() => setActiveCat(c.id)}
-              style={{ flexShrink:0, display:"flex", alignItems:"center", gap:5, padding:"6px 13px", borderRadius:99, border:`1px solid ${activeCat===c.id?c.color||TH.accent:TH.border}`, background:activeCat===c.id?c.colorDim||TH.accentDim:TH.card, color:activeCat===c.id?c.color||TH.accent:TH.muted, fontSize:12, fontFamily:"Syne, sans-serif", fontWeight:600, cursor:"pointer", whiteSpace:"nowrap", transition:"all 0.15s" }}>
-              {c.icon} {c.label}
+        <div style={{ padding:"12px 16px", display:"flex", gap:5, overflowX:"auto", borderBottom:`1px solid ${TH.border}`, background:TH.card }}>
+          {[{ id:"all", label:"All", icon:"✦" }, ...CATEGORIES].map(c => (
+            <button key={c.id} onClick={() => setActiveCat(c.id)} className="tf-cat-tab"
+              style={{ flexShrink:0, padding:"6px 14px", borderRadius:99, border:`1px solid ${activeCat===c.id?TH.border2:"transparent"}`, background:activeCat===c.id?TH.ink:"transparent", color:activeCat===c.id?TH.bg:TH.muted, fontSize:12, fontFamily:"Inter, sans-serif", fontWeight:activeCat===c.id?600:400, cursor:"pointer", whiteSpace:"nowrap" }}>
+              {c.icon} {c.label||"All"}
             </button>
           ))}
         </div>
@@ -858,34 +932,37 @@ export default function ToolForge() {
           {search ? (
             <>
               <div style={{ fontSize:12, color:TH.muted, marginBottom:12 }}>{filtered.length} result{filtered.length!==1?"s":""} for "{search}"</div>
-              <div className="tf-stagger" style={mobileGrid}>{filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}</div>
+              <div className="tf-stagger" style={mobileGrid}>{filtered.map(tool => <ToolCard key={tool.id} tool={tool} TH={TH} onClick={() => setActiveTool(tool)} />)}</div>
             </>
           ) : activeCat !== "all" ? (
-            <div className="tf-stagger" style={mobileGrid}>{filtered.map(tool => <ToolCard key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />)}</div>
+            <div className="tf-stagger" style={mobileGrid}>{filtered.map(tool => <ToolCard key={tool.id} tool={tool} TH={TH} onClick={() => setActiveTool(tool)} />)}</div>
           ) : (
             CATEGORIES.map(cat => (
-              <div key={cat.id} style={{ marginBottom:20 }}>
-                <div onClick={() => setCollapsed(prev => ({ ...prev, [cat.id]: !prev[cat.id] }))} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:collapsed[cat.id]?0:10, cursor:"pointer", padding:"6px 0" }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                    <div style={{ width:28, height:28, borderRadius:8, background:cat.colorDim, display:"flex", alignItems:"center", justifyContent:"center", fontSize:15 }}>{cat.icon}</div>
-                    <span style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:14, color:TH.ink }}>{cat.label}</span>
-                    <span style={{ fontSize:10, color:TH.muted }}>{cat.tools.length} tools</span>
-                  </div>
-                  <span style={{ fontSize:14, color:TH.muted, transform:collapsed[cat.id]?"rotate(-90deg)":"rotate(0deg)", transition:"transform 0.2s", display:"inline-block" }}>▾</span>
+              <div key={cat.id} style={{ marginBottom:24 }}>
+                {/* Section header */}
+                <div onClick={() => setCollapsed(prev => ({ ...prev, [cat.id]: !prev[cat.id] }))}
+                  style={{ display:"flex", alignItems:"center", gap:8, marginBottom:collapsed[cat.id]?0:11, cursor:"pointer", padding:"6px 0" }}>
+                  <div style={{ width:7, height:7, borderRadius:"50%", background:cat.color, flexShrink:0 }}></div>
+                  <span style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:TH.ink }}>{cat.label}</span>
+                  <span style={{ fontSize:11, color:TH.hint }}>{cat.tools.length} tools</span>
+                  <span style={{ marginLeft:"auto", fontSize:12, color:TH.hint, transform:collapsed[cat.id]?"rotate(-90deg)":"rotate(0deg)", transition:"transform 0.18s", display:"inline-block" }}>▾</span>
                 </div>
                 {!collapsed[cat.id] && (
-                  <div style={mobileGrid}>
+                  <div className="tf-stagger" style={mobileGrid}>
                     {cat.tools.map(tool => (
-                      <ToolCard key={tool.id} tool={{ ...tool, catId:cat.id, catColor:cat.color, catColorDim:cat.colorDim }} onClick={() => setActiveTool({ ...tool, catId:cat.id, catColor:cat.color, catColorDim:cat.colorDim })} />
+                      <ToolCard key={tool.id} TH={TH} tool={{ ...tool, catId:cat.id, catColor:cat.color, catColorDim:cat.colorDim }} onClick={() => setActiveTool({ ...tool, catId:cat.id, catColor:cat.color, catColorDim:cat.colorDim })} />
                     ))}
                   </div>
                 )}
               </div>
             ))
           )}
-          <div style={{ marginTop:10, padding:16, borderRadius:14, background:`linear-gradient(135deg,${TH.accentDim},${TH.blueDim})`, border:`1px solid ${TH.border}`, textAlign:"center" }}>
-            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:TH.ink, marginBottom:4 }}>✦ More tools dropping weekly</div>
-            <div style={{ fontSize:12, color:TH.muted }}>Debt payoff · Resume bullets · Pricing guide · and 20+ more</div>
+          <div style={{ marginTop:4, padding:"14px 16px", borderRadius:12, background:TH.bg2, border:`1px solid ${TH.border2}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <div>
+              <div style={{ fontFamily:"Syne, sans-serif", fontWeight:600, fontSize:12, color:TH.ink, marginBottom:2 }}>✦ More tools dropping weekly</div>
+              <div style={{ fontSize:11, color:TH.hint }}>Password gen · Loan calc · and more</div>
+            </div>
+            <span style={{ fontSize:14, color:TH.hint }}>→</span>
           </div>
         </div>
 
