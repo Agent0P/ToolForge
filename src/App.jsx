@@ -761,6 +761,9 @@ export default function ToolForge() {
             <span onClick={() => setShowUpgrade(true)} style={{ fontSize:11, color:TH.muted, cursor:"pointer", fontFamily:"Inter, sans-serif", fontWeight:400 }}>Pricing</span>
             <span onClick={() => { setShowTos(true); window.history.pushState({},"","/terms"); }} style={{ fontSize:11, color:TH.muted, cursor:"pointer", fontFamily:"Inter, sans-serif", fontWeight:400 }}>Terms</span>
             <span onClick={() => { setShowRefund(true); window.history.pushState({},"","/refund"); }} style={{ fontSize:11, color:TH.muted, cursor:"pointer", fontFamily:"Inter, sans-serif", fontWeight:400 }}>Refund</span>
+            <a href="https://www.saashub.com/toolforge?utm_source=badge&utm_campaign=badge&utm_content=toolforge&badge_kind=approved" target="_blank" rel="noopener noreferrer" style={{ display:"flex", alignItems:"center" }}>
+              <img src={isDark ? "https://cdn-b.saashub.com/img/badges/approved-dark.png?v=1" : "https://cdn-b.saashub.com/img/badges/approved-color.png?v=1"} alt="Approved on SaaSHub" style={{ height:22, opacity:0.8, transition:"opacity 0.2s" }} onMouseOver={e=>e.target.style.opacity=1} onMouseOut={e=>e.target.style.opacity=0.8} />
+            </a>
             <DarkToggle />
             {proToken && proToken.generations_left > 0
               ? <div style={{ background:TH.goldDim, border:`1px solid ${TH.gold}`, borderRadius:8, padding:"4px 11px", fontSize:10, color:TH.gold, fontFamily:"Syne, sans-serif", fontWeight:700 }}>✦ {proToken.generations_left} left</div>
