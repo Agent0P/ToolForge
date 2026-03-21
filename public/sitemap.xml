@@ -1,9 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://toolforge.pro</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
+  <url><loc>https://toolforge.pro</loc><lastmod>2026-03-21</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://toolforge.pro/faq</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+
+  <!-- Writing & AI -->
+  <url><loc>https://toolforge.pro/tool/document-summarizer</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://toolforge.pro/tool/resume-reviewer</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://toolforge.pro/tool/cover-letter-generator</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://toolforge.pro/tool/linkedin-bio-writer</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://toolforge.pro/tool/cold-email-generator</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://toolforge.pro/tool/client-proposal-writer</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://toolforge.pro/tool/invoice-text-generator</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://toolforge.pro/tool/business-tagline-generator</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://toolforge.pro/tool/essay-outline-generator</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://toolforge.pro/tool/marketing-email-writer</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+
+  <!-- Calculators -->
+  <url><loc>https://toolforge.pro/tool/hourly-rate-calculator</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://toolforge.pro/tool/project-price-estimator</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://toolforge.pro/tool/profit-margin-calculator</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://toolforge.pro/tool/break-even-calculator</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://toolforge.pro/tool/gpa-calculator</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://toolforge.pro/tool/salary-negotiation-helper</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://toolforge.pro/tool/tip-bill-splitter</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://toolforge.pro/tool/savings-goal-calculator</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://toolforge.pro/tool/bmi-calculator</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+
+  <!-- Planning & Time -->
+  <url><loc>https://toolforge.pro/tool/deadline-countdown</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://toolforge.pro/tool/study-session-planner</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://toolforge.pro/tool/citation-formatter</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://toolforge.pro/tool/pomodoro-timer</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+
+  <!-- Utilities -->
+  <url><loc>https://toolforge.pro/tool/unit-converter</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://toolforge.pro/tool/timezone-converter</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://toolforge.pro/tool/word-counter</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://toolforge.pro/tool/qr-code-generator</loc><lastmod>2026-03-21</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>
