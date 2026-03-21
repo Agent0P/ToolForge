@@ -325,7 +325,31 @@ export const injectStyles = () => {
     body.dark .tf-mini-result div   { color: #f2ede6 !important; }
     body.dark .tf-tip               { background: #041509 !important; border-color: rgba(45,202,116,0.18) !important; }
     body.dark .tf-tool-card         { background: #252018 !important; border-color: rgba(242,237,230,0.07) !important; }
-    body.dark .tf-btn-group button  { background: #2a2620 !important; color: #8a8780 !important; border-color: rgba(242,237,230,0.14) !important; }
+    /* Only unselected buttons (white/card bg) go dark — selected ones keep their color */
+    body.dark .tf-btn-group button[style*="rgb(255, 255, 255)"],
+    body.dark .tf-btn-group button[style*="white"],
+    body.dark .tf-btn-group button[style*="rgb(247, 245, 240)"],
+    body.dark .tf-btn-group button[style*="rgb(240, 237, 230)"] {
+      background: #2a2620 !important;
+      color: #8a8780 !important;
+      border-color: rgba(242,237,230,0.14) !important;
+    }
+
+    /* ── Selected buttons in dark mode — boost border visibility ── */
+    body.dark .tf-btn-group button[style*="rgb(4, 21, 9)"]    { border-color: rgba(45,202,116,0.5)  !important; color: #2dca74 !important; } /* greenDim selected */
+    body.dark .tf-btn-group button[style*="rgb(30, 14, 5)"]   { border-color: rgba(240,100,40,0.5)  !important; color: #f06428 !important; } /* accentDim selected */
+    body.dark .tf-btn-group button[style*="rgb(6, 14, 32)"]   { border-color: rgba(85,152,255,0.5)  !important; color: #5598ff !important; } /* blueDim selected */
+    body.dark .tf-btn-group button[style*="rgb(16, 8, 40)"]   { border-color: rgba(160,123,250,0.5) !important; color: #a07bfa !important; } /* purpleDim selected */
+    body.dark .tf-btn-group button[style*="rgb(3, 20, 18)"]   { border-color: rgba(45,212,191,0.5)  !important; color: #2dd4bf !important; } /* tealDim selected */
+    body.dark .tf-btn-group button[style*="rgb(26, 16, 0)"]   { border-color: rgba(224,144,64,0.5)  !important; color: #e09040 !important; } /* goldDim selected */
+
+    /* ── Selected buttons in dark — keep color, boost contrast ── */
+    body.dark .tf-btn-group button[style*="rgb(4, 21, 9)"]    { border-color: rgba(45,202,116,0.5)  !important; color: #2dca74 !important; }
+    body.dark .tf-btn-group button[style*="rgb(30, 14, 5)"]   { border-color: rgba(240,100,40,0.5)  !important; color: #f06428 !important; }
+    body.dark .tf-btn-group button[style*="rgb(6, 14, 32)"]   { border-color: rgba(85,152,255,0.5)  !important; color: #5598ff !important; }
+    body.dark .tf-btn-group button[style*="rgb(16, 8, 40)"]   { border-color: rgba(160,123,250,0.5) !important; color: #a07bfa !important; }
+    body.dark .tf-btn-group button[style*="rgb(3, 20, 18)"]   { border-color: rgba(45,212,191,0.5)  !important; color: #2dd4bf !important; }
+    body.dark .tf-btn-group button[style*="rgb(26, 16, 0)"]   { border-color: rgba(224,144,64,0.5)  !important; color: #e09040 !important; }
 
     /* ── 8. Word Counter textarea ── */
     body.dark [style*="minHeight: 200px"],
