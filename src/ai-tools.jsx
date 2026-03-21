@@ -123,7 +123,7 @@ Be direct, specific to their numbers, and practical. No generic filler.`;
       <div style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 11, color: T.muted, marginBottom: 6, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.3 }}>Investment approach</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <div className="tf-btn-group" style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {INVEST_OPTIONS.map(o => (
               <button key={o.id} onClick={() => setInvestType(o.id)} style={{ padding: "7px 10px", borderRadius: 9, border: `1.5px solid ${investType === o.id ? T.green : T.border}`, background: investType === o.id ? T.greenDim : "white", color: investType === o.id ? T.green : T.muted, fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>{o.label}</button>
             ))}
@@ -292,7 +292,7 @@ Be specific, direct and practical. No filler. Every section should feel personal
       <CurrencyPicker value={currency} onChange={setCurrency} />
       <div style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 11, color: T.muted, marginBottom: 6, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.3 }}>What's your situation?</div>
-        <div style={{ display: "flex", gap: 6 }}>
+        <div className="tf-btn-group" style={{ display: "flex", gap: 6 }}>
           {Object.entries(situationLabels).map(([val, label]) => (
             <button key={val} onClick={() => setSituation(val)} style={{ flex: 1, padding: "8px 4px", borderRadius: 9, border: `1.5px solid ${situation === val ? T.blue : T.border}`, background: situation === val ? T.blueDim : "white", color: situation === val ? T.blue : T.muted, fontSize: 10, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer", lineHeight: 1.4 }}>{label}</button>
           ))}
@@ -305,7 +305,7 @@ Be specific, direct and practical. No filler. Every section should feel personal
       <Row label="Years of Experience in This Field"><input type="number" value={experience} onChange={e => setExp(e.target.value)} style={inputStyle} /></Row>
       <div style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 11, color: T.muted, marginBottom: 6, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.3 }}>Company size / type</div>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <div className="tf-btn-group" style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {[["startup", "🚀 Startup"], ["scaleup", "📈 Scale-up"], ["midsize", "🏢 Mid-size"], ["enterprise", "🌐 Enterprise"], ["public", "📋 Public Co."]].map(([val, label]) => (
             <button key={val} onClick={() => setCompanySize(val)} style={{ padding: "7px 10px", borderRadius: 9, border: `1.5px solid ${companySize === val ? T.purple : T.border}`, background: companySize === val ? T.purpleDim : "white", color: companySize === val ? T.purple : T.muted, fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>{label}</button>
           ))}
@@ -313,7 +313,7 @@ Be specific, direct and practical. No filler. Every section should feel personal
       </div>
       <div style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 11, color: T.muted, marginBottom: 6, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.3 }}>Your current employment status</div>
-        <div style={{ display: "flex", gap: 6 }}>
+        <div className="tf-btn-group" style={{ display: "flex", gap: 6 }}>
           {[["employed", "✅ Currently employed"], ["unemployed", "🔍 Between jobs"]].map(([val, label]) => (
             <button key={val} onClick={() => setEmployed(val)} style={{ flex: 1, padding: "8px 6px", borderRadius: 9, border: `1.5px solid ${employed === val ? T.accent : T.border}`, background: employed === val ? T.accentDim : "white", color: employed === val ? T.accent : T.muted, fontSize: 11, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>{label}</button>
           ))}
@@ -321,7 +321,7 @@ Be specific, direct and practical. No filler. Every section should feel personal
       </div>
       <div style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 11, color: T.muted, marginBottom: 6, fontFamily: "DM Sans, sans-serif", letterSpacing: 0.3 }}>Do you have a competing offer?</div>
-        <div style={{ display: "flex", gap: 6 }}>
+        <div className="tf-btn-group" style={{ display: "flex", gap: 6 }}>
           {[["no", "No"], ["yes", "Yes — I have one"]].map(([val, label]) => (
             <button key={val} onClick={() => setCompeting(val)} style={{ flex: 1, padding: "8px 0", borderRadius: 9, border: `1.5px solid ${competing === val ? T.green : T.border}`, background: competing === val ? T.greenDim : "white", color: competing === val ? T.green : T.muted, fontSize: 12, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>{label}</button>
           ))}
