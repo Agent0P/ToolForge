@@ -143,21 +143,37 @@ export function GPACalc() {
     { id:1, name: "", grade: "A", credits: 3 },
     { id:2, name: "", grade: "B+", credits: 3 },
   ]);
-  const [showTarget, setShowTarget] = useState(false);
-  const [targetGPA, setTargetGPA]   = useState("3.5");
-  const [newCredits, setNewCredits] = useState(3);
+  const [showTarget, setShowTarget]   = useState(false);
+  const [targetGPA, setTargetGPA]     = useState("3.5");
+  const [newCredits, setNewCredits]   = useState(3);
+  const [cumMode, setCumMode]         = useState(false);
+  const [prevGPA, setPrevGPA]         = useState("");
+  const [prevCredits, setPrevCredits] = useState("");
   const nextId = useRef(3);
 
   const addCourse   = () => { setCourses(cs => [...cs, { id: nextId.current++, name: "", grade: "B", credits: 3 }]); };
   const delCourse   = id  => setCourses(cs => cs.filter(c => c.id !== id));
   const updateField = (id, field, val) => setCourses(cs => cs.map(c => c.id === id ? { ...c, [field]: val } : c));
 
-  const totalCredits  = courses.reduce((s, c) => s + Number(c.credits || 0), 0);
-  const totalPoints   = courses.reduce((s, c) => s + toPoints(c.grade) * Number(c.credits || 0), 0);
-  const gpa           = totalCredits ? (totalPoints / totalCredits).toFixed(2) : "0.00";
-  const gpaNum        = parseFloat(gpa);
-  const gpaColor      = gpaNum >= 3.7 ? T.green : gpaNum >= 3.0 ? T.blue : gpaNum >= 2.0 ? T.accent : "#dc2626";
-  const gpaLabel      = gpaNum >= 3.7 ? "Dean's List 🎓" : gpaNum >= 3.0 ? "Good Standing ✓" : gpaNum >= 2.0 ? "Satisfactory" : "At Risk ⚠️";
+  // Semester GPA
+  const semCredits = courses.reduce((s, c) => s + Number(c.credits || 0), 0);
+  const semPoints  = courses.reduce((s, c) => s + toPoints(c.grade) * Number(c.credits || 0), 0);
+  const semGpa     = semCredits ? (semPoints / semCredits).toFixed(2) : "0.00";
+
+  // Cumulative GPA (semester + previous)
+  const pGPA     = parseFloat(prevGPA) || 0;
+  const pCreds   = Number(prevCredits) || 0;
+  const cumCredits = semCredits + pCreds;
+  const cumPoints  = semPoints + (pGPA * pCreds);
+  const cumGpa     = cumCredits ? (cumPoints / cumCredits).toFixed(2) : "0.00";
+
+  const gpa      = cumMode && pCreds > 0 ? cumGpa : semGpa;
+  const totalCredits = cumMode && pCreds > 0 ? cumCredits : semCredits;
+  const totalPoints  = cumMode && pCreds > 0 ? cumPoints  : semPoints;
+
+  const gpaNum   = parseFloat(gpa);
+  const gpaColor = gpaNum >= 3.7 ? T.green : gpaNum >= 3.0 ? T.blue : gpaNum >= 2.0 ? T.accent : "#dc2626";
+  const gpaLabel = gpaNum >= 3.7 ? "Dean's List 🎓" : gpaNum >= 3.0 ? "Good Standing ✓" : gpaNum >= 2.0 ? "Satisfactory" : "At Risk ⚠️";
 
   // "What grade do I need?" calculator
   const tgt = parseFloat(targetGPA) || 0;
@@ -174,6 +190,34 @@ export function GPACalc() {
 
   return (
     <div>
+      {/* Semester / Cumulative toggle */}
+      <div style={{ display:"flex", gap:8, marginBottom:14 }}>
+        {[{id:false,label:"This Semester"},{id:true,label:"Cumulative GPA"}].map(m => (
+          <button key={String(m.id)} onClick={() => setCumMode(m.id)}
+            style={{ flex:1, padding:"7px 0", borderRadius:9, border:`1px solid ${cumMode===m.id ? T.blue : T.border}`, background:cumMode===m.id ? T.blueDim : T.card, color:cumMode===m.id ? T.blue : T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:11, cursor:"pointer", transition:"all 0.15s" }}>
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Previous GPA inputs (cumulative mode only) */}
+      {cumMode && (
+        <div style={{ display:"flex", gap:10, marginBottom:14, padding:"12px 14px", borderRadius:12, background:T.blueDim, border:`1px solid ${T.blue}22` }}>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:4 }}>PREVIOUS GPA</div>
+            <input type="number" value={prevGPA} min="0" max="4.3" step="0.01"
+              onChange={e => setPrevGPA(e.target.value)}
+              style={{ ...inputStyle, textAlign:"center" }} placeholder="e.g. 3.2" />
+          </div>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:4 }}>PREVIOUS CREDIT HOURS</div>
+            <input type="number" value={prevCredits} min="0"
+              onChange={e => setPrevCredits(e.target.value)}
+              style={{ ...inputStyle, textAlign:"center" }} placeholder="e.g. 60" />
+          </div>
+        </div>
+      )}
+
       {/* Course column headers */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 90px 70px 30px", gap:8, marginBottom:4 }}>
         <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, paddingLeft:2 }}>COURSE (OPTIONAL)</div>
@@ -204,7 +248,7 @@ export function GPACalc() {
       {totalCredits > 0 && (
         <div style={{ marginTop:16, padding:"16px 18px", borderRadius:14, background:T.card, border:`2px solid ${gpaColor}22` }}>
           <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:4 }}>
-            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.muted }}>YOUR GPA</div>
+            <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:13, color:T.muted }}>{cumMode && pCreds > 0 ? "CUMULATIVE GPA" : "YOUR GPA"}</div>
             <div style={{ fontSize:11, color:gpaColor, fontFamily:"Syne, sans-serif", fontWeight:700 }}>{gpaLabel}</div>
           </div>
           <div style={{ fontFamily:"Syne, sans-serif", fontWeight:800, fontSize:42, color:gpaColor, lineHeight:1 }}>{gpa}</div>
@@ -259,7 +303,7 @@ export function GPACalc() {
       </div>
 
       <div style={{ marginTop:10 }}>
-        <CopyButton text={`My GPA is ${gpa} (${totalCredits} credit hours) — calculated on ToolForge`} />
+        <CopyButton text={`My ${cumMode && pCreds > 0 ? "cumulative" : "semester"} GPA is ${gpa} (${totalCredits} credit hours) — calculated on ToolForge`} />
       </div>
     </div>
   );
