@@ -343,7 +343,23 @@ export const injectStyles = () => {
     body.dark .tf-btn-group button[style*="rgb(3, 20, 18)"]   { border-color: rgba(45,212,191,0.5)  !important; color: #2dd4bf !important; } /* tealDim selected */
     body.dark .tf-btn-group button[style*="rgb(26, 16, 0)"]   { border-color: rgba(224,144,64,0.5)  !important; color: #e09040 !important; } /* goldDim selected */
 
-    /* ── Selected buttons in dark — keep color, boost contrast ── */
+    /* ── Selected buttons in dark — dim bg + correct text color per variant ── */
+    /* purpleDim selected */
+    body.dark .tf-btn-group button[style*="rgb(240, 235, 255)"] { background: #1a0f38 !important; color: #a07bfa !important; border-color: rgba(160,123,250,0.55) !important; }
+    /* greenDim selected */
+    body.dark .tf-btn-group button[style*="rgb(237, 250, 244)"] { background: #072210 !important; color: #2dca74 !important; border-color: rgba(45,202,116,0.55) !important; }
+    /* accentDim selected */
+    body.dark .tf-btn-group button[style*="rgb(255, 240, 232)"],
+    body.dark .tf-btn-group button[style*="rgb(255, 241, 234)"] { background: #2a1008 !important; color: #f06428 !important; border-color: rgba(240,100,40,0.55) !important; }
+    /* blueDim selected */
+    body.dark .tf-btn-group button[style*="rgb(237, 242, 255)"] { background: #0a1428 !important; color: #5598ff !important; border-color: rgba(85,152,255,0.55) !important; }
+    /* tealDim selected */
+    body.dark .tf-btn-group button[style*="rgb(228, 250, 248)"] { background: #051e1a !important; color: #2dd4bf !important; border-color: rgba(45,212,191,0.55) !important; }
+    /* goldDim selected */
+    body.dark .tf-btn-group button[style*="rgb(255, 245, 224)"],
+    body.dark .tf-btn-group button[style*="rgb(254, 243, 199)"] { background: #201500 !important; color: #e09040 !important; border-color: rgba(224,144,64,0.55) !important; }
+
+    /* ── Selected buttons in dark — keep color, boost contrast (legacy rules) ── */
     body.dark .tf-btn-group button[style*="rgb(4, 21, 9)"]    { border-color: rgba(45,202,116,0.5)  !important; color: #2dca74 !important; }
     body.dark .tf-btn-group button[style*="rgb(30, 14, 5)"]   { border-color: rgba(240,100,40,0.5)  !important; color: #f06428 !important; }
     body.dark .tf-btn-group button[style*="rgb(6, 14, 32)"]   { border-color: rgba(85,152,255,0.5)  !important; color: #5598ff !important; }
