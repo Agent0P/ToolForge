@@ -53,6 +53,67 @@ const CATEGORIES = [
 const ALL_TOOLS = CATEGORIES.flatMap(c => c.tools.map(t => ({ ...t, catId:c.id, catColor:c.color, catColorDim:c.colorDim })));
 const AI_TOOLS  = ["Cover Letter Generator","LinkedIn Bio Writer","Cold Email Generator","Business Tagline Generator","Essay Outline Generator","Client Proposal Writer","Invoice Text Generator","Marketing Email Writer","Resume Reviewer","Salary Negotiation Helper","Savings Goal Calculator","Document Summarizer","Citation Formatter"];
 
+/* ── SEO: slug → { title, description } for every tool ── */
+const TOOL_META = {
+  /* Writing & AI */
+  "summarize":  { slug:"document-summarizer",       title:"Free Document Summarizer — Instant AI Summary",                    desc:"Paste or upload any text and get an instant AI summary. Understand any document in seconds. Free, no sign-up required." },
+  "resume":     { slug:"resume-reviewer",            title:"Free Resume Reviewer — AI CV Feedback & Score",                   desc:"Get honest AI feedback on your resume. Section-by-section critique, ATS check, rewrite suggestions, and a score out of 100. Free." },
+  "cover":      { slug:"cover-letter-generator",    title:"Free Cover Letter Generator — AI Tailored Letters",               desc:"Generate a tailored, professional cover letter in seconds. AI-written for your specific job and experience. No sign-up needed." },
+  "linkedin":   { slug:"linkedin-bio-writer",        title:"Free LinkedIn Bio Writer — AI-Written Profile Summary",           desc:"Create a standout LinkedIn About section with AI. Professional, keyword-rich bios that get noticed by recruiters. Free." },
+  "cold":       { slug:"cold-email-generator",       title:"Free Cold Email Generator — AI Outreach Emails That Get Replies", desc:"Write cold emails that actually get responses. AI-crafted outreach emails for sales, networking, and job hunting. Free to try." },
+  "proposal":   { slug:"client-proposal-writer",    title:"Free Client Proposal Writer — Win More Freelance Clients",        desc:"Write professional client proposals in minutes with AI. Customised to your project, rate, and client. Free for freelancers." },
+  "invoice":    { slug:"invoice-text-generator",    title:"Free Invoice Text Generator — Professional AI Invoices",          desc:"Generate clear, professional invoice text instantly. Perfect for freelancers and small businesses. No sign-up, completely free." },
+  "tagline":    { slug:"business-tagline-generator", title:"Free Business Tagline Generator — AI Slogans That Stick",        desc:"Create memorable taglines and slogans for your business with AI. Get multiple options instantly. Free, no account needed." },
+  "essay":      { slug:"essay-outline-generator",   title:"Free Essay Outline Generator — AI Structured Essay Plans",       desc:"Build a clear, structured essay outline in seconds. AI organises your arguments and sections for any topic. Free for students." },
+  "email":      { slug:"marketing-email-writer",    title:"Free Marketing Email Writer — AI Emails That Convert",           desc:"Write marketing emails that drive clicks and conversions. AI-crafted campaigns for newsletters, promotions, and more. Free." },
+  /* Calculators */
+  "rate":       { slug:"hourly-rate-calculator",    title:"Free Hourly Rate Calculator for Freelancers",                    desc:"Calculate your exact freelance hourly rate. Factor in expenses, taxes, and desired salary. Know what to charge. Free tool." },
+  "project":    { slug:"project-price-estimator",   title:"Free Project Price Estimator — Quote Any Project Instantly",     desc:"Estimate project costs by task. Add hours, rates, and a rush fee. Export a clean quote ready to send to clients. Free." },
+  "margin":     { slug:"profit-margin-calculator",  title:"Free Profit Margin Calculator — Price Products for Profit",      desc:"Calculate gross profit margin instantly. Enter cost and price, see your margin percentage. Find what price hits your target. Free." },
+  "breakeven":  { slug:"break-even-calculator",     title:"Free Break-Even Calculator — Find Your Break-Even Point Fast",   desc:"Find out exactly how many units you need to sell to break even. Enter fixed costs, variable costs, and price. Free online tool." },
+  "gpa":        { slug:"gpa-calculator",            title:"Free GPA Calculator — Track & Project Your GPA",                 desc:"Calculate your GPA, track your grades, and find out exactly what grade you need in your next course to hit your target GPA. Free." },
+  "salary":     { slug:"salary-negotiation-helper", title:"Free Salary Negotiation Helper — Know Your Worth",               desc:"Get a personalised salary negotiation range based on your role, experience, and market. AI-powered full analysis available. Free." },
+  "tip":        { slug:"tip-bill-splitter",         title:"Free Tip Calculator & Bill Splitter — Split Any Bill Instantly", desc:"Split restaurant bills evenly or by custom percentage. Calculate tip amounts for any bill size. Free tip and bill splitting tool." },
+  "savings":    { slug:"savings-goal-calculator",   title:"Free Savings Goal Calculator — Plan Any Financial Goal",         desc:"Calculate how long it takes to reach a savings goal. Compare cash savings vs investing. AI financial strategy available. Free." },
+  "bmi":        { slug:"bmi-calculator",            title:"Free BMI Calculator — Check Your Body Mass Index",               desc:"Calculate your Body Mass Index instantly. Supports metric and imperial. See your weight category and health range. Free tool." },
+  /* Planning & Time */
+  "deadline":   { slug:"deadline-countdown",        title:"Free Deadline Countdown Timer — Days & Hours to Any Date",       desc:"Count down to any deadline in days, hours, and minutes. Set a label, pin it to your screen, and never miss a deadline. Free." },
+  "study":      { slug:"study-session-planner",     title:"Free Study Session Planner — Optimise Your Revision Time",      desc:"Plan your study sessions with Pomodoro or custom techniques. Set your exam date and build an optimised revision schedule. Free." },
+  "citation":   { slug:"citation-formatter",        title:"Free Citation Formatter — APA, MLA & Chicago in One Click",     desc:"Format citations in APA, MLA, or Chicago style instantly. Auto-fill from a URL with AI. Supports books, websites, and journals. Free." },
+  "pomodoro":   { slug:"pomodoro-timer",            title:"Free Pomodoro Timer — Stay Focused with Timed Work Sessions",   desc:"Use the Pomodoro technique to boost focus. 25-minute work sessions with short and long breaks. Track your sessions. Free." },
+  /* Utilities */
+  "unit":       { slug:"unit-converter",            title:"Free Unit Converter — Length, Weight, Temperature & More",      desc:"Convert between units instantly. Length, weight, temperature, speed, area, volume, data, and cooking measurements. Free." },
+  "timezone":   { slug:"timezone-converter",        title:"Free Timezone Converter — Convert Times Across the World",      desc:"Convert times between 50+ cities worldwide. Find meeting overlaps across timezones. City converter and UTC reference table. Free." },
+  "wordcount":  { slug:"word-counter",              title:"Free Word Counter — Words, Characters & Reading Time",           desc:"Count words, characters, sentences, and paragraphs instantly. See reading time, speaking time, and top keywords. Free." },
+  "qr":         { slug:"qr-code-generator",         title:"Free QR Code Generator — Turn Any Link Into a QR Code",        desc:"Generate a scannable QR code for any URL or text instantly. Choose your size and download as PNG. Free, no sign-up needed." },
+};
+
+/* ── URL helpers ── */
+function toolToSlug(toolId) {
+  return TOOL_META[toolId]?.slug || toolId;
+}
+function slugToToolId(slug) {
+  return Object.entries(TOOL_META).find(([,v]) => v.slug === slug)?.[0] || null;
+}
+function setToolMeta(tool) {
+  const meta = TOOL_META[tool.id];
+  if (!meta) return;
+  document.title = `${meta.title} | ToolForge`;
+  let desc = document.querySelector("meta[name='description']");
+  if (desc) desc.setAttribute("content", meta.desc);
+  let canon = document.querySelector("link[rel='canonical']");
+  if (canon) canon.setAttribute("href", `https://toolforge.pro/tool/${meta.slug}`);
+}
+function resetMeta() {
+  document.title = "ToolForge — 27 Free Tools For Freelancers, Students & Small Business";
+  let desc = document.querySelector("meta[name='description']");
+  if (desc) desc.setAttribute("content", "Free online tools for freelancers, students, job seekers and small businesses. AI cover letters, hourly rate calculator, GPA calculator, timezone converter and more. No sign-up needed.");
+  let canon = document.querySelector("link[rel='canonical']");
+  if (canon) canon.setAttribute("href", "https://toolforge.pro");
+}
+
+
+
 /* ── Tool renderer ── */
 function ToolView({ tool, onBack, hideBack, proToken, onNeedUpgrade, onTokenUpdate, pomoProps, dlProps }) {
   const cat = CATEGORIES.find(c => c.id === tool.catId);
@@ -390,7 +451,12 @@ function RefundPage({ onBack, onFaq, onTos, proToken, thm }) {
 ══════════════════════════════════════════════ */
 export default function ToolForge() {
   const [activeCat, setActiveCat]       = useState("all");
-  const [activeTool, setActiveTool]     = useState(null);
+  const [activeTool, setActiveTool]     = useState(() => {
+    const m = window.location.pathname.match(/^\/tool\/(.+)$/);
+    if (!m) return null;
+    const id = slugToToolId(m[1]);
+    return id ? (ALL_TOOLS.find(t => t.id === id) || null) : null;
+  });
   const [showGames, setShowGames]       = useState(false);
   const [search, setSearch]             = useState("");
   const [showUpgrade, setShowUpgrade]   = useState(false);
@@ -493,9 +559,40 @@ export default function ToolForge() {
   useEffect(() => {
     injectFonts();
     injectStyles();
-    // Sync body class on initial load
     if (isDark) document.body.classList.add("dark");
+    // Handle browser back/forward
+    const onPop = () => {
+      const m = window.location.pathname.match(/^\/tool\/(.+)$/);
+      if (m) {
+        const id = slugToToolId(m[1]);
+        const t = id ? ALL_TOOLS.find(x => x.id === id) : null;
+        if (t) { setActiveTool(t); setToolMeta(t); return; }
+      }
+      if (window.location.pathname === "/faq")    { setShowFaq(true); setActiveTool(null); return; }
+      if (window.location.pathname === "/terms")  { setShowTos(true); setActiveTool(null); return; }
+      if (window.location.pathname === "/refund") { setShowRefund(true); setActiveTool(null); return; }
+      setActiveTool(null);
+      setShowFaq(false); setShowTos(false); setShowRefund(false);
+      resetMeta();
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
   }, []);
+
+  /* ── URL + meta sync when tool opens/closes ── */
+  useEffect(() => {
+    if (activeTool) {
+      const slug = toolToSlug(activeTool.id);
+      const target = `/tool/${slug}`;
+      if (window.location.pathname !== target) window.history.pushState({}, "", target);
+      setToolMeta(activeTool);
+    } else {
+      if (!showFaq && !showTos && !showRefund) {
+        if (window.location.pathname !== "/") window.history.pushState({}, "", "/");
+        resetMeta();
+      }
+    }
+  }, [activeTool]);
   const params = new URLSearchParams(window.location.search);
   const orderId = params.get("order_id");
 
