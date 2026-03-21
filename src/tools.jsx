@@ -175,25 +175,25 @@ export function GPACalc() {
   return (
     <div>
       {/* Course column headers */}
-      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
-        <div style={{ flex:1, fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, paddingLeft:2 }}>COURSE (OPTIONAL)</div>
-        <div style={{ width:80, flexShrink:0, fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700 }}>GRADE</div>
-        <div style={{ width:60, flexShrink:0, fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, textAlign:"center" }}>CREDITS</div>
-        <div style={{ width:30, flexShrink:0 }}></div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 90px 70px 30px", gap:8, marginBottom:4 }}>
+        <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, paddingLeft:2 }}>COURSE (OPTIONAL)</div>
+        <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700 }}>GRADE</div>
+        <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, textAlign:"center" }}>CREDITS</div>
+        <div></div>
       </div>
 
       {/* Course rows */}
       {courses.map(c => (
-        <div key={c.id} style={rowStyle}>
+        <div key={c.id} style={{ display:"grid", gridTemplateColumns:"1fr 90px 70px 30px", gap:8, marginBottom:8, alignItems:"center" }}>
           <input value={c.name} onChange={e => updateField(c.id, "name", e.target.value)}
             style={{ ...inputStyle, flex:1 }} placeholder="e.g. Math 101" />
           <select value={c.grade} onChange={e => updateField(c.id, "grade", e.target.value)}
-            style={{ ...inputStyle, width:80, paddingLeft:8 }}>
+            style={{ ...inputStyle, width:"100%", paddingLeft:8 }}>
             {GRADES.map(g => <option key={g[0]}>{g[0]}</option>)}
           </select>
           <input type="number" value={c.credits} min={0} max={12}
             onChange={e => updateField(c.id, "credits", e.target.value)}
-            style={{ ...inputStyle, width:60, textAlign:"center" }} placeholder="3" />
+            style={{ ...inputStyle, width:"100%", textAlign:"center" }} placeholder="3" />
           <button onClick={() => delCourse(c.id)} style={delBtn} title="Remove">✕</button>
         </div>
       ))}
