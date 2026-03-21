@@ -98,18 +98,122 @@ function slugToToolId(slug) {
 function setToolMeta(tool) {
   const meta = TOOL_META[tool.id];
   if (!meta) return;
-  document.title = `${meta.title} | ToolForge`;
-  let desc = document.querySelector("meta[name='description']");
-  if (desc) desc.setAttribute("content", meta.desc);
+  const url = `https://toolforge.pro/tool/${meta.slug}`;
+  const fullTitle = `${meta.title} | ToolForge`;
+
+  // Title
+  document.title = fullTitle;
+
+  // Meta description
+  let descEl = document.querySelector("meta[name='description']");
+  if (descEl) descEl.setAttribute("content", meta.desc);
+
+  // Canonical
   let canon = document.querySelector("link[rel='canonical']");
-  if (canon) canon.setAttribute("href", `https://toolforge.pro/tool/${meta.slug}`);
+  if (canon) canon.setAttribute("href", url);
+
+  // Open Graph
+  let ogTitle = document.querySelector("meta[property='og:title']");
+  if (ogTitle) ogTitle.setAttribute("content", fullTitle);
+  let ogDesc = document.querySelector("meta[property='og:description']");
+  if (ogDesc) ogDesc.setAttribute("content", meta.desc);
+  let ogUrl = document.querySelector("meta[property='og:url']");
+  if (ogUrl) ogUrl.setAttribute("content", url);
+
+  // Twitter
+  let twTitle = document.querySelector("meta[name='twitter:title']");
+  if (twTitle) twTitle.setAttribute("content", fullTitle);
+  let twDesc = document.querySelector("meta[name='twitter:description']");
+  if (twDesc) twDesc.setAttribute("content", meta.desc);
+  let twUrl = document.querySelector("meta[name='twitter:url']");
+  if (twUrl) twUrl.setAttribute("content", url);
+
+  // Schema.org structured data (JSON-LD)
+  const isAI = ["summarize","resume","cover","linkedin","cold","proposal","invoice","tagline","essay","email","salary","savings","citation"].includes(tool.id);
+  const isFree = !["resume","cover","linkedin","cold","proposal","invoice","tagline","essay","email","salary","savings","citation","summarize"].includes(tool.id);
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": meta.title.split(" — ")[0].replace(" | ToolForge",""),
+    "description": meta.desc,
+    "url": url,
+    "applicationCategory": isAI ? "AIApplication" : "UtilitiesApplication",
+    "operatingSystem": "Web",
+    "offers": isFree
+      ? { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      : {
+          "@type": "AggregateOffer",
+          "lowPrice": "0",
+          "highPrice": "7.99",
+          "priceCurrency": "USD",
+          "offerCount": "3"
+        },
+    "featureList": meta.desc,
+    "provider": {
+      "@type": "Organization",
+      "name": "ToolForge",
+      "url": "https://toolforge.pro"
+    }
+  };
+
+  let schemaEl = document.getElementById("tf-schema");
+  if (!schemaEl) {
+    schemaEl = document.createElement("script");
+    schemaEl.id = "tf-schema";
+    schemaEl.type = "application/ld+json";
+    document.head.appendChild(schemaEl);
+  }
+  schemaEl.textContent = JSON.stringify(schema);
 }
 function resetMeta() {
-  document.title = "ToolForge — 27 Free Tools For Freelancers, Students & Small Business";
+  const defaultTitle = "ToolForge — 27 Free Tools For Freelancers, Students & Small Business";
+  const defaultDesc  = "Free online tools for freelancers, students, job seekers and small businesses. AI cover letters, hourly rate calculator, GPA calculator, timezone converter and more. No sign-up needed.";
+  const defaultUrl   = "https://toolforge.pro";
+
+  document.title = defaultTitle;
+
   let desc = document.querySelector("meta[name='description']");
-  if (desc) desc.setAttribute("content", "Free online tools for freelancers, students, job seekers and small businesses. AI cover letters, hourly rate calculator, GPA calculator, timezone converter and more. No sign-up needed.");
+  if (desc) desc.setAttribute("content", defaultDesc);
   let canon = document.querySelector("link[rel='canonical']");
-  if (canon) canon.setAttribute("href", "https://toolforge.pro");
+  if (canon) canon.setAttribute("href", defaultUrl);
+
+  // OG
+  let ogTitle = document.querySelector("meta[property='og:title']");
+  if (ogTitle) ogTitle.setAttribute("content", defaultTitle);
+  let ogDesc = document.querySelector("meta[property='og:description']");
+  if (ogDesc) ogDesc.setAttribute("content", defaultDesc);
+  let ogUrl = document.querySelector("meta[property='og:url']");
+  if (ogUrl) ogUrl.setAttribute("content", defaultUrl);
+
+  // Twitter
+  let twTitle = document.querySelector("meta[name='twitter:title']");
+  if (twTitle) twTitle.setAttribute("content", defaultTitle);
+  let twDesc = document.querySelector("meta[name='twitter:description']");
+  if (twDesc) twDesc.setAttribute("content", defaultDesc);
+  let twUrl = document.querySelector("meta[name='twitter:url']");
+  if (twUrl) twUrl.setAttribute("content", defaultUrl);
+
+  // Remove per-tool schema, inject homepage schema
+  const homepageSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "ToolForge",
+    "url": "https://toolforge.pro",
+    "description": defaultDesc,
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://toolforge.pro/?search={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+  let schemaEl = document.getElementById("tf-schema");
+  if (!schemaEl) {
+    schemaEl = document.createElement("script");
+    schemaEl.id = "tf-schema";
+    schemaEl.type = "application/ld+json";
+    document.head.appendChild(schemaEl);
+  }
+  schemaEl.textContent = JSON.stringify(homepageSchema);
 }
 
 
@@ -560,6 +664,8 @@ export default function ToolForge() {
     injectFonts();
     injectStyles();
     if (isDark) document.body.classList.add("dark");
+    // Inject homepage schema on first load (if not opening a tool directly)
+    if (!window.location.pathname.startsWith("/tool/")) resetMeta();
     // Handle browser back/forward
     const onPop = () => {
       const m = window.location.pathname.match(/^\/tool\/(.+)$/);
