@@ -177,9 +177,9 @@ export function GPACalc() {
       {/* Course column headers */}
       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
         <div style={{ flex:1, fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, paddingLeft:2 }}>COURSE (OPTIONAL)</div>
-        <div style={{ width:80, fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, textAlign:"left" }}>GRADE</div>
-        <div style={{ width:60, fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, textAlign:"center" }}>CREDITS</div>
-        <div style={{ width:24 }}></div>
+        <div style={{ width:80, flexShrink:0, fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700 }}>GRADE</div>
+        <div style={{ width:60, flexShrink:0, fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, textAlign:"center" }}>CREDITS</div>
+        <div style={{ width:30, flexShrink:0 }}></div>
       </div>
 
       {/* Course rows */}
