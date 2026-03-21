@@ -422,7 +422,12 @@ function Footer({ onFaq, onTos, onRefund, onPricing, TH: th }) {
         <span onClick={onTos}    style={{ fontSize:11, color:theme.muted, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>Terms of Service</span>
         <span onClick={onRefund} style={{ fontSize:11, color:theme.muted, fontFamily:"DM Sans, sans-serif", cursor:"pointer", textDecoration:"underline" }}>Refund Policy</span>
       </div>
-      <div style={{ fontSize:10, color:theme.muted, fontFamily:"DM Sans, sans-serif", marginTop:14 }}>© {new Date().getFullYear()} ToolForge · Made with ☕</div>
+      <div style={{ marginTop:16, marginBottom:4 }}>
+        <a href="https://www.saashub.com/toolforge?utm_source=badge&utm_campaign=badge&utm_content=toolforge&badge_kind=approved" target="_blank" rel="noopener noreferrer">
+          <img src={theme.bg === T.bg ? "https://cdn-b.saashub.com/img/badges/approved-color.png?v=1" : "https://cdn-b.saashub.com/img/badges/approved-dark.png?v=1"} alt="Approved on SaaSHub" style={{ maxWidth:110, opacity:0.85, transition:"opacity 0.2s" }} onMouseOver={e=>e.target.style.opacity=1} onMouseOut={e=>e.target.style.opacity=0.85} />
+        </a>
+      </div>
+      <div style={{ fontSize:10, color:theme.muted, fontFamily:"DM Sans, sans-serif", marginTop:8 }}>© {new Date().getFullYear()} ToolForge · Made with ☕</div>
     </div>
   );
 }
