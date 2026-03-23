@@ -1527,7 +1527,7 @@ export function PasswordGenerator() {
   const [count, setCount] = useState(1);
   const [passwords, setPasswords] = useState([]);
   const [copied, setCopied] = useState(null);
-  const [history, setHistory] = useState([]);
+  const [saved, setSaved] = useState([]);
 
   const SIMILAR = "iI1loO0|B8";
   const WORDS = ["apple","brave","cloud","dance","eagle","frost","grace","hello","ivory","jazzy","karma","lemon","mango","noble","ocean","pearl","quick","river","solar","tiger","ultra","vivid","waltz","xenon","yacht","zebra","amber","blaze","crisp","dusk","ember","flint","grove","haze","iris","jewel","knack","lunar","maple","nexus","onyx","pixel","quartz","ridge","spark","talon","umbra","vault","whisp","xeric","yield","zeal","arch","bolt","cave","dew","echo","fern","gale","hawk","isle","jade","kite","loft","moss","noon","oak","pine","quill","rose","sage","tide","urn","vine","wave","x-ray","yew","zone"];
@@ -1549,30 +1549,20 @@ export function PasswordGenerator() {
   };
 
   const genOne = () => {
-    if (mode === "PIN") {
-      return Array.from({length: pinLength}, () => Math.floor(Math.random()*10)).join("");
-    }
+    if (mode === "PIN") return Array.from({length: pinLength}, () => Math.floor(Math.random()*10)).join("");
     if (mode === "Memorable") {
       const sep = ["-","_",".","+"][Math.floor(Math.random()*4)];
       const picks = [];
       for (let i=0;i<wordCount;i++) picks.push(WORDS[Math.floor(Math.random()*WORDS.length)]);
-      const num = Math.floor(Math.random()*90+10);
-      return picks.join(sep) + sep + num;
+      return picks.join(sep) + sep + Math.floor(Math.random()*90+10);
     }
-    // Random
-    const CHARS = {
-      upper:"ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-      lower:"abcdefghijklmnopqrstuvwxyz",
-      numbers:"0123456789",
-      symbols:"!@#$%^&*()_+-=[]{}|;:,.<>?",
-    };
+    const CHARS = { upper:"ABCDEFGHIJKLMNOPQRSTUVWXYZ", lower:"abcdefghijklmnopqrstuvwxyz", numbers:"0123456789", symbols:"!@#$%^&*()_+-=[]{}|;:,.<>?" };
     const active = Object.entries(opts).filter(([,v])=>v).map(([k])=>CHARS[k]);
     if (!active.length) return "";
     let charset = active.join("");
     if (exSimilar) charset = charset.split("").filter(c=>!SIMILAR.includes(c)).join("");
     let pwd = "";
     const used = new Set();
-    // Guarantee one from each active set
     for (const set of active) {
       let chars = set.split("").filter(c=>!exSimilar||!SIMILAR.includes(c));
       if (exDupes) chars = chars.filter(c=>!used.has(c));
@@ -1580,7 +1570,6 @@ export function PasswordGenerator() {
       const ch = chars[Math.floor(Math.random()*chars.length)];
       pwd += ch; used.add(ch);
     }
-    // Fill rest
     let tries = 0;
     while (pwd.length < length && tries < 10000) {
       tries++;
@@ -1590,69 +1579,44 @@ export function PasswordGenerator() {
       const ch = chars[Math.floor(Math.random()*chars.length)];
       pwd += ch; used.add(ch);
     }
-    // Shuffle
     return pwd.split("").sort(()=>Math.random()-0.5).join("");
   };
 
-  const generate = () => {
-    const pwds = Array.from({length: count}, genOne);
-    setPasswords(pwds);
-    setCopied(null);
-    if (pwds[0]) setHistory(h => [pwds[0], ...h].slice(0,5));
-  };
-
-  const copy = (pwd, idx) => {
-    navigator.clipboard.writeText(pwd);
-    setCopied(idx);
-    setTimeout(()=>setCopied(null), 2000);
-  };
-
-  const toggleOpt = (key) => {
-    const activeCount = Object.entries(opts).filter(([k,v])=>v&&k!==key).length;
-    if (activeCount === 0) return;
-    setOpts(o=>({...o,[key]:!o[key]}));
-  };
+  const generate = () => { setPasswords(Array.from({length: count}, genOne)); setCopied(null); };
+  const copy = (pwd, idx) => { navigator.clipboard.writeText(pwd); setCopied(idx); setTimeout(()=>setCopied(null), 2000); };
+  const toggleSave = (pwd) => { setSaved(s => s.includes(pwd) ? s.filter(p=>p!==pwd) : [pwd, ...s].slice(0,10)); };
+  const toggleOpt = (key) => { if (Object.entries(opts).filter(([k,v])=>v&&k!==key).length===0) return; setOpts(o=>({...o,[key]:!o[key]})); };
 
   useEffect(()=>{ generate(); }, []);
 
   const str = passwords[0] ? getStrength(passwords[0]) : null;
 
-  const tabBtn = (m) => ({
-    flex:1, padding:"8px 0", border:`1.5px solid ${mode===m?T.accent:T.border}`,
-    borderRadius:8, background:mode===m?`${T.accent}15`:"transparent",
-    color:mode===m?T.accent:T.muted, fontFamily:"DM Sans, sans-serif",
-    fontSize:12, fontWeight:mode===m?700:400, cursor:"pointer", transition:"all 0.15s"
-  });
-
+  const tabBtn = (m) => ({ flex:1, padding:"8px 0", border:`1.5px solid ${mode===m?T.accent:T.border}`, borderRadius:8, background:mode===m?`${T.accent}15`:"transparent", color:mode===m?T.accent:T.muted, fontFamily:"DM Sans, sans-serif", fontSize:12, fontWeight:mode===m?700:400, cursor:"pointer", transition:"all 0.15s" });
   const chkBtn = (active, toggle, label) => (
-    <button onClick={toggle} style={{
-      padding:"8px 10px", border:`1.5px solid ${active?T.accent:T.border}`, borderRadius:8,
-      background:active?`${T.accent}15`:"transparent", color:active?T.accent:T.muted,
-      fontFamily:"DM Sans, sans-serif", fontSize:12, fontWeight:active?700:400,
-      cursor:"pointer", textAlign:"left", transition:"all 0.15s", display:"flex", alignItems:"center", gap:6
-    }}>
+    <button onClick={toggle} style={{ padding:"8px 10px", border:`1.5px solid ${active?T.accent:T.border}`, borderRadius:8, background:active?`${T.accent}15`:"transparent", color:active?T.accent:T.muted, fontFamily:"DM Sans, sans-serif", fontSize:12, fontWeight:active?700:400, cursor:"pointer", textAlign:"left", transition:"all 0.15s", display:"flex", alignItems:"center", gap:6 }}>
       <span style={{fontSize:10}}>{active?"✓":"○"}</span>{label}
     </button>
   );
 
   return (
     <div>
-      {/* Mode tabs */}
       <div style={{display:"flex", gap:6, marginBottom:16}}>
         {MODES.map(m=><button key={m} onClick={()=>setMode(m)} style={tabBtn(m)}>{m}</button>)}
       </div>
 
-      {/* Password output */}
       {passwords.map((pwd,i)=>(
-        <div key={i} style={{background:T.card, border:`1px solid ${i===0?T.accent+"44":T.border}`, borderRadius:10, padding:"12px 14px", marginBottom:8, display:"flex", alignItems:"center", gap:10}}>
+        <div key={i} style={{background:T.card, border:`1px solid ${i===0?T.accent+"44":T.border}`, borderRadius:10, padding:"12px 14px", marginBottom:8, display:"flex", alignItems:"center", gap:8}}>
           <div style={{fontFamily:"monospace", fontSize:14, color:T.ink, wordBreak:"break-all", flex:1, letterSpacing:0.5}}>{pwd}</div>
+          <button onClick={()=>toggleSave(pwd)} title={saved.includes(pwd)?"Remove from saved":"Save password"} style={{flexShrink:0, padding:"5px 8px", background:"transparent", border:`1px solid ${saved.includes(pwd)?T.accent:T.border}`, borderRadius:7, fontSize:14, color:saved.includes(pwd)?T.accent:T.muted, cursor:"pointer", transition:"all 0.15s"}}>
+            {saved.includes(pwd)?"🔖":"🔖"}
+            <span style={{fontSize:10, marginLeft:3, color:saved.includes(pwd)?T.accent:T.muted}}>{saved.includes(pwd)?"Saved":"Save"}</span>
+          </button>
           <button onClick={()=>copy(pwd,i)} style={{flexShrink:0, padding:"5px 12px", background:copied===i?T.green:T.accent, color:"white", border:"none", borderRadius:7, fontSize:11, fontWeight:700, fontFamily:"DM Sans, sans-serif", cursor:"pointer", transition:"background 0.2s", whiteSpace:"nowrap"}}>
             {copied===i?"✓ Copied":"Copy"}
           </button>
         </div>
       ))}
 
-      {/* Strength bar — only for first password in Random mode */}
       {mode==="Random" && str && (
         <div style={{display:"flex", alignItems:"center", gap:10, marginBottom:14}}>
           <div style={{flex:1, height:4, background:T.border, borderRadius:4, overflow:"hidden"}}>
@@ -1662,7 +1626,6 @@ export function PasswordGenerator() {
         </div>
       )}
 
-      {/* Controls per mode */}
       {mode==="Random" && (
         <>
           <Row label={`Length — ${length} characters`}>
@@ -1671,15 +1634,13 @@ export function PasswordGenerator() {
           </Row>
           <Row label="Characters">
             <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:7}}>
-              {[["upper","Uppercase (A-Z)"],["lower","Lowercase (a-z)"],["numbers","Numbers (0-9)"],["symbols","Symbols (!@#...)"]].map(([k,l])=>(
-                chkBtn(opts[k], ()=>toggleOpt(k), l)
-              ))}
+              {[["upper","Uppercase (A-Z)"],["lower","Lowercase (a-z)"],["numbers","Numbers (0-9)"],["symbols","Symbols (!@#...)"]].map(([k,l])=>chkBtn(opts[k],()=>toggleOpt(k),l))}
             </div>
           </Row>
           <Row label="Exclude">
             <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:7}}>
-              {chkBtn(exSimilar, ()=>setExSimilar(v=>!v), "Similar (iI1loO0)")}
-              {chkBtn(exDupes, ()=>setExDupes(v=>!v), "Duplicate chars")}
+              {chkBtn(exSimilar,()=>setExSimilar(v=>!v),"Similar (iI1loO0)")}
+              {chkBtn(exDupes,()=>setExDupes(v=>!v),"Duplicate chars")}
             </div>
           </Row>
         </>
@@ -1697,7 +1658,6 @@ export function PasswordGenerator() {
         </Row>
       )}
 
-      {/* How many */}
       <Row label="Generate">
         <div style={{display:"flex", gap:6}}>
           {[1,5,10].map(n=>(
@@ -1708,18 +1668,16 @@ export function PasswordGenerator() {
         </div>
       </Row>
 
-      <button onClick={generate} style={{width:"100%", marginTop:8, padding:"12px 0", background:T.accent, color:"white", border:"none", borderRadius:10, fontSize:14, fontWeight:700, fontFamily:"Syne, sans-serif", cursor:"pointer"}}>
-        ↻ Generate
-      </button>
+      <button onClick={generate} style={{width:"100%", marginTop:8, padding:"12px 0", background:T.accent, color:"white", border:"none", borderRadius:10, fontSize:14, fontWeight:700, fontFamily:"Syne, sans-serif", cursor:"pointer"}}>↻ Generate</button>
 
-      {/* History */}
-      {history.length > 1 && (
+      {saved.length > 0 && (
         <div style={{marginTop:16}}>
-          <div style={{fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:8}}>RECENT</div>
-          {history.slice(1).map((pwd,i)=>(
-            <div key={i} style={{display:"flex", alignItems:"center", gap:8, padding:"7px 10px", background:T.card, border:`1px solid ${T.border}`, borderRadius:8, marginBottom:5}}>
-              <div style={{fontFamily:"monospace", fontSize:12, color:T.muted, flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{pwd}</div>
-              <button onClick={()=>copy(pwd,`h${i}`)} style={{padding:"3px 10px", background:"transparent", border:`1px solid ${T.border}`, borderRadius:6, fontSize:10, color:T.muted, cursor:"pointer", fontFamily:"DM Sans, sans-serif"}}>{copied===`h${i}`?"✓":"Copy"}</button>
+          <div style={{fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:8}}>🔖 SAVED PASSWORDS</div>
+          {saved.map((pwd,i)=>(
+            <div key={i} style={{display:"flex", alignItems:"center", gap:8, padding:"8px 12px", background:T.card, border:`1px solid ${T.border}`, borderRadius:8, marginBottom:5}}>
+              <div style={{fontFamily:"monospace", fontSize:12, color:T.ink, flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{pwd}</div>
+              <button onClick={()=>copy(pwd,`s${i}`)} style={{padding:"3px 10px", background:"transparent", border:`1px solid ${T.border}`, borderRadius:6, fontSize:10, color:T.muted, cursor:"pointer", fontFamily:"DM Sans, sans-serif", whiteSpace:"nowrap"}}>{copied===`s${i}`?"✓ Copied":"Copy"}</button>
+              <button onClick={()=>toggleSave(pwd)} style={{padding:"3px 8px", background:"transparent", border:`1px solid ${T.border}`, borderRadius:6, fontSize:10, color:"#dc2626", cursor:"pointer", fontFamily:"DM Sans, sans-serif"}}>✕</button>
             </div>
           ))}
         </div>
@@ -1836,14 +1794,25 @@ export function CurrencyConverter() {
 }
 
 export function LoanCalculator() {
-  const [amount, setAmount] = useState("10000");
-  const [rate, setRate] = useState("5");
-  const [years, setYears] = useState("5");
+  const PRESETS = [
+    { label:"Mortgage", rate:"6.5", years:"30", icon:"🏠" },
+    { label:"Car Loan", rate:"7.0", years:"5",  icon:"🚗" },
+    { label:"Personal", rate:"11.0",years:"3",  icon:"💳" },
+    { label:"Student",  rate:"5.5", years:"10", icon:"🎓" },
+  ];
+
+  const [amount, setAmount] = useState("250000");
+  const [rate, setRate] = useState("6.5");
+  const [years, setYears] = useState("30");
+  const [extra, setExtra] = useState("0");
   const [currency, setCurrency] = useState("USD");
+  const [showAmort, setShowAmort] = useState(false);
+  const [activePreset, setActivePreset] = useState("Mortgage");
 
   const principal = parseFloat(amount) || 0;
   const annualRate = parseFloat(rate) || 0;
   const numYears = parseFloat(years) || 0;
+  const extraPay = parseFloat(extra) || 0;
   const monthlyRate = annualRate / 100 / 12;
   const numPayments = numYears * 12;
 
@@ -1853,78 +1822,172 @@ export function LoanCalculator() {
 
   const totalPayment = monthlyPayment * numPayments;
   const totalInterest = totalPayment - principal;
+  const interestPct = totalPayment > 0 ? (totalInterest / totalPayment) * 100 : 0;
 
-  const fmt = (n) => isFinite(n) && n > 0
+  // Extra payment simulation
+  const calcWithExtra = () => {
+    if (!extra || extraPay <= 0) return null;
+    let bal = principal;
+    let months = 0;
+    let totalInt = 0;
+    const pay = monthlyPayment + extraPay;
+    while (bal > 0.01 && months < numPayments) {
+      const intCharge = bal * monthlyRate;
+      totalInt += intCharge;
+      bal = bal + intCharge - pay;
+      if (bal < 0) bal = 0;
+      months++;
+    }
+    return { months, totalInt, savedMonths: numPayments - months, savedInt: totalInterest - totalInt };
+  };
+  const withExtra = calcWithExtra();
+
+  // Build amortization schedule (yearly)
+  const buildAmort = () => {
+    const rows = [];
+    let bal = principal;
+    for (let yr = 1; yr <= numYears && bal > 0.01; yr++) {
+      let yearInt = 0, yearPrin = 0;
+      for (let m = 0; m < 12 && bal > 0.01; m++) {
+        const intCharge = bal * monthlyRate;
+        const prinCharge = Math.min(monthlyPayment - intCharge, bal);
+        yearInt += intCharge;
+        yearPrin += prinCharge;
+        bal -= prinCharge;
+      }
+      rows.push({ yr, yearPrin, yearInt, bal: Math.max(0, bal) });
+    }
+    return rows;
+  };
+
+  const applyPreset = (p) => { setRate(p.rate); setYears(p.years); setActivePreset(p.label); };
+
+  const fmt = (n) => isFinite(n) && n >= 0
+    ? n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+    : "—";
+  const fmt2 = (n) => isFinite(n) && n >= 0
     ? n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     : "—";
 
   const SYMS = { USD:"$", EUR:"€", GBP:"£", ILS:"₪", CAD:"CA$", AUD:"A$", JPY:"¥" };
   const sym = SYMS[currency] || "$";
 
-  const interestPct = totalPayment > 0 ? (totalInterest / totalPayment) * 100 : 0;
-
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
-        <select value={currency} onChange={e => setCurrency(e.target.value)} style={{ ...inputStyle, width: "auto", padding: "5px 10px", fontSize: 12, fontFamily: "DM Sans, sans-serif" }}>
-          {Object.keys(SYMS).map(c => <option key={c} value={c}>{c}</option>)}
+      {/* Presets */}
+      <div style={{display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:6, marginBottom:16}}>
+        {PRESETS.map(p=>(
+          <button key={p.label} onClick={()=>applyPreset(p)} style={{padding:"8px 4px", border:`1.5px solid ${activePreset===p.label?T.accent:T.border}`, borderRadius:9, background:activePreset===p.label?`${T.accent}15`:"transparent", color:activePreset===p.label?T.accent:T.muted, fontFamily:"DM Sans, sans-serif", fontSize:11, fontWeight:activePreset===p.label?700:400, cursor:"pointer", textAlign:"center", transition:"all 0.15s"}}>
+            <div style={{fontSize:16, marginBottom:2}}>{p.icon}</div>
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{display:"flex", justifyContent:"flex-end", marginBottom:10}}>
+        <select value={currency} onChange={e=>setCurrency(e.target.value)} style={{...inputStyle, width:"auto", padding:"5px 10px", fontSize:12, fontFamily:"DM Sans, sans-serif"}}>
+          {Object.keys(SYMS).map(c=><option key={c} value={c}>{c}</option>)}
         </select>
       </div>
 
       <Row label="Loan Amount">
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 16, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>{sym}</span>
-          <input type="number" value={amount} min="0" onChange={e => setAmount(e.target.value)}
-            style={{ ...inputStyle, flex: 1 }} placeholder="10000" />
+        <div style={{display:"flex", alignItems:"center", gap:8}}>
+          <span style={{fontSize:16, color:T.muted, fontFamily:"DM Sans, sans-serif"}}>{sym}</span>
+          <input type="number" value={amount} min="0" onChange={e=>setAmount(e.target.value)} style={{...inputStyle, flex:1}} placeholder="250000"/>
         </div>
       </Row>
-
-      <Row label="Annual Interest Rate (%)">
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <input type="number" value={rate} min="0" max="100" step="0.1" onChange={e => setRate(e.target.value)}
-            style={{ ...inputStyle, flex: 1 }} placeholder="5" />
-          <span style={{ fontSize: 16, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>%</span>
+      <Row label="Annual Interest Rate">
+        <div style={{display:"flex", alignItems:"center", gap:8}}>
+          <input type="number" value={rate} min="0" max="100" step="0.1" onChange={e=>setRate(e.target.value)} style={{...inputStyle, flex:1}} placeholder="6.5"/>
+          <span style={{fontSize:16, color:T.muted, fontFamily:"DM Sans, sans-serif"}}>%</span>
         </div>
       </Row>
-
       <Row label="Loan Term (Years)">
-        <input type="number" value={years} min="1" max="50" onChange={e => setYears(e.target.value)}
-          style={{ ...inputStyle }} placeholder="5" />
+        <input type="number" value={years} min="1" max="50" onChange={e=>setYears(e.target.value)} style={{...inputStyle}} placeholder="30"/>
+      </Row>
+      <Row label="Extra Monthly Payment (optional)">
+        <div style={{display:"flex", alignItems:"center", gap:8}}>
+          <span style={{fontSize:16, color:T.muted, fontFamily:"DM Sans, sans-serif"}}>{sym}</span>
+          <input type="number" value={extra} min="0" onChange={e=>setExtra(e.target.value)} style={{...inputStyle, flex:1}} placeholder="0"/>
+        </div>
       </Row>
 
-      {/* Results */}
       {isFinite(monthlyPayment) && monthlyPayment > 0 && (
         <>
-          <div style={{ background: T.card, border: `2px solid ${T.accent}22`, borderRadius: 14, padding: "18px 18px", marginTop: 8, marginBottom: 14 }}>
-            <div style={{ fontSize: 12, color: T.muted, fontFamily: "DM Sans, sans-serif", marginBottom: 4 }}>Monthly Payment</div>
-            <div style={{ fontSize: 40, fontWeight: 800, color: T.accent, fontFamily: "Syne, sans-serif", lineHeight: 1 }}>{sym}{fmt(monthlyPayment)}</div>
+          {/* Main result */}
+          <div style={{background:T.card, border:`2px solid ${T.accent}22`, borderRadius:14, padding:"18px 18px", marginTop:4, marginBottom:12}}>
+            <div style={{fontSize:12, color:T.muted, fontFamily:"DM Sans, sans-serif", marginBottom:4}}>Monthly Payment</div>
+            <div style={{fontSize:40, fontWeight:800, color:T.accent, fontFamily:"Syne, sans-serif", lineHeight:1}}>{sym}{fmt2(monthlyPayment)}</div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+          {/* Stats grid */}
+          <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:14}}>
             {[
               ["Total Payment", `${sym}${fmt(totalPayment)}`],
               ["Total Interest", `${sym}${fmt(totalInterest)}`],
-              ["Principal", `${sym}${fmt(principal)}`],
               ["Num. Payments", `${numPayments}`],
+              ["Interest Rate", `${rate}% / yr`],
             ].map(([label, val]) => (
-              <div key={label} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: "12px 14px" }}>
-                <div style={{ fontSize: 11, color: T.muted, fontFamily: "DM Sans, sans-serif", marginBottom: 4 }}>{label}</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: T.ink, fontFamily: "Syne, sans-serif" }}>{val}</div>
+              <div key={label} style={{background:T.card, border:`1px solid ${T.border}`, borderRadius:10, padding:"12px 14px"}}>
+                <div style={{fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", marginBottom:4}}>{label}</div>
+                <div style={{fontSize:16, fontWeight:700, color:T.ink, fontFamily:"Syne, sans-serif"}}>{val}</div>
               </div>
             ))}
           </div>
 
-          {/* Interest vs Principal bar */}
-          <div style={{ marginBottom: 6 }}>
-            <div style={{ fontSize: 10, color: T.muted, fontFamily: "Syne, sans-serif", fontWeight: 700, marginBottom: 6 }}>PAYMENT BREAKDOWN</div>
-            <div style={{ height: 10, borderRadius: 6, overflow: "hidden", display: "flex" }}>
-              <div style={{ width: `${100 - interestPct}%`, background: T.accent }} />
-              <div style={{ width: `${interestPct}%`, background: T.border }} />
+          {/* Breakdown bar */}
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:6}}>PAYMENT BREAKDOWN</div>
+            <div style={{height:10, borderRadius:6, overflow:"hidden", display:"flex"}}>
+              <div style={{width:`${100-interestPct}%`, background:T.accent}}/>
+              <div style={{width:`${interestPct}%`, background:T.border}}/>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5, fontSize: 11, fontFamily: "DM Sans, sans-serif", color: T.muted }}>
-              <span style={{ color: T.accent, fontWeight: 700 }}>● Principal {(100 - interestPct).toFixed(1)}%</span>
-              <span style={{ fontWeight: 700 }}>● Interest {interestPct.toFixed(1)}%</span>
+            <div style={{display:"flex", justifyContent:"space-between", marginTop:5, fontSize:11, fontFamily:"DM Sans, sans-serif", color:T.muted}}>
+              <span style={{color:T.accent, fontWeight:700}}>● Principal {(100-interestPct).toFixed(1)}%</span>
+              <span style={{fontWeight:700}}>● Interest {interestPct.toFixed(1)}%</span>
             </div>
+          </div>
+
+          {/* Extra payment savings */}
+          {withExtra && withExtra.savedMonths > 0 && (
+            <div style={{background:T.greenDim||"#f0fdf4", border:`1px solid #bbf7d0`, borderRadius:12, padding:"12px 14px", marginBottom:14}}>
+              <div style={{fontSize:11, fontWeight:700, color:"#16a34a", fontFamily:"Syne, sans-serif", marginBottom:6}}>💡 With {sym}{extra}/mo extra payment:</div>
+              <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:8}}>
+                <div style={{fontSize:12, color:T.ink, fontFamily:"DM Sans, sans-serif"}}>Pay off <strong>{Math.floor(withExtra.savedMonths/12)}y {withExtra.savedMonths%12}m earlier</strong></div>
+                <div style={{fontSize:12, color:T.ink, fontFamily:"DM Sans, sans-serif"}}>Save <strong>{sym}{fmt(withExtra.savedInt)}</strong> in interest</div>
+              </div>
+            </div>
+          )}
+
+          {/* Amortization toggle */}
+          <div style={{marginTop:4, borderRadius:12, border:`1px solid ${T.border}`, overflow:"hidden"}}>
+            <div onClick={()=>setShowAmort(v=>!v)} style={{padding:"11px 14px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer", background:showAmort?T.purpleDim:T.card}}>
+              <div style={{fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:T.purple}}>📊 Amortization Schedule</div>
+              <span style={{fontSize:13, color:T.muted, transform:showAmort?"rotate(180deg)":"rotate(0deg)", transition:"transform 0.2s", display:"inline-block"}}>▾</span>
+            </div>
+            {showAmort && (
+              <div style={{padding:"0 0 4px", background:T.card, borderTop:`1px solid ${T.border}`, overflowX:"auto"}}>
+                <table style={{width:"100%", borderCollapse:"collapse", fontSize:12, fontFamily:"DM Sans, sans-serif"}}>
+                  <thead>
+                    <tr style={{background:T.border+"33"}}>
+                      {["Year","Principal","Interest","Balance"].map(h=>(
+                        <th key={h} style={{padding:"8px 10px", textAlign:"right", fontWeight:700, color:T.muted, fontSize:10, whiteSpace:"nowrap"}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {buildAmort().map(row=>(
+                      <tr key={row.yr} style={{borderTop:`1px solid ${T.border}`}}>
+                        <td style={{padding:"7px 10px", textAlign:"right", color:T.muted}}>{row.yr}</td>
+                        <td style={{padding:"7px 10px", textAlign:"right", color:T.accent, fontWeight:600}}>{sym}{fmt(row.yearPrin)}</td>
+                        <td style={{padding:"7px 10px", textAlign:"right", color:T.ink}}>{sym}{fmt(row.yearInt)}</td>
+                        <td style={{padding:"7px 10px", textAlign:"right", color:T.ink}}>{sym}{fmt(row.bal)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </>
       )}
