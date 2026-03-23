@@ -5,5 +5,11 @@
     { "source": "/faq",      "destination": "/index.html" },
     { "source": "/terms",    "destination": "/index.html" },
     { "source": "/refund",   "destination": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/keep-alive",
+      "schedule": "0 9 * * *"
+    }
   ]
 }
