@@ -1514,3 +1514,420 @@ export function QRGenerator() {
     </div>
   );
 }
+
+export function PasswordGenerator() {
+  const MODES = ["Random","Memorable","PIN"];
+  const [mode, setMode] = useState("Random");
+  const [length, setLength] = useState(16);
+  const [pinLength, setPinLength] = useState(6);
+  const [wordCount, setWordCount] = useState(4);
+  const [opts, setOpts] = useState({ upper:true, lower:true, numbers:true, symbols:true });
+  const [exSimilar, setExSimilar] = useState(false);
+  const [exDupes, setExDupes] = useState(false);
+  const [count, setCount] = useState(1);
+  const [passwords, setPasswords] = useState([]);
+  const [copied, setCopied] = useState(null);
+  const [history, setHistory] = useState([]);
+
+  const SIMILAR = "iI1loO0|B8";
+  const WORDS = ["apple","brave","cloud","dance","eagle","frost","grace","hello","ivory","jazzy","karma","lemon","mango","noble","ocean","pearl","quick","river","solar","tiger","ultra","vivid","waltz","xenon","yacht","zebra","amber","blaze","crisp","dusk","ember","flint","grove","haze","iris","jewel","knack","lunar","maple","nexus","onyx","pixel","quartz","ridge","spark","talon","umbra","vault","whisp","xeric","yield","zeal","arch","bolt","cave","dew","echo","fern","gale","hawk","isle","jade","kite","loft","moss","noon","oak","pine","quill","rose","sage","tide","urn","vine","wave","x-ray","yew","zone"];
+
+  const getStrength = (pwd) => {
+    if (!pwd) return null;
+    let s = 0;
+    if (pwd.length >= 10) s++;
+    if (pwd.length >= 16) s++;
+    if (/[A-Z]/.test(pwd)) s++;
+    if (/[a-z]/.test(pwd)) s++;
+    if (/[0-9]/.test(pwd)) s++;
+    if (/[^A-Za-z0-9]/.test(pwd)) s++;
+    if (s <= 2) return { label:"Weak", color:"#dc2626", w:"20%" };
+    if (s <= 3) return { label:"Fair", color:"#f59e0b", w:"45%" };
+    if (s <= 4) return { label:"Good", color:"#2563eb", w:"65%" };
+    if (s <= 5) return { label:"Strong", color:"#16a34a", w:"82%" };
+    return { label:"Very Strong", color:"#0f766e", w:"100%" };
+  };
+
+  const genOne = () => {
+    if (mode === "PIN") {
+      return Array.from({length: pinLength}, () => Math.floor(Math.random()*10)).join("");
+    }
+    if (mode === "Memorable") {
+      const sep = ["-","_",".","+"][Math.floor(Math.random()*4)];
+      const picks = [];
+      for (let i=0;i<wordCount;i++) picks.push(WORDS[Math.floor(Math.random()*WORDS.length)]);
+      const num = Math.floor(Math.random()*90+10);
+      return picks.join(sep) + sep + num;
+    }
+    // Random
+    const CHARS = {
+      upper:"ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      lower:"abcdefghijklmnopqrstuvwxyz",
+      numbers:"0123456789",
+      symbols:"!@#$%^&*()_+-=[]{}|;:,.<>?",
+    };
+    const active = Object.entries(opts).filter(([,v])=>v).map(([k])=>CHARS[k]);
+    if (!active.length) return "";
+    let charset = active.join("");
+    if (exSimilar) charset = charset.split("").filter(c=>!SIMILAR.includes(c)).join("");
+    let pwd = "";
+    const used = new Set();
+    // Guarantee one from each active set
+    for (const set of active) {
+      let chars = set.split("").filter(c=>!exSimilar||!SIMILAR.includes(c));
+      if (exDupes) chars = chars.filter(c=>!used.has(c));
+      if (!chars.length) continue;
+      const ch = chars[Math.floor(Math.random()*chars.length)];
+      pwd += ch; used.add(ch);
+    }
+    // Fill rest
+    let tries = 0;
+    while (pwd.length < length && tries < 10000) {
+      tries++;
+      let chars = charset.split("");
+      if (exDupes) chars = chars.filter(c=>!used.has(c));
+      if (!chars.length) break;
+      const ch = chars[Math.floor(Math.random()*chars.length)];
+      pwd += ch; used.add(ch);
+    }
+    // Shuffle
+    return pwd.split("").sort(()=>Math.random()-0.5).join("");
+  };
+
+  const generate = () => {
+    const pwds = Array.from({length: count}, genOne);
+    setPasswords(pwds);
+    setCopied(null);
+    if (pwds[0]) setHistory(h => [pwds[0], ...h].slice(0,5));
+  };
+
+  const copy = (pwd, idx) => {
+    navigator.clipboard.writeText(pwd);
+    setCopied(idx);
+    setTimeout(()=>setCopied(null), 2000);
+  };
+
+  const toggleOpt = (key) => {
+    const activeCount = Object.entries(opts).filter(([k,v])=>v&&k!==key).length;
+    if (activeCount === 0) return;
+    setOpts(o=>({...o,[key]:!o[key]}));
+  };
+
+  useEffect(()=>{ generate(); }, []);
+
+  const str = passwords[0] ? getStrength(passwords[0]) : null;
+
+  const tabBtn = (m) => ({
+    flex:1, padding:"8px 0", border:`1.5px solid ${mode===m?T.accent:T.border}`,
+    borderRadius:8, background:mode===m?`${T.accent}15`:"transparent",
+    color:mode===m?T.accent:T.muted, fontFamily:"DM Sans, sans-serif",
+    fontSize:12, fontWeight:mode===m?700:400, cursor:"pointer", transition:"all 0.15s"
+  });
+
+  const chkBtn = (active, toggle, label) => (
+    <button onClick={toggle} style={{
+      padding:"8px 10px", border:`1.5px solid ${active?T.accent:T.border}`, borderRadius:8,
+      background:active?`${T.accent}15`:"transparent", color:active?T.accent:T.muted,
+      fontFamily:"DM Sans, sans-serif", fontSize:12, fontWeight:active?700:400,
+      cursor:"pointer", textAlign:"left", transition:"all 0.15s", display:"flex", alignItems:"center", gap:6
+    }}>
+      <span style={{fontSize:10}}>{active?"✓":"○"}</span>{label}
+    </button>
+  );
+
+  return (
+    <div>
+      {/* Mode tabs */}
+      <div style={{display:"flex", gap:6, marginBottom:16}}>
+        {MODES.map(m=><button key={m} onClick={()=>setMode(m)} style={tabBtn(m)}>{m}</button>)}
+      </div>
+
+      {/* Password output */}
+      {passwords.map((pwd,i)=>(
+        <div key={i} style={{background:T.card, border:`1px solid ${i===0?T.accent+"44":T.border}`, borderRadius:10, padding:"12px 14px", marginBottom:8, display:"flex", alignItems:"center", gap:10}}>
+          <div style={{fontFamily:"monospace", fontSize:14, color:T.ink, wordBreak:"break-all", flex:1, letterSpacing:0.5}}>{pwd}</div>
+          <button onClick={()=>copy(pwd,i)} style={{flexShrink:0, padding:"5px 12px", background:copied===i?T.green:T.accent, color:"white", border:"none", borderRadius:7, fontSize:11, fontWeight:700, fontFamily:"DM Sans, sans-serif", cursor:"pointer", transition:"background 0.2s", whiteSpace:"nowrap"}}>
+            {copied===i?"✓ Copied":"Copy"}
+          </button>
+        </div>
+      ))}
+
+      {/* Strength bar — only for first password in Random mode */}
+      {mode==="Random" && str && (
+        <div style={{display:"flex", alignItems:"center", gap:10, marginBottom:14}}>
+          <div style={{flex:1, height:4, background:T.border, borderRadius:4, overflow:"hidden"}}>
+            <div style={{height:"100%", borderRadius:4, background:str.color, width:str.w, transition:"width 0.3s"}}/>
+          </div>
+          <div style={{fontSize:12, fontWeight:700, color:str.color, fontFamily:"DM Sans, sans-serif", minWidth:72}}>{str.label}</div>
+        </div>
+      )}
+
+      {/* Controls per mode */}
+      {mode==="Random" && (
+        <>
+          <Row label={`Length — ${length} characters`}>
+            <input type="range" min={6} max={64} value={length} onChange={e=>setLength(Number(e.target.value))} style={{width:"100%", accentColor:T.accent}}/>
+            <div style={{display:"flex", justifyContent:"space-between", fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", marginTop:2}}><span>6</span><span>64</span></div>
+          </Row>
+          <Row label="Characters">
+            <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:7}}>
+              {[["upper","Uppercase (A-Z)"],["lower","Lowercase (a-z)"],["numbers","Numbers (0-9)"],["symbols","Symbols (!@#...)"]].map(([k,l])=>(
+                chkBtn(opts[k], ()=>toggleOpt(k), l)
+              ))}
+            </div>
+          </Row>
+          <Row label="Exclude">
+            <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:7}}>
+              {chkBtn(exSimilar, ()=>setExSimilar(v=>!v), "Similar (iI1loO0)")}
+              {chkBtn(exDupes, ()=>setExDupes(v=>!v), "Duplicate chars")}
+            </div>
+          </Row>
+        </>
+      )}
+      {mode==="Memorable" && (
+        <Row label={`Word count — ${wordCount} words`}>
+          <input type="range" min={2} max={6} value={wordCount} onChange={e=>setWordCount(Number(e.target.value))} style={{width:"100%", accentColor:T.accent}}/>
+          <div style={{display:"flex", justifyContent:"space-between", fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", marginTop:2}}><span>2</span><span>6</span></div>
+        </Row>
+      )}
+      {mode==="PIN" && (
+        <Row label={`PIN length — ${pinLength} digits`}>
+          <input type="range" min={4} max={12} value={pinLength} onChange={e=>setPinLength(Number(e.target.value))} style={{width:"100%", accentColor:T.accent}}/>
+          <div style={{display:"flex", justifyContent:"space-between", fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", marginTop:2}}><span>4</span><span>12</span></div>
+        </Row>
+      )}
+
+      {/* How many */}
+      <Row label="Generate">
+        <div style={{display:"flex", gap:6}}>
+          {[1,5,10].map(n=>(
+            <button key={n} onClick={()=>setCount(n)} style={{flex:1, padding:"7px 0", border:`1.5px solid ${count===n?T.accent:T.border}`, borderRadius:8, background:count===n?`${T.accent}15`:"transparent", color:count===n?T.accent:T.muted, fontFamily:"DM Sans, sans-serif", fontSize:12, fontWeight:count===n?700:400, cursor:"pointer"}}>
+              {n===1?"1 password":`${n} passwords`}
+            </button>
+          ))}
+        </div>
+      </Row>
+
+      <button onClick={generate} style={{width:"100%", marginTop:8, padding:"12px 0", background:T.accent, color:"white", border:"none", borderRadius:10, fontSize:14, fontWeight:700, fontFamily:"Syne, sans-serif", cursor:"pointer"}}>
+        ↻ Generate
+      </button>
+
+      {/* History */}
+      {history.length > 1 && (
+        <div style={{marginTop:16}}>
+          <div style={{fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:8}}>RECENT</div>
+          {history.slice(1).map((pwd,i)=>(
+            <div key={i} style={{display:"flex", alignItems:"center", gap:8, padding:"7px 10px", background:T.card, border:`1px solid ${T.border}`, borderRadius:8, marginBottom:5}}>
+              <div style={{fontFamily:"monospace", fontSize:12, color:T.muted, flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{pwd}</div>
+              <button onClick={()=>copy(pwd,`h${i}`)} style={{padding:"3px 10px", background:"transparent", border:`1px solid ${T.border}`, borderRadius:6, fontSize:10, color:T.muted, cursor:"pointer", fontFamily:"DM Sans, sans-serif"}}>{copied===`h${i}`?"✓":"Copy"}</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function CurrencyConverter() {
+  const [rates, setRates] = useState(null);
+  const [from, setFrom] = useState("USD");
+  const [to, setTo] = useState("EUR");
+  const [amount, setAmount] = useState("1");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [lastUpdated, setLastUpdated] = useState("");
+
+  const CURRENCIES = [
+    ["USD","🇺🇸 US Dollar"],["EUR","🇪🇺 Euro"],["GBP","🇬🇧 British Pound"],
+    ["JPY","🇯🇵 Japanese Yen"],["CAD","🇨🇦 Canadian Dollar"],["AUD","🇦🇺 Australian Dollar"],
+    ["CHF","🇨🇭 Swiss Franc"],["CNY","🇨🇳 Chinese Yuan"],["INR","🇮🇳 Indian Rupee"],
+    ["MXN","🇲🇽 Mexican Peso"],["BRL","🇧🇷 Brazilian Real"],["KRW","🇰🇷 South Korean Won"],
+    ["SGD","🇸🇬 Singapore Dollar"],["HKD","🇭🇰 Hong Kong Dollar"],["NOK","🇳🇴 Norwegian Krone"],
+    ["SEK","🇸🇪 Swedish Krona"],["DKK","🇩🇰 Danish Krone"],["NZD","🇳🇿 New Zealand Dollar"],
+    ["ZAR","🇿🇦 South African Rand"],["AED","🇦🇪 UAE Dirham"],["ILS","🇮🇱 Israeli Shekel"],
+    ["TRY","🇹🇷 Turkish Lira"],["PLN","🇵🇱 Polish Złoty"],["THB","🇹🇭 Thai Baht"],
+    ["MYR","🇲🇾 Malaysian Ringgit"],["IDR","🇮🇩 Indonesian Rupiah"],["PHP","🇵🇭 Philippine Peso"],
+  ];
+
+  useEffect(() => {
+    fetch("https://open.er-api.com/v6/latest/USD")
+      .then(r => r.json())
+      .then(data => {
+        if (data.result === "success") {
+          setRates(data.rates);
+          setLastUpdated(new Date(data.time_last_update_utc).toLocaleDateString());
+        } else { setError("Could not load exchange rates."); }
+        setLoading(false);
+      })
+      .catch(() => { setError("Could not load exchange rates."); setLoading(false); });
+  }, []);
+
+  const convert = (val, f, t) => {
+    if (!rates || !val) return "";
+    const inUSD = parseFloat(val) / rates[f];
+    const result = inUSD * rates[t];
+    if (isNaN(result)) return "";
+    return result >= 1 ? result.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                       : result.toFixed(4);
+  };
+
+  const swap = () => { setFrom(to); setTo(from); };
+
+  const result = convert(amount, from, to);
+  const rate = rates ? convert(1, from, to) : null;
+
+  const selStyle = { ...inputStyle, width: "100%", padding: "9px 10px", fontFamily: "DM Sans, sans-serif", fontSize: 13 };
+
+  return (
+    <div>
+      {loading && <div style={{ textAlign: "center", padding: 32, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>Loading exchange rates…</div>}
+      {error && <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, color: "#dc2626", fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{error}</div>}
+      {rates && (
+        <>
+          {/* Amount */}
+          <Row label="Amount">
+            <input type="number" value={amount} min="0" onChange={e => setAmount(e.target.value)}
+              style={{ ...inputStyle, fontSize: 18, fontWeight: 700, padding: "10px 14px" }} placeholder="1" />
+          </Row>
+
+          {/* From / To */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 8, alignItems: "end", marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 10, color: T.muted, fontFamily: "Syne, sans-serif", fontWeight: 700, marginBottom: 4 }}>FROM</div>
+              <select value={from} onChange={e => setFrom(e.target.value)} style={selStyle}>
+                {CURRENCIES.map(([code, name]) => <option key={code} value={code}>{code} — {name.split(" ").slice(1).join(" ")}</option>)}
+              </select>
+            </div>
+            <button onClick={swap} style={{ padding: "9px 12px", border: `1px solid ${T.border}`, borderRadius: 8, background: T.card, cursor: "pointer", fontSize: 16, marginBottom: 0 }}>⇄</button>
+            <div>
+              <div style={{ fontSize: 10, color: T.muted, fontFamily: "Syne, sans-serif", fontWeight: 700, marginBottom: 4 }}>TO</div>
+              <select value={to} onChange={e => setTo(e.target.value)} style={selStyle}>
+                {CURRENCIES.map(([code, name]) => <option key={code} value={code}>{code} — {name.split(" ").slice(1).join(" ")}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Result */}
+          {result && (
+            <div style={{ background: T.card, border: `2px solid ${T.accent}22`, borderRadius: 14, padding: "20px 18px", marginBottom: 14, textAlign: "center" }}>
+              <div style={{ fontSize: 13, color: T.muted, fontFamily: "DM Sans, sans-serif", marginBottom: 6 }}>{amount} {from} =</div>
+              <div style={{ fontSize: 38, fontWeight: 800, color: T.accent, fontFamily: "Syne, sans-serif", lineHeight: 1 }}>{result} <span style={{ fontSize: 22 }}>{to}</span></div>
+              {rate && <div style={{ fontSize: 12, color: T.muted, fontFamily: "DM Sans, sans-serif", marginTop: 10 }}>1 {from} = {rate} {to}</div>}
+            </div>
+          )}
+
+          {/* Popular conversions */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 10, color: T.muted, fontFamily: "Syne, sans-serif", fontWeight: 700, marginBottom: 8 }}>POPULAR</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {[["USD","EUR"],["USD","GBP"],["USD","JPY"],["EUR","GBP"],["GBP","USD"],["USD","ILS"]].map(([f,t]) => (
+                <button key={f+t} onClick={() => { setFrom(f); setTo(t); }} style={{ padding: "5px 12px", border: `1px solid ${from===f&&to===t ? T.accent : T.border}`, borderRadius: 20, background: from===f&&to===t ? `${T.accent}15` : "transparent", color: from===f&&to===t ? T.accent : T.muted, fontFamily: "DM Sans, sans-serif", fontSize: 12, cursor: "pointer", fontWeight: from===f&&to===t ? 700 : 400 }}>
+                  {f}/{t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {lastUpdated && <div style={{ fontSize: 11, color: T.muted, fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>Rates updated {lastUpdated} · Powered by open.er-api.com</div>}
+        </>
+      )}
+    </div>
+  );
+}
+
+export function LoanCalculator() {
+  const [amount, setAmount] = useState("10000");
+  const [rate, setRate] = useState("5");
+  const [years, setYears] = useState("5");
+  const [currency, setCurrency] = useState("USD");
+
+  const principal = parseFloat(amount) || 0;
+  const annualRate = parseFloat(rate) || 0;
+  const numYears = parseFloat(years) || 0;
+  const monthlyRate = annualRate / 100 / 12;
+  const numPayments = numYears * 12;
+
+  const monthlyPayment = monthlyRate === 0
+    ? principal / numPayments
+    : (principal * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1);
+
+  const totalPayment = monthlyPayment * numPayments;
+  const totalInterest = totalPayment - principal;
+
+  const fmt = (n) => isFinite(n) && n > 0
+    ? n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : "—";
+
+  const SYMS = { USD:"$", EUR:"€", GBP:"£", ILS:"₪", CAD:"CA$", AUD:"A$", JPY:"¥" };
+  const sym = SYMS[currency] || "$";
+
+  const interestPct = totalPayment > 0 ? (totalInterest / totalPayment) * 100 : 0;
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+        <select value={currency} onChange={e => setCurrency(e.target.value)} style={{ ...inputStyle, width: "auto", padding: "5px 10px", fontSize: 12, fontFamily: "DM Sans, sans-serif" }}>
+          {Object.keys(SYMS).map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </div>
+
+      <Row label="Loan Amount">
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 16, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>{sym}</span>
+          <input type="number" value={amount} min="0" onChange={e => setAmount(e.target.value)}
+            style={{ ...inputStyle, flex: 1 }} placeholder="10000" />
+        </div>
+      </Row>
+
+      <Row label="Annual Interest Rate (%)">
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <input type="number" value={rate} min="0" max="100" step="0.1" onChange={e => setRate(e.target.value)}
+            style={{ ...inputStyle, flex: 1 }} placeholder="5" />
+          <span style={{ fontSize: 16, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>%</span>
+        </div>
+      </Row>
+
+      <Row label="Loan Term (Years)">
+        <input type="number" value={years} min="1" max="50" onChange={e => setYears(e.target.value)}
+          style={{ ...inputStyle }} placeholder="5" />
+      </Row>
+
+      {/* Results */}
+      {isFinite(monthlyPayment) && monthlyPayment > 0 && (
+        <>
+          <div style={{ background: T.card, border: `2px solid ${T.accent}22`, borderRadius: 14, padding: "18px 18px", marginTop: 8, marginBottom: 14 }}>
+            <div style={{ fontSize: 12, color: T.muted, fontFamily: "DM Sans, sans-serif", marginBottom: 4 }}>Monthly Payment</div>
+            <div style={{ fontSize: 40, fontWeight: 800, color: T.accent, fontFamily: "Syne, sans-serif", lineHeight: 1 }}>{sym}{fmt(monthlyPayment)}</div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+            {[
+              ["Total Payment", `${sym}${fmt(totalPayment)}`],
+              ["Total Interest", `${sym}${fmt(totalInterest)}`],
+              ["Principal", `${sym}${fmt(principal)}`],
+              ["Num. Payments", `${numPayments}`],
+            ].map(([label, val]) => (
+              <div key={label} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 11, color: T.muted, fontFamily: "DM Sans, sans-serif", marginBottom: 4 }}>{label}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: T.ink, fontFamily: "Syne, sans-serif" }}>{val}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Interest vs Principal bar */}
+          <div style={{ marginBottom: 6 }}>
+            <div style={{ fontSize: 10, color: T.muted, fontFamily: "Syne, sans-serif", fontWeight: 700, marginBottom: 6 }}>PAYMENT BREAKDOWN</div>
+            <div style={{ height: 10, borderRadius: 6, overflow: "hidden", display: "flex" }}>
+              <div style={{ width: `${100 - interestPct}%`, background: T.accent }} />
+              <div style={{ width: `${interestPct}%`, background: T.border }} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5, fontSize: 11, fontFamily: "DM Sans, sans-serif", color: T.muted }}>
+              <span style={{ color: T.accent, fontWeight: 700 }}>● Principal {(100 - interestPct).toFixed(1)}%</span>
+              <span style={{ fontWeight: 700 }}>● Interest {interestPct.toFixed(1)}%</span>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
