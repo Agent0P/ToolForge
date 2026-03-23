@@ -274,7 +274,7 @@ function setToolMeta(tool) {
   schemaEl.textContent = JSON.stringify(schemaArray.length === 1 ? schemaArray[0] : schemaArray);
 }
 function resetMeta() {
-  const defaultTitle = "ToolForge — 27 Free Tools For Freelancers, Students & Small Business";
+  const defaultTitle = "ToolForge — 30 Free Tools For Freelancers, Students & Small Business";
   const defaultDesc  = "Free online tools for freelancers, students, job seekers and small businesses. AI cover letters, hourly rate calculator, GPA calculator, timezone converter and more. No sign-up needed.";
   const defaultUrl   = "https://toolforge.pro";
 
@@ -551,7 +551,7 @@ const FAQ_ITEMS = [
   { q:"How do I access my account on a new device?", a:"There are no accounts or passwords. Just go to ToolForge, click \"Restore Access\" and enter the email you used to purchase. Your access will be restored instantly on any device, any browser." },
   { q:"I bought a plan but can't access Claude — what do I do?", a:"Click \"Restore Access\" on the homepage and enter your purchase email. Your access will be restored instantly. If that doesn't work, contact toolforgesupport@gmail.com." },
   { q:"Is my data private? Do you store my inputs?", a:"Your inputs are sent to the AI model to generate a response and are not stored on our servers. We don't sell data or show ads based on your inputs. Payments are handled entirely by Lemon Squeezy — we never see your card details." },
-  { q:"How many tools are there and will more be added?", a:"There are currently 27 tools and we add more regularly. Tools span AI writing, calculators, planning, utilities and more. There's also a fun Take a Break games section!" },
+  { q:"How many tools are there and will more be added?", a:"There are currently 30 tools and we add more regularly. Tools span AI writing, calculators, planning, utilities and more. There's also a fun Take a Break games section!" },
   { q:"What payment methods are accepted?", a:"All major credit and debit cards are accepted via Lemon Squeezy, our payment provider. Payments are secure and encrypted." },
   { q:"Can I cancel my Pro subscription?", a:"Yes, anytime. Log into your Lemon Squeezy customer portal (link in your receipt email) and cancel with one click. You keep access until the end of your billing period." },
   { q:"Will there be ads on ToolForge?", a:"Not right now. The site is funded by the paid AI plans. If ads are ever introduced in the future, they'll be minimal and non-intrusive." },
@@ -895,7 +895,7 @@ export default function ToolForge() {
               Every tool you need, <span style={{ color:TH.accent }}>right here.</span>
             </div>
             <div style={{ fontSize:13, color:TH.muted, lineHeight:1.6, marginBottom:14, maxWidth:500 }}>
-              27 free tools for freelancers, students & small businesses.
+              30 free tools for freelancers, students & small businesses.
             </div>
             {/* Desktop search */}
             <div className="tf-search" style={{ display:"flex", alignItems:"center", gap:10, background:TH.bg2, border:`1.5px solid ${TH.border2}`, borderRadius:10, padding:"10px 14px", maxWidth:420 }}>
@@ -1228,7 +1228,7 @@ export default function ToolForge() {
               Every tool you need,<br /><span style={{ color:TH.accent }}>right here.</span>
             </div>
             <div style={{ fontSize:13, color:TH.muted, lineHeight:1.65, marginBottom:20 }}>
-              27 tools for freelancers, students & small businesses.
+              30 tools for freelancers, students & small businesses.
             </div>
             {/* Search */}
             <div className="tf-search" style={{ display:"flex", alignItems:"center", gap:10, background:TH.bg, border:`1.5px solid ${TH.border2}`, borderRadius:12, padding:"12px 14px", boxShadow:TH.shadow }}>
