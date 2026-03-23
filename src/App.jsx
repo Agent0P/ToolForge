@@ -4,7 +4,8 @@ import {
   RateCalc, ProjectEstimator, GPACalc, TipSplitter, MarginCalc, BreakEvenCalc,
   DeadlineCountdown, PomodoroTimer, FloatingWidget,
   TimezoneConverter, UnitConverter, StudyPlanner, CitationFormatter,
-  WordCounter, BMICalculator, QRGenerator
+  WordCounter, BMICalculator, QRGenerator,
+  PasswordGenerator, CurrencyConverter, LoanCalculator
 } from "./tools";
 import { SavingsCalc, SalaryHelper, ResumeReviewer, AIToolPlaceholder, DocumentSummarizer } from "./ai-tools";
 import { G_COLOR, G_DIM, GamesSection } from "./games";
@@ -46,6 +47,9 @@ const CATEGORIES = [
     { id:"unit",      icon:"📏",  name:"Unit Converter",           desc:"Length, weight, temp & more" },
     { id:"timezone",  icon:"🌍",  name:"Timezone Converter",       desc:"Convert times across the world instantly" },
     { id:"wordcount", icon:"📝",  name:"Word Counter",             desc:"Count words, reading time & more" },
+    { id:"password",  icon:"🔐",  name:"Password Generator",        desc:"Secure passwords in one click" },
+    { id:"currency",  icon:"💱",  name:"Currency Converter",         desc:"Live exchange rates, 27 currencies" },
+    { id:"loan",      icon:"🏠",  name:"Loan & Mortgage Calculator", desc:"Monthly payments & interest breakdown", section:"Calculators" },
     { id:"qr",        icon:"🔲",  name:"QR Code Generator",        desc:"Turn any link or text into a QR code" },
   ]},
 ];
@@ -85,6 +89,9 @@ const TOOL_META = {
   "unit":       { slug:"unit-converter",            title:"Free Unit Converter — Length, Weight, Temperature & More",      desc:"Convert between units instantly. Length, weight, temperature, speed, area, volume, data, and cooking measurements. Free." },
   "timezone":   { slug:"timezone-converter",        title:"Free Timezone Converter — Convert Times Across the World",      desc:"Convert times between 50+ cities worldwide. Find meeting overlaps across timezones. City converter and UTC reference table. Free." },
   "wordcount":  { slug:"word-counter",              title:"Free Word Counter — Words, Characters & Reading Time",           desc:"Count words, characters, sentences, and paragraphs instantly. See reading time, speaking time, and top keywords. Free." },
+  "password":  { slug:"password-generator",    title:"Free Password Generator — Create Strong Secure Passwords",      desc:"Generate strong, secure passwords instantly. Customise length, uppercase, numbers and symbols. Free, no sign-up." },
+  "currency":  { slug:"currency-converter",     title:"Free Currency Converter — Live Exchange Rates",                  desc:"Convert currencies with live exchange rates. 27 currencies supported including USD, EUR, GBP, JPY, ILS and more." },
+  "loan":      { slug:"loan-calculator",         title:"Free Loan & Mortgage Calculator — Monthly Payments & Interest",  desc:"Calculate monthly loan payments, total interest and full repayment breakdown. Works for mortgages, car loans and personal loans." },
   "qr":         { slug:"qr-code-generator",         title:"Free QR Code Generator — Turn Any Link Into a QR Code",        desc:"Generate a scannable QR code for any URL or text instantly. Choose your size and download as PNG. Free, no sign-up needed." },
 };
 
@@ -158,6 +165,26 @@ const TOOL_FAQS = {
     { q: "What can a QR code link to?", a: "A QR code can link to any URL — websites, app downloads, contact cards, social profiles, menus, or any text. Our generator works with any URL or plain text." },
     { q: "How do I scan a QR code?", a: "Open your phone's camera app and point it at the QR code. On most modern smartphones this works automatically without a separate app." },
     { q: "Are QR codes free to generate?", a: "Yes — our QR code generator is completely free. No sign-up required. Generate as many QR codes as you need and download them as PNG files." },
+  ],
+  "password": [
+    { q: "What makes a password strong?", a: "A strong password is at least 12 characters long and contains a mix of uppercase letters, lowercase letters, numbers, and symbols. Avoid common words, names, or sequences like 123456." },
+    { q: "How long should a password be?", a: "Security experts recommend at least 12–16 characters. Longer is always better — a 20-character password is exponentially harder to crack than a 10-character one." },
+    { q: "What are similar characters and why exclude them?", a: "Similar characters like i, I, 1, l, o, O, and 0 look alike and can cause confusion when reading or typing passwords. Excluding them makes passwords easier to read and type manually." },
+    { q: "What is a memorable password?", a: "A memorable password combines random words with numbers and separators — like frost-eagle-solar-42. These are easier to remember than random strings but still very secure." },
+    { q: "Is it safe to generate passwords in a browser?", a: "Yes — our password generator runs entirely in your browser. No passwords are ever sent to any server or stored anywhere. All generation happens locally on your device." },
+  ],
+  "currency": [
+    { q: "How often are exchange rates updated?", a: "Our exchange rates are updated daily via the open.er-api.com API. For most purposes this is accurate enough — rates typically don't change dramatically hour to hour." },
+    { q: "Which currencies are supported?", a: "We support 27 major currencies including USD, EUR, GBP, JPY, CAD, AUD, CHF, CNY, INR, ILS, AED, and more. New currencies may be added over time." },
+    { q: "Why is the exchange rate different from my bank?", a: "Banks and money transfer services add a markup (typically 1–5%) to the mid-market rate shown by currency converters. Our tool shows the real mid-market rate with no markup." },
+    { q: "How do I convert multiple currencies at once?", a: "Select your base currency and amount, then change the target currency. The conversion updates instantly. Switch between different target currencies using the dropdown." },
+  ],
+  "loan": [
+    { q: "How is a monthly loan payment calculated?", a: "Monthly payment = P × r(1+r)ⁿ / ((1+r)ⁿ-1), where P is the principal, r is the monthly interest rate, and n is the number of payments. Our calculator handles all of this automatically." },
+    { q: "What is the difference between a loan and a mortgage?", a: "A mortgage is a specific type of loan secured against a property. The same monthly payment formula applies — our calculator works for both personal loans and mortgages." },
+    { q: "How does interest rate affect monthly payments?", a: "A higher interest rate increases both your monthly payment and total interest paid significantly. Even a 1% difference on a large loan can mean thousands of dollars over the loan term." },
+    { q: "What is total interest paid?", a: "Total interest is the difference between the total amount you repay and the original loan amount. Our calculator shows this clearly alongside your monthly payment." },
+    { q: "Should I choose a shorter or longer loan term?", a: "A shorter term means higher monthly payments but much less total interest paid. A longer term means lower payments but significantly more interest over time. Use our calculator to compare both scenarios." },
   ],
 };
 
@@ -320,6 +347,9 @@ function ToolView({ tool, onBack, hideBack, proToken, onNeedUpgrade, onTokenUpda
       case "pomodoro":  return <PomodoroTimer {...pomoProps} />;
       case "wordcount": return <WordCounter />;
       case "bmi":       return <BMICalculator />;
+      case "password":  return <PasswordGenerator />;
+      case "currency":  return <CurrencyConverter />;
+      case "loan":      return <LoanCalculator />;
       case "qr":        return <QRGenerator />;
       case "resume":    return <ResumeReviewer proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
       case "summarize": return <DocumentSummarizer proToken={proToken} onNeedUpgrade={onNeedUpgrade} onTokenUpdate={onTokenUpdate} />;
