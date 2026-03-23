@@ -36,6 +36,7 @@ const CATEGORIES = [
     { id:"tip",       icon:"🍽",  name:"Tip & Bill Splitter",      desc:"Split any bill instantly" },
     { id:"savings",   icon:"🏦",  name:"Savings Goal Calculator",  desc:"Plan your way to any goal" },
     { id:"bmi",       icon:"⚖️",  name:"BMI Calculator",           desc:"Check your body mass index instantly" },
+    { id:"loan",      icon:"🏠",  name:"Loan & Mortgage Calculator", desc:"Monthly payments & interest breakdown" },
   ]},
   { id:"planning", label:"Planning & Time", icon:"📅", color:T.purple, colorDim:T.purpleDim, tools:[
     { id:"deadline",  icon:"🗓",  name:"Deadline Countdown",       desc:"Days, hours, minutes to any date" },
@@ -48,8 +49,7 @@ const CATEGORIES = [
     { id:"timezone",  icon:"🌍",  name:"Timezone Converter",       desc:"Convert times across the world instantly" },
     { id:"wordcount", icon:"📝",  name:"Word Counter",             desc:"Count words, reading time & more" },
     { id:"password",  icon:"🔐",  name:"Password Generator",        desc:"Secure passwords in one click" },
-    { id:"currency",  icon:"💱",  name:"Currency Converter",         desc:"Live exchange rates, 27 currencies" },
-    { id:"loan",      icon:"🏠",  name:"Loan & Mortgage Calculator", desc:"Monthly payments & interest breakdown", section:"Calculators" },
+    { id:"currency",  icon:"💱",  name:"Currency Converter",         desc:"Live exchange rates, 30 currencies" },
     { id:"qr",        icon:"🔲",  name:"QR Code Generator",        desc:"Turn any link or text into a QR code" },
   ]},
 ];
