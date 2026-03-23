@@ -95,6 +95,72 @@ function toolToSlug(toolId) {
 function slugToToolId(slug) {
   return Object.entries(TOOL_META).find(([,v]) => v.slug === slug)?.[0] || null;
 }
+
+/* ── SEO: FAQ structured data per tool ── */
+const TOOL_FAQS = {
+  "gpa": [
+    { q: "How is GPA calculated?", a: "GPA is calculated by multiplying each course grade by its credit hours, summing those points, then dividing by total credit hours. An A is worth 4.0, B is 3.0, C is 2.0, D is 1.0, and F is 0." },
+    { q: "What is a good GPA?", a: "A GPA of 3.5 or above is generally considered excellent. 3.0–3.49 is good standing. Below 2.0 may put you at academic risk depending on your institution." },
+    { q: "What grade do I need to raise my GPA?", a: "Use the 'What grade do I need?' section of the calculator — enter your target GPA and next course credits and it will tell you the exact letter grade required." },
+    { q: "Does GPA reset each semester?", a: "Your semester GPA resets each term, but your cumulative GPA includes all semesters. Use the Cumulative GPA tab to factor in your previous semesters." },
+  ],
+  "tip": [
+    { q: "How do you calculate a tip?", a: "Multiply your bill by the tip percentage. For a 20% tip on a $50 bill: $50 × 0.20 = $10 tip, making the total $60." },
+    { q: "What is the standard tip percentage?", a: "In the US, 15–20% is standard for restaurants. 18–20% is considered good service. 25% or more for exceptional service." },
+    { q: "How do you split a bill evenly?", a: "Add up the total including tip, then divide by the number of people. Our tip splitter does this automatically — just enter the bill, tip %, and number of people." },
+  ],
+  "bmi": [
+    { q: "What is BMI?", a: "BMI (Body Mass Index) is a measure of body fat based on height and weight. It is calculated by dividing weight in kg by height in metres squared." },
+    { q: "What is a healthy BMI?", a: "A BMI between 18.5 and 24.9 is considered healthy. Under 18.5 is underweight, 25–29.9 is overweight, and 30 or above is obese." },
+    { q: "Is BMI accurate?", a: "BMI is a useful screening tool but not a perfect measure. It doesn't account for muscle mass, age, or body composition. Consult a doctor for a full health assessment." },
+  ],
+  "rate": [
+    { q: "How do I calculate my freelance hourly rate?", a: "Start with your target annual income, add 25–30% for taxes, then divide by your billable hours (typically 50–60% of working hours). Our calculator handles all these factors automatically." },
+    { q: "What should a freelancer charge per hour?", a: "It depends on your skills, experience, and location. Use the calculator to find your minimum viable rate based on your actual expenses and desired income." },
+    { q: "How many hours do freelancers bill per week?", a: "Most freelancers bill 20–25 hours per week out of a 40-hour work week. The rest goes to admin, sales, and non-billable tasks." },
+  ],
+  "unit": [
+    { q: "How do you convert Celsius to Fahrenheit?", a: "Multiply the Celsius temperature by 9/5 (or 1.8) and add 32. For example, 20°C × 1.8 + 32 = 68°F. Use our unit converter for instant results." },
+    { q: "How many centimeters in an inch?", a: "There are 2.54 centimeters in one inch. So 1 inch = 2.54 cm, and 1 cm = 0.3937 inches." },
+    { q: "How do you convert kg to pounds?", a: "Multiply kilograms by 2.20462. For example, 70 kg × 2.20462 = 154.3 lbs. Our unit converter handles this and dozens of other unit conversions instantly." },
+  ],
+  "timezone": [
+    { q: "How do I convert time zones?", a: "Find the UTC offset for both locations, calculate the difference, and apply it to your time. Our timezone converter does this instantly for 50+ cities worldwide." },
+    { q: "What is UTC time?", a: "UTC (Coordinated Universal Time) is the global time standard. All time zones are defined as UTC plus or minus a certain number of hours." },
+    { q: "How do I find a meeting time that works for multiple time zones?", a: "Use the Meeting Planner tab in our Timezone Converter. Add multiple cities and it will show you all time windows where everyone falls within working hours." },
+  ],
+  "wordcount": [
+    { q: "How many words is a page?", a: "A standard double-spaced page contains roughly 250–300 words. Single-spaced pages contain about 500–600 words. This varies by font size and margins." },
+    { q: "How long does it take to read 1000 words?", a: "At an average reading speed of 238 words per minute, 1000 words takes about 4 minutes to read. Our word counter shows reading time automatically." },
+    { q: "How many words should a cover letter be?", a: "A cover letter should be 250–400 words — roughly one page. Concise and targeted performs better than lengthy explanations." },
+  ],
+  "pomodoro": [
+    { q: "What is the Pomodoro Technique?", a: "The Pomodoro Technique is a time management method that breaks work into 25-minute focused sessions (pomodoros) separated by short 5-minute breaks. After 4 sessions, take a longer 15–30 minute break." },
+    { q: "Does the Pomodoro Technique work?", a: "Research supports that structured work intervals reduce mental fatigue and improve focus. Many students and freelancers report higher productivity using the technique." },
+    { q: "How many Pomodoros should I do per day?", a: "Most people aim for 8–12 pomodoros per day (4–6 hours of focused work). Quality focused sessions matter more than quantity." },
+  ],
+  "cover": [
+    { q: "What should a cover letter include?", a: "A strong cover letter includes: a compelling opening, your relevant experience, specific achievements with numbers, why you want this role at this company, and a clear call to action." },
+    { q: "How long should a cover letter be?", a: "A cover letter should be 3–4 short paragraphs, around 250–400 words. Hiring managers spend an average of 30 seconds reviewing it — keep it concise." },
+    { q: "Can AI write a cover letter for me?", a: "Yes — our AI cover letter generator uses Claude Sonnet to write tailored cover letters based on your experience and the specific role. Free users get 3 generations per day." },
+  ],
+  "margin": [
+    { q: "How do you calculate profit margin?", a: "Profit margin = (Revenue - Cost) / Revenue × 100. For example, if you sell something for $100 that costs $60 to make, your profit margin is 40%." },
+    { q: "What is a good profit margin?", a: "It varies by industry. Retail typically targets 5–20%. SaaS businesses often aim for 60–80% gross margins. Services businesses can achieve 30–50%." },
+    { q: "What is the difference between gross and net profit margin?", a: "Gross margin only subtracts cost of goods sold. Net margin subtracts all expenses including operating costs, taxes, and interest." },
+  ],
+  "breakeven": [
+    { q: "What is a break-even point?", a: "The break-even point is the number of units you need to sell for your total revenue to equal your total costs — where you make neither profit nor loss." },
+    { q: "How do you calculate break-even point?", a: "Break-even units = Fixed Costs / (Price per Unit - Variable Cost per Unit). Our calculator does this automatically once you enter your costs and price." },
+    { q: "Why is break-even analysis important?", a: "It tells you the minimum sales volume needed to cover costs, helping you price products correctly and understand the viability of a business idea." },
+  ],
+  "qr": [
+    { q: "What can a QR code link to?", a: "A QR code can link to any URL — websites, app downloads, contact cards, social profiles, menus, or any text. Our generator works with any URL or plain text." },
+    { q: "How do I scan a QR code?", a: "Open your phone's camera app and point it at the QR code. On most modern smartphones this works automatically without a separate app." },
+    { q: "Are QR codes free to generate?", a: "Yes — our QR code generator is completely free. No sign-up required. Generate as many QR codes as you need and download them as PNG files." },
+  ],
+};
+
 function setToolMeta(tool) {
   const meta = TOOL_META[tool.id];
   if (!meta) return;
@@ -156,6 +222,21 @@ function setToolMeta(tool) {
     }
   };
 
+  // FAQ schema (if available for this tool)
+  const faqs = TOOL_FAQS[tool.id];
+  const schemaArray = [schema];
+  if (faqs && faqs.length > 0) {
+    schemaArray.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faqs.map(f => ({
+        "@type": "Question",
+        "name": f.q,
+        "acceptedAnswer": { "@type": "Answer", "text": f.a }
+      }))
+    });
+  }
+
   let schemaEl = document.getElementById("tf-schema");
   if (!schemaEl) {
     schemaEl = document.createElement("script");
@@ -163,7 +244,7 @@ function setToolMeta(tool) {
     schemaEl.type = "application/ld+json";
     document.head.appendChild(schemaEl);
   }
-  schemaEl.textContent = JSON.stringify(schema);
+  schemaEl.textContent = JSON.stringify(schemaArray.length === 1 ? schemaArray[0] : schemaArray);
 }
 function resetMeta() {
   const defaultTitle = "ToolForge — 27 Free Tools For Freelancers, Students & Small Business";
