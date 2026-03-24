@@ -565,7 +565,32 @@ Be specific, reference their actual CV content, and don't soften feedback that n
 }
 
 export function AIToolPlaceholder({ name, proToken, onNeedUpgrade, onTokenUpdate }) {
-  const [input, setInput] = useState(""); const [output, setOutput] = useState(""); const [loading, setLoading] = useState(false); const [mode, setMode] = useState("groq"); const [error, setError] = useState("");
+  const [input, setInput] = useState("");
+  const [output, setOutput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState("groq");
+  const [error, setError] = useState("");
+  const [tone, setTone] = useState("professional");
+  const [length, setLength] = useState("medium");
+
+  const TONES = [
+    { id:"professional", label:"Professional" },
+    { id:"casual",       label:"Casual" },
+    { id:"enthusiastic", label:"Enthusiastic" },
+    { id:"formal",       label:"Formal" },
+  ];
+  const LENGTHS = [
+    { id:"short",  label:"Short",  desc:"~100 words" },
+    { id:"medium", label:"Medium", desc:"~250 words" },
+    { id:"long",   label:"Long",   desc:"~500 words" },
+  ];
+
+  const buildEnhancedInput = () => {
+    return `${input.trim()}
+
+[Tone: ${tone}] [Length: ${length}]`;
+  };
+
   const [groqCount, setGroqCount] = useState(() => { try { const s = localStorage.getItem("tf_groq_usage"); if (!s) return 0; const { date, count } = JSON.parse(s); return new Date().toDateString() === date ? count : 0; } catch { return 0; } });
   const groqAtLimit = groqCount >= 3; const hasClaude = proToken && proToken.generations_left > 0;
 
@@ -573,7 +598,8 @@ export function AIToolPlaceholder({ name, proToken, onNeedUpgrade, onTokenUpdate
     if (!input.trim() || groqAtLimit) return;
     setLoading(true); setOutput(""); setError("");
     try {
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${import.meta.env.VITE_GROQ_KEY || ""}` }, body: JSON.stringify({ model: "llama-3.3-70b-versatile", max_tokens: 1000, messages: [{ role: "system", content: GROQ_PROMPTS[name] || `You are a professional ${name} tool. Output only the result.` }, { role: "user", content: input }] }) });
+      const enhancedInput = buildEnhancedInput();
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${import.meta.env.VITE_GROQ_KEY || ""}` }, body: JSON.stringify({ model: "llama-3.3-70b-versatile", max_tokens: length === "short" ? 400 : length === "long" ? 1200 : 800, messages: [{ role: "system", content: (GROQ_PROMPTS[name] || `You are a professional ${name} tool. Output only the result.`) + ` Write in a ${tone} tone. Keep the response ${length === "short" ? "concise, around 100 words" : length === "long" ? "detailed, around 500 words" : "moderate, around 250 words"}.` }, { role: "user", content: enhancedInput }] }) });
       const data = await res.json(); const text = data.choices?.[0]?.message?.content;
       if (!text) throw new Error("Empty"); setOutput(text);
       const n = groqCount + 1; setGroqCount(n); localStorage.setItem("tf_groq_usage", JSON.stringify({ date: new Date().toDateString(), count: n }));
@@ -585,7 +611,8 @@ export function AIToolPlaceholder({ name, proToken, onNeedUpgrade, onTokenUpdate
     if (!input.trim() || !hasClaude) return;
     setLoading(true); setOutput(""); setError("");
     try {
-      const res = await fetch("/api/generate-claude", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: proToken.token, toolName: name, userInput: input }) });
+      const enhancedInput = buildEnhancedInput();
+      const res = await fetch("/api/generate-claude", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: proToken.token, toolName: name, userInput: enhancedInput }) });
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Generation failed."); setLoading(false); return; }
       setOutput(data.result); onTokenUpdate({ ...proToken, generations_left: data.generations_left });
@@ -615,6 +642,31 @@ export function AIToolPlaceholder({ name, proToken, onNeedUpgrade, onTokenUpdate
       )}
       {mode==="claude" && (!proToken || proToken.generations_left > 0) && <div style={{ marginBottom:10, padding:"8px 12px", borderRadius:8, background:T.goldDim, border:`1px solid ${T.gold}44`, fontSize:11, color:T.gold, fontFamily:"DM Sans, sans-serif" }}>✦ Claude produces significantly more polished output — ideal for client-facing work.</div>}
       {mode==="groq" && groqAtLimit && <div style={{ marginBottom:10, padding:"8px 12px", borderRadius:8, background:T.accentDim, border:`1px solid ${T.accent}44`, fontSize:11, color:T.accent, fontFamily:"DM Sans, sans-serif" }}>Daily free limit reached. Resets at midnight — or unlock Premium Claude now.</div>}
+      {/* Tone selector */}
+      <div style={{ marginBottom:10 }}>
+        <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:6 }}>TONE</div>
+        <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+          {TONES.map(t => (
+            <button key={t.id} onClick={()=>setTone(t.id)} style={{ padding:"5px 12px", borderRadius:8, border:`1.5px solid ${tone===t.id?T.accent:T.border}`, background:tone===t.id?T.accentDim:"transparent", color:tone===t.id?T.accent:T.muted, fontFamily:"DM Sans, sans-serif", fontSize:11, fontWeight:tone===t.id?700:400, cursor:"pointer", transition:"all 0.15s" }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Length selector */}
+      <div style={{ marginBottom:10 }}>
+        <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:6 }}>LENGTH</div>
+        <div style={{ display:"flex", gap:6 }}>
+          {LENGTHS.map(l => (
+            <button key={l.id} onClick={()=>setLength(l.id)} style={{ flex:1, padding:"6px 8px", borderRadius:8, border:`1.5px solid ${length===l.id?T.blue:T.border}`, background:length===l.id?T.blueDim:"transparent", color:length===l.id?T.blue:T.muted, fontFamily:"DM Sans, sans-serif", fontSize:11, fontWeight:length===l.id?700:400, cursor:"pointer", transition:"all 0.15s", textAlign:"center" }}>
+              <div>{l.label}</div>
+              <div style={{ fontSize:9, opacity:0.7, marginTop:1 }}>{l.desc}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <textarea value={input} onChange={e => setInput(e.target.value)} placeholder={mode==="claude"?"Describe in detail for best Claude results...":"Describe what you need..."} disabled={mode==="groq"&&groqAtLimit} style={{ ...inputStyle, width:"100%", height:90, resize:"vertical", boxSizing:"border-box", fontFamily:"DM Sans, sans-serif", opacity:(mode==="groq"&&groqAtLimit)?0.5:1 }} />
       <button onClick={() => mode==="claude"?generateClaude():generateGroq()} disabled={!canGenerate} style={{ width:"100%", padding:"11px 0", borderRadius:10, border:"none", background:!canGenerate?T.border:mode==="claude"?T.gold:T.green, color:!canGenerate?T.muted:"white", fontSize:13, fontFamily:"Syne, sans-serif", fontWeight:700, cursor:canGenerate?"pointer":"default", marginTop:8, letterSpacing:0.5 }}>
         {loading?"Generating…":mode==="claude"?"✦ Generate with Claude Sonnet AI":"Generate with Groq AI"}
