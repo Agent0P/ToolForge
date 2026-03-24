@@ -724,10 +724,13 @@ export default function ToolForge() {
   };
 
   /* ── Pomodoro ── */
+  const [pomoFocusMins, setPomoFocusMins]   = useState(25);
+  const [pomoShortMins, setPomoShortMins]   = useState(5);
+  const [pomoLongMins, setPomoLongMins]     = useState(15);
   const POMO_MODES = [
-    { id:"focus", label:"Focus",       icon:"🍅", mins:25, color:T.accent, colorDim:T.accentDim },
-    { id:"short",  label:"Short Break", icon:"☕", mins:5,  color:T.green,  colorDim:T.greenDim  },
-    { id:"long",   label:"Long Break",  icon:"🌿", mins:15, color:T.blue,   colorDim:T.blueDim   },
+    { id:"focus", label:"Focus",       icon:"🍅", mins:pomoFocusMins, color:T.accent, colorDim:T.accentDim },
+    { id:"short",  label:"Short Break", icon:"☕", mins:pomoShortMins,  color:T.green,  colorDim:T.greenDim  },
+    { id:"long",   label:"Long Break",  icon:"🌿", mins:pomoLongMins, color:T.blue,   colorDim:T.blueDim   },
   ];
   const [pomoMode, setPomoMode]         = useState("focus");
   const [pomoSec, setPomoSec]           = useState(25 * 60);
@@ -744,6 +747,10 @@ export default function ToolForge() {
   const pomoProps = {
     modes:POMO_MODES, modeId:pomoMode, secondsLeft:pomoSec, running:pomoRunning,
     pinned:pomoPinned, sessions:pomoSessions, paused:pomoPaused,
+    focusMins:pomoFocusMins, shortMins:pomoShortMins, longMins:pomoLongMins,
+    onSetFocus: (m) => { setPomoFocusMins(m); if(pomoMode==="focus"&&!pomoRunning) setPomoSec(m*60); },
+    onSetShort: (m) => { setPomoShortMins(m); if(pomoMode==="short"&&!pomoRunning) setPomoSec(m*60); },
+    onSetLong:  (m) => { setPomoLongMins(m);  if(pomoMode==="long"&&!pomoRunning)  setPomoSec(m*60); },
     onStart:      () => { setPomoRunning(true); setPomoPaused(false); setPomoPinned(true); },
     onPause:      () => { setPomoRunning(false); setPomoPaused(true); },
     onReset:      () => { const m = POMO_MODES.find(x=>x.id===pomoMode); clearInterval(pomoRef.current); setPomoRunning(false); setPomoPaused(false); setPomoSec(m.mins*60); setPomoPinned(false); },
@@ -758,7 +765,18 @@ export default function ToolForge() {
   const [dlRunning, setDlRunning] = useState(false);
   const dlRef = useRef(null); const [dlTick, setDlTick] = useState(0);
   useEffect(() => { if (dlRunning) { dlRef.current = setInterval(() => setDlTick(t=>t+1), 1000); } else clearInterval(dlRef.current); return () => clearInterval(dlRef.current); }, [dlRunning]);
-  const dlProps = { label:dlLabel, setLabel:setDlLabel, target:dlTarget, setTarget:setDlTarget, pinned:dlPinned, running:dlRunning, tick:dlTick, onTogglePin:() => setDlPinned(p=>!p), onStart:() => setDlRunning(true), onStop:() => setDlRunning(false) };
+  /* Multiple countdowns */
+  const [dlExtras, setDlExtras] = useState([]);
+  const dlNextId = useRef(1);
+  const addDlExtra = () => setDlExtras(list => [...list, { id: dlNextId.current++, label:"", target:"" }]);
+  const removeDlExtra = (id) => setDlExtras(list => list.filter(d => d.id !== id));
+  const updateDlExtra = (id, field, val) => setDlExtras(list => list.map(d => d.id === id ? {...d, [field]:val} : d));
+  const dlProps = { label:dlLabel, setLabel:setDlLabel, target:dlTarget, setTarget:setDlTarget, pinned:dlPinned, running:dlRunning, tick:dlTick, onTogglePin:() => setDlPinned(p=>!p), onStart:() => setDlRunning(true), onStop:() => setDlRunning(false) ,
+    extras: dlExtras,
+    onAddExtra: addDlExtra,
+    onRemoveExtra: removeDlExtra,
+    onUpdateExtra: updateDlExtra,
+  };
 
   /* ── Widgets ── */
   const [widgets, setWidgets]       = useState([]);
