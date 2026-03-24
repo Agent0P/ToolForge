@@ -5,9 +5,78 @@ import { T, inputStyle, addBtnStyle, CURRENCIES, NumInput, Row, Result, MiniResu
 export function RateCalc() {
   const [currency, setCurrency] = useState("USD");
   const sym = CURRENCIES.find(c => c.code === currency)?.symbol || "$";
-  const [expenses, setExpenses] = useState(""); const [salary, setSalary] = useState(""); const [hours, setHours] = useState(""); const [buffer, setBuffer] = useState(20);
-  const rate = (Number(expenses) > 0 || Number(salary) > 0) && Number(hours) > 0 ? ((Number(expenses) + Number(salary)) / Number(hours) * (1 + Number(buffer) / 100)).toFixed(2) : null;
-  return <div><CurrencyPicker value={currency} onChange={setCurrency} /><Row label={`Monthly Expenses (${sym})`}><NumInput val={expenses} set={setExpenses} /></Row><Row label={`Desired Monthly Take-home (${sym})`}><NumInput val={salary} set={setSalary} /></Row><Row label="Billable Hours / Month"><NumInput val={hours} set={setHours} /></Row><Row label="Buffer / Profit (%)"><NumInput val={buffer} set={setBuffer} /></Row>{rate && <><Result label="Your Minimum Hourly Rate" value={`${sym}${rate}/hr`} /><CopyButton text={`My minimum hourly rate is ${sym}${rate}/hr — ToolForge`} /></>}<Tip>Going below this rate means you're losing money. Add 20–40% more for growth.</Tip></div>;
+  const [expenses, setExpenses] = useState("");
+  const [salary, setSalary]     = useState("");
+  const [hours, setHours]       = useState("");
+  const [buffer, setBuffer]     = useState(20);
+  const [showBenchmarks, setShowBenchmarks] = useState(false);
+
+  const BENCHMARKS = [
+    { role:"Web Developer",       lo:50,  hi:150 },
+    { role:"Graphic Designer",    lo:35,  hi:100 },
+    { role:"Copywriter",          lo:40,  hi:120 },
+    { role:"SEO Specialist",      lo:50,  hi:130 },
+    { role:"Social Media Mgr",    lo:30,  hi:80  },
+    { role:"Video Editor",        lo:40,  hi:110 },
+    { role:"VA / Admin",          lo:20,  hi:60  },
+    { role:"Project Manager",     lo:60,  hi:160 },
+    { role:"UX/UI Designer",      lo:55,  hi:150 },
+    { role:"Data Analyst",        lo:55,  hi:140 },
+    { role:"Consultant",          lo:75,  hi:250 },
+    { role:"Photographer",        lo:50,  hi:200 },
+  ];
+
+  const applyBenchmark = (b) => {
+    const mid = Math.round((b.lo + b.hi) / 2);
+    setSalary(String(mid * 160));
+    setHours("160");
+  };
+
+  const rate = (Number(expenses) > 0 || Number(salary) > 0) && Number(hours) > 0
+    ? ((Number(expenses) + Number(salary)) / Number(hours) * (1 + Number(buffer) / 100)).toFixed(2)
+    : null;
+
+  return (
+    <div>
+      <CurrencyPicker value={currency} onChange={setCurrency} />
+      <Row label={`Monthly Expenses (${sym})`}><NumInput val={expenses} set={setExpenses} /></Row>
+      <Row label={`Desired Monthly Take-home (${sym})`}><NumInput val={salary} set={setSalary} /></Row>
+      <Row label="Billable Hours / Month"><NumInput val={hours} set={setHours} /></Row>
+      <Row label="Buffer / Profit (%)"><NumInput val={buffer} set={setBuffer} /></Row>
+
+      {rate && (
+        <>
+          <Result label="Your Minimum Hourly Rate" value={`${sym}${rate}/hr`} />
+          <CopyButton text={`My minimum hourly rate is ${sym}${rate}/hr — ToolForge`} />
+        </>
+      )}
+      <Tip>Going below this rate means you're losing money. Add 20–40% more for growth.</Tip>
+
+      {/* Industry benchmarks */}
+      <div style={{ marginTop:12, borderRadius:12, border:`1px solid ${T.border}`, overflow:"hidden" }}>
+        <div onClick={()=>setShowBenchmarks(v=>!v)} style={{ padding:"11px 14px", display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer", background:showBenchmarks?T.blueDim:T.card }}>
+          <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:T.blue }}>📊 Market Rate Benchmarks</div>
+          <span style={{ fontSize:13, color:T.muted, transform:showBenchmarks?"rotate(180deg)":"rotate(0deg)", transition:"transform 0.2s", display:"inline-block" }}>▾</span>
+        </div>
+        {showBenchmarks && (
+          <div style={{ padding:"10px 14px 14px", background:T.card, borderTop:`1px solid ${T.border}` }}>
+            <div style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", marginBottom:10 }}>Typical freelance rates (USD/hr). Click any role to pre-fill your calculator.</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+              {BENCHMARKS.map(b => (
+                <div key={b.role} onClick={()=>applyBenchmark(b)} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, cursor:"pointer", background:"white", transition:"background 0.15s" }}
+                  onMouseEnter={e=>e.currentTarget.style.background=T.blueDim}
+                  onMouseLeave={e=>e.currentTarget.style.background="white"}>
+                  <span style={{ fontSize:12, fontFamily:"DM Sans, sans-serif", color:T.ink }}>{b.role}</span>
+                  <span style={{ fontSize:12, fontWeight:700, fontFamily:"Syne, sans-serif", color:T.blue }}>${b.lo}–${b.hi}/hr</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize:10, color:T.muted, fontFamily:"DM Sans, sans-serif", marginTop:8 }}>Ranges reflect typical global freelance markets. Local rates may vary.</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function ProjectEstimator() {
@@ -312,23 +381,40 @@ export function GPACalc() {
 export function TipSplitter() {
   const [currency, setCurrency] = useState("USD");
   const sym = CURRENCIES.find(c => c.code === currency)?.symbol || "$";
-  const [bill, setBill]     = useState("");
-  const [tip, setTip]       = useState(18);
+  const [bill, setBill]         = useState("");
+  const [tip, setTip]           = useState(18);
   const [customTip, setCustomTip] = useState("");
   const [useCustom, setUseCustom] = useState(false);
-  const [people, setPeople] = useState(2);
+  const [people, setPeople]     = useState(2);
+  const [taxRate, setTaxRate]   = useState("");
+  const [roundUp, setRoundUp]   = useState(false);
 
-  const activeTip   = useCustom ? (parseFloat(customTip) || 0) : tip;
-  const billNum     = parseFloat(bill) || 0;
-  const tipAmt      = (billNum * activeTip / 100).toFixed(2);
-  const total       = (billNum + parseFloat(tipAmt)).toFixed(2);
-  const perPerson   = people > 0 ? (parseFloat(total) / people).toFixed(2) : "0.00";
-  const hasResult   = billNum > 0;
+  const activeTip  = useCustom ? (parseFloat(customTip) || 0) : tip;
+  const billNum    = parseFloat(bill) || 0;
+  const taxNum     = parseFloat(taxRate) || 0;
+  const taxAmt     = (billNum * taxNum / 100);
+  const subtotal   = billNum + taxAmt;
+  const tipAmt     = (subtotal * activeTip / 100);
+  const totalRaw   = subtotal + tipAmt;
+  const total      = roundUp ? Math.ceil(totalRaw) : totalRaw;
+  const perPerson  = people > 0 ? total / people : 0;
+  const hasResult  = billNum > 0;
+
+  const fmt = (n) => n.toFixed(2);
 
   return (
     <div>
       <CurrencyPicker value={currency} onChange={setCurrency} />
-      <Row label={`Bill Total (${sym})`}><NumInput val={bill} set={setBill} /></Row>
+      <Row label={`Bill Subtotal (${sym})`}><NumInput val={bill} set={setBill} /></Row>
+
+      <Row label="Sales Tax (%)">
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <input type="number" value={taxRate} onChange={e=>setTaxRate(e.target.value)}
+            placeholder="0 if already included" min="0" max="30" step="0.1"
+            style={{ ...inputStyle, flex:1, textAlign:"center" }} />
+          <span style={{ fontSize:14, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>%</span>
+        </div>
+      </Row>
 
       <Row label="Tip">
         <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
@@ -338,25 +424,33 @@ export function TipSplitter() {
               {p}%
             </button>
           ))}
-          <input
-            type="number" placeholder="Custom" value={customTip}
+          <input type="number" placeholder="Custom" value={customTip}
             onChange={e => { setCustomTip(e.target.value); setUseCustom(true); }}
             onFocus={() => setUseCustom(true)}
-            style={{ ...inputStyle, flex:1, minWidth:60, padding:"6px 8px", border:`1px solid ${useCustom?T.accent:T.border}`, background:useCustom?T.accentDim:T.card, color:useCustom?T.accent:T.ink, textAlign:"center" }}
-          />
+            style={{ ...inputStyle, flex:1, minWidth:60, padding:"6px 8px", border:`1px solid ${useCustom?T.accent:T.border}`, background:useCustom?T.accentDim:T.card, color:useCustom?T.accent:T.ink, textAlign:"center" }} />
         </div>
       </Row>
 
       <Row label="Number of People"><NumInput val={people} set={setPeople} /></Row>
 
+      <Row label="Round Up Total">
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <div onClick={()=>setRoundUp(v=>!v)} style={{ width:40, height:22, borderRadius:11, background:roundUp?T.accent:T.border, position:"relative", cursor:"pointer", transition:"background 0.2s", flexShrink:0 }}>
+            <div style={{ position:"absolute", top:3, left:roundUp?21:3, width:16, height:16, borderRadius:"50%", background:"white", transition:"left 0.2s", boxShadow:"0 1px 3px rgba(0,0,0,0.2)" }} />
+          </div>
+          <span style={{ fontSize:12, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>Round total up to nearest whole {sym}</span>
+        </div>
+      </Row>
+
       {hasResult && (
         <>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:12 }}>
-            <MiniResult label={"Tip (" + activeTip + "%)"} value={sym + tipAmt} />
-            <MiniResult label="Total Bill" value={sym + total} />
+            {taxNum > 0 && <MiniResult label={`Tax (${taxNum}%)`} value={sym + fmt(taxAmt)} />}
+            <MiniResult label={`Tip (${activeTip}%)`} value={sym + fmt(tipAmt)} />
+            <MiniResult label="Total Bill" value={sym + fmt(total)} />
           </div>
-          <Result label="Each Person Pays" value={sym + perPerson} />
-          <CopyButton text={"Bill split: " + sym + perPerson + " each (" + activeTip + "% tip) — ToolForge"} />
+          <Result label="Each Person Pays" value={sym + fmt(perPerson)} />
+          <CopyButton text={"Bill split: " + sym + fmt(perPerson) + " each (" + activeTip + "% tip" + (taxNum?", "+taxNum+"% tax":"") + ") — ToolForge"} />
         </>
       )}
     </div>
@@ -468,6 +562,43 @@ export function BreakEvenCalc() {
           <CopyButton text={"Break-even: " + units + " units at " + sym + sellNum + "/unit — ToolForge"} />
           <Tip>{"Sell more than " + units + " units/month and you're profitable."}</Tip>
 
+          {/* Visual chart */}
+          {(() => {
+            const maxUnits = Math.ceil(units * 2);
+            const maxRevenue = maxUnits * sellNum;
+            const maxCost = fixedNum + maxUnits * varNum;
+            const yMax = Math.max(maxRevenue, maxCost) * 1.05;
+            const W = 280; const H = 140;
+            const xScale = (u) => (u / maxUnits) * W;
+            const yScale = (v) => H - (v / yMax) * H;
+            const revenuePoints = [[0,0],[maxUnits, maxRevenue]].map(([u,v]) => `${xScale(u)},${yScale(v)}`).join(" ");
+            const costPoints = [[0,fixedNum],[maxUnits, fixedNum + maxUnits*varNum]].map(([u,v]) => `${xScale(u)},${yScale(v)}`).join(" ");
+            const bx = xScale(units); const by = yScale(units * sellNum);
+            return (
+              <div style={{ marginTop:14, marginBottom:4, padding:"14px", borderRadius:12, background:T.card, border:`1px solid ${T.border}` }}>
+                <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:10 }}>BREAK-EVEN CHART</div>
+                <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow:"visible" }}>
+                  {/* Revenue line */}
+                  <polyline points={revenuePoints} fill="none" stroke={T.green} strokeWidth="2" strokeLinecap="round"/>
+                  {/* Cost line */}
+                  <polyline points={costPoints} fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeDasharray="5,3"/>
+                  {/* Break-even point */}
+                  <circle cx={bx} cy={by} r="5" fill={T.accent} />
+                  <line x1={bx} y1={by} x2={bx} y2={H} stroke={T.accent} strokeWidth="1" strokeDasharray="3,3"/>
+                  {/* Labels */}
+                  <text x={W-2} y={yScale(maxRevenue)+4} textAnchor="end" fill={T.green} fontSize="9" fontFamily="DM Sans, sans-serif">Revenue</text>
+                  <text x={W-2} y={yScale(fixedNum + maxUnits*varNum)+4} textAnchor="end" fill="#f87171" fontSize="9" fontFamily="DM Sans, sans-serif">Total Cost</text>
+                  <text x={bx} y={by-8} textAnchor="middle" fill={T.accent} fontSize="9" fontFamily="DM Sans, sans-serif" fontWeight="700">{units} units</text>
+                </svg>
+                <div style={{ display:"flex", gap:14, marginTop:6, fontSize:10, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>
+                  <span style={{ color:T.green }}>— Revenue</span>
+                  <span style={{ color:"#f87171" }}>--- Total Cost</span>
+                  <span style={{ color:T.accent }}>● Break-even</span>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Profit checker */}
           <div style={{ marginTop:12, padding:"12px 14px", borderRadius:12, border:`1px solid ${T.border}`, background:T.card }}>
             <div style={{ fontFamily:"Syne, sans-serif", fontWeight:700, fontSize:12, color:T.ink, marginBottom:8 }}>📊 How profitable am I at X units?</div>
@@ -491,13 +622,25 @@ export function BreakEvenCalc() {
   );
 }
 
-export function DeadlineCountdown({ label, setLabel, target, setTarget, pinned, onTogglePin, running, onStart, onStop }) {
+export function DeadlineCountdown({ label, setLabel, target, setTarget, pinned, onTogglePin, running, onStart, onStop, tick, extras, onAddExtra, onRemoveExtra, onUpdateExtra }) {
   const getDiff = () => new Date(target) - new Date();
-  const fmt = () => { const diff = getDiff(); if (diff <= 0) return "Past due!"; const d = Math.floor(diff/864e5); const h = Math.floor((diff%864e5)/36e5); const m = Math.floor((diff%36e5)/6e4); return `${d}d ${h}h ${m}m`; };
   const diff = getDiff();
-  const days = diff > 0 ? Math.floor(diff/864e5) : 0;
-  const hours = diff > 0 ? Math.floor((diff%864e5)/36e5) : 0;
-  const mins = diff > 0 ? Math.floor((diff%36e5)/6e4) : 0;
+  const days  = Math.floor(diff / 864e5);
+  const hours = Math.floor((diff % 864e5) / 36e5);
+  const mins  = Math.floor((diff % 36e5) / 6e4);
+  const fmt = () => `${days}d ${hours}h ${mins}m`;
+
+  const getCountdown = (tgt) => {
+    const d = new Date(tgt) - new Date();
+    if (d <= 0) return "Past due!";
+    const dy = Math.floor(d / 864e5);
+    const hr = Math.floor((d % 864e5) / 36e5);
+    const mn = Math.floor((d % 36e5) / 6e4);
+    return `${dy}d ${hr}h ${mn}m`;
+  };
+
+  const iStyle = { ...inputStyle, fontSize:13, padding:"8px 10px" };
+
   return (
     <div>
       <Row label="Event / Deadline Name"><input value={label} onChange={e => setLabel(e.target.value)} style={inputStyle} /></Row>
@@ -520,11 +663,36 @@ export function DeadlineCountdown({ label, setLabel, target, setTarget, pinned, 
           </button>
         </div>
       </>}
+
+      {/* Additional countdowns */}
+      {(extras||[]).length > 0 && (
+        <div style={{ marginTop:16 }}>
+          <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:10 }}>ADDITIONAL COUNTDOWNS</div>
+          {(extras||[]).map(ex => (
+            <div key={ex.id} style={{ padding:"12px 14px", borderRadius:10, background:T.card, border:`1px solid ${T.border}`, marginBottom:8 }}>
+              <div style={{ display:"flex", gap:8, marginBottom:8 }}>
+                <input value={ex.label} onChange={e=>onUpdateExtra(ex.id,"label",e.target.value)} placeholder="Event name" style={{ ...iStyle, flex:1 }} />
+                <input type="date" value={ex.target} onChange={e=>onUpdateExtra(ex.id,"target",e.target.value)} style={{ ...iStyle, flex:1 }} />
+                <button onClick={()=>onRemoveExtra(ex.id)} style={{ padding:"0 10px", borderRadius:8, border:`1px solid ${T.border}`, background:"transparent", color:T.muted, cursor:"pointer", fontSize:14, flexShrink:0 }}>✕</button>
+              </div>
+              {ex.target && (
+                <div style={{ fontSize:14, fontWeight:700, color:T.purple, fontFamily:"Syne, sans-serif" }}>
+                  {getCountdown(ex.target)}
+                  {ex.label && <span style={{ fontSize:11, fontWeight:400, color:T.muted, fontFamily:"DM Sans, sans-serif", marginLeft:8 }}>{ex.label}</span>}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      <button onClick={onAddExtra} style={{ marginTop:10, width:"100%", padding:"8px 0", borderRadius:9, border:`1.5px dashed ${T.border}`, background:"transparent", color:T.muted, fontSize:12, fontFamily:"DM Sans, sans-serif", cursor:"pointer" }}>
+        + Add Another Countdown
+      </button>
     </div>
   );
 }
 
-export function PomodoroTimer({ modes, modeId, secondsLeft, running, pinned, sessions, paused, onStart, onPause, onReset, onSwitchMode, onTogglePin }) {
+export function PomodoroTimer({ modes, modeId, secondsLeft, running, pinned, sessions, paused, focusMins, shortMins, longMins, onSetFocus, onSetShort, onSetLong, onStart, onPause, onReset, onSwitchMode, onTogglePin }) {
   const mode = modes.find(m => m.id === modeId);
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
   const total = mode.mins * 60;
@@ -564,6 +732,27 @@ export function PomodoroTimer({ modes, modeId, secondsLeft, running, pinned, ses
         <button onClick={onTogglePin} style={{ padding: "13px 14px", background: pinned ? mode.colorDim : "white", color: pinned ? mode.color : T.muted, border: `1.5px solid ${pinned ? mode.color : T.border}`, borderRadius: 12, fontSize: 13, fontFamily: "Syne, sans-serif", fontWeight: 700, cursor: "pointer" }}>📌</button>
       </div>
       {running && <div style={{ padding: "9px 12px", borderRadius: 9, background: mode.colorDim, border: `1px solid ${mode.color}33`, fontSize: 12, color: mode.color, fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>← Go back — timer keeps running in the widget</div>}
+
+      {/* Custom session lengths */}
+      {!running && (
+        <div style={{ marginTop:16, padding:"12px 14px", borderRadius:12, background:T.card, border:`1px solid ${T.border}` }}>
+          <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:10 }}>CUSTOM DURATIONS (minutes)</div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
+            {[
+              { label:"Focus", val:focusMins, set:onSetFocus, color:T.accent },
+              { label:"Short Break", val:shortMins, set:onSetShort, color:T.green },
+              { label:"Long Break", val:longMins, set:onSetLong, color:T.blue },
+            ].map(({label, val, set, color}) => (
+              <div key={label}>
+                <div style={{ fontSize:9, color:T.muted, fontFamily:"DM Sans, sans-serif", marginBottom:4, textAlign:"center" }}>{label}</div>
+                <input type="number" min={1} max={120} value={val}
+                  onChange={e => { const v=Math.max(1,Math.min(120,parseInt(e.target.value)||1)); set(v); }}
+                  style={{ ...inputStyle, textAlign:"center", padding:"6px 4px", border:`1.5px solid ${color}44`, fontSize:14, fontWeight:700, color:color, width:"100%", boxSizing:"border-box" }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1386,6 +1575,28 @@ export function WordCounter() {
           </div>
         ))}
       </div>
+      {/* Keyword density */}
+      {words > 0 && (() => {
+        const stopWords = new Set(["the","a","an","and","or","but","in","on","at","to","for","of","with","by","from","is","are","was","were","be","been","being","have","has","had","do","does","did","will","would","could","should","may","might","i","you","he","she","it","we","they","this","that","these","those","my","your","his","her","its","our","their"]);
+        const wordList = text.toLowerCase().match(/\b[a-z]{3,}\b/g) || [];
+        const freq = {};
+        wordList.forEach(w => { if (!stopWords.has(w)) freq[w] = (freq[w]||0)+1; });
+        const topWords = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,8);
+        if (!topWords.length) return null;
+        return (
+          <div style={{ marginTop:14 }}>
+            <div style={{ fontSize:10, color:T.muted, fontFamily:"Syne, sans-serif", fontWeight:700, marginBottom:8 }}>TOP KEYWORDS</div>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+              {topWords.map(([word, count]) => (
+                <div key={word} style={{ display:"flex", alignItems:"center", gap:5, background:T.card, border:`1px solid ${T.border}`, borderRadius:20, padding:"4px 10px" }}>
+                  <span style={{ fontSize:12, color:T.ink, fontFamily:"DM Sans, sans-serif" }}>{word}</span>
+                  <span style={{ fontSize:10, color:T.accent, fontWeight:700, fontFamily:"DM Sans, sans-serif" }}>{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
       {text.length > 0 && (
         <button onClick={() => setText("")} style={{ marginTop: 10, padding: "7px 16px", background: "transparent", border: `1px solid ${T.border}`, borderRadius: 8, cursor: "pointer", fontSize: 12, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>Clear</button>
       )}
@@ -1442,39 +1653,120 @@ export function BMICalculator() {
         </>
       )}
       <button onClick={calculate} style={{ width: "100%", marginTop: 6, padding: "12px 0", background: T.accent, color: "white", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: "Syne, sans-serif", cursor: "pointer" }}>Calculate BMI</button>
-      {bmi && cat && (
-        <div className="tf-bmi-result" style={{ marginTop: 20, background: cat.bg, border: `1.5px solid ${cat.color}44`, borderRadius: 12, padding: 20, textAlign: "center" }}>
-          <div style={{ fontSize: 48, fontWeight: 800, color: cat.color, fontFamily: "Syne, sans-serif", lineHeight: 1 }}>{bmi}</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: cat.color, marginTop: 6, fontFamily: "Syne, sans-serif" }}>{cat.label}</div>
-          <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", height: 8, marginTop: 16, marginBottom: 4 }}>
-            {[{ c: "#93c5fd", w: 25 }, { c: "#4ade80", w: 33 }, { c: "#fbbf24", w: 25 }, { c: "#f87171", w: 17 }].map((s, i) => (
-              <div key={i} style={{ flex: s.w, background: s.c }} />
-            ))}
+      {bmi && cat && (() => {
+        // Healthy weight range for current height
+        const getHealthyRange = () => {
+          if (unit === "metric") {
+            const h = parseFloat(height) / 100;
+            if (!h) return null;
+            const lo = (18.5 * h * h).toFixed(1);
+            const hi = (24.9 * h * h).toFixed(1);
+            return `${lo}–${hi} kg`;
+          } else {
+            const inches = parseFloat(heightFt) * 12 + parseFloat(heightIn || 0);
+            if (!inches) return null;
+            const lo = ((18.5 * inches * inches) / 703).toFixed(1);
+            const hi = ((24.9 * inches * inches) / 703).toFixed(1);
+            return `${lo}–${hi} lbs`;
+          }
+        };
+        const healthyRange = getHealthyRange();
+        return (
+          <div className="tf-bmi-result" style={{ marginTop: 20 }}>
+            <div style={{ background: cat.bg, border: `1.5px solid ${cat.color}44`, borderRadius: 12, padding: 20, textAlign: "center" }}>
+              <div style={{ fontSize: 48, fontWeight: 800, color: cat.color, fontFamily: "Syne, sans-serif", lineHeight: 1 }}>{bmi}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: cat.color, marginTop: 6, fontFamily: "Syne, sans-serif" }}>{cat.label}</div>
+              <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", height: 8, marginTop: 16, marginBottom: 4 }}>
+                {[{ c: "#93c5fd", w: 25 }, { c: "#4ade80", w: 33 }, { c: "#fbbf24", w: 25 }, { c: "#f87171", w: 17 }].map((s, i) => (
+                  <div key={i} style={{ flex: s.w, background: s.c }} />
+                ))}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>
+                <span>Under</span><span>Healthy</span><span>Over</span><span>Obese</span>
+              </div>
+            </div>
+            {healthyRange && (
+              <div style={{ marginTop: 10, padding: "12px 14px", borderRadius: 10, background: T.greenDim, border: `1px solid ${T.green}33`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontSize: 12, color: T.green, fontFamily: "DM Sans, sans-serif", fontWeight: 600 }}>Healthy weight for your height</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: T.green, fontFamily: "Syne, sans-serif" }}>{healthyRange}</div>
+              </div>
+            )}
+            <div style={{ fontSize: 11, color: T.muted, marginTop: 8, fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>BMI is a screening tool, not a medical diagnosis.</div>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: T.muted, fontFamily: "DM Sans, sans-serif" }}>
-            <span>Under</span><span>Healthy</span><span>Over</span><span>Obese</span>
-          </div>
-          <div style={{ fontSize: 11, color: T.muted, marginTop: 12, fontFamily: "DM Sans, sans-serif" }}>BMI is a screening tool, not a medical diagnosis.</div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
 
 export function QRGenerator() {
-  const [input, setInput] = useState("");
-  const [qrUrl, setQrUrl] = useState("");
-  const [size, setSize] = useState(256);
+  const QR_TYPES = [
+    { id:"url",    label:"🔗 URL",    placeholder:"https://yoursite.com" },
+    { id:"text",   label:"📝 Text",   placeholder:"Any text or message…" },
+    { id:"wifi",   label:"📶 WiFi",   placeholder:null },
+    { id:"email",  label:"📧 Email",  placeholder:null },
+    { id:"sms",    label:"💬 SMS",    placeholder:null },
+    { id:"vcard",  label:"👤 vCard",  placeholder:null },
+  ];
+
+  const [qrType, setQrType]   = useState("url");
+  const [input, setInput]     = useState("");
+  const [qrUrl, setQrUrl]     = useState("");
+  const [size, setSize]       = useState(256);
+  const [darkColor, setDark]  = useState("#0f0f0d");
+  const [lightColor, setLight]= useState("#ffffff");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError]     = useState("");
+
+  // WiFi fields
+  const [wifiSsid, setWifiSsid]   = useState("");
+  const [wifiPass, setWifiPass]   = useState("");
+  const [wifiSec, setWifiSec]     = useState("WPA");
+  // Email fields
+  const [emailTo, setEmailTo]     = useState("");
+  const [emailSub, setEmailSub]   = useState("");
+  const [emailBody, setEmailBody] = useState("");
+  // SMS fields
+  const [smsTo, setSmsTo]         = useState("");
+  const [smsMsg, setSmsMsg]       = useState("");
+  // vCard fields
+  const [vcName, setVcName]       = useState("");
+  const [vcPhone, setVcPhone]     = useState("");
+  const [vcEmail, setVcEmail]     = useState("");
+  const [vcOrg, setVcOrg]         = useState("");
+
+  const buildPayload = () => {
+    if (qrType === "url" || qrType === "text") return input.trim();
+    if (qrType === "wifi")  return `WIFI:T:${wifiSec};S:${wifiSsid};P:${wifiPass};;`;
+    if (qrType === "email") return `mailto:${emailTo}?subject=${encodeURIComponent(emailSub)}&body=${encodeURIComponent(emailBody)}`;
+    if (qrType === "sms")   return `smsto:${smsTo}:${smsMsg}`;
+    if (qrType === "vcard") return `BEGIN:VCARD
+VERSION:3.0
+FN:${vcName}
+TEL:${vcPhone}
+EMAIL:${vcEmail}
+ORG:${vcOrg}
+END:VCARD`;
+    return "";
+  };
+
+  const canGenerate = () => {
+    if (qrType === "url" || qrType === "text") return input.trim().length > 0;
+    if (qrType === "wifi")  return wifiSsid.trim().length > 0;
+    if (qrType === "email") return emailTo.trim().length > 0;
+    if (qrType === "sms")   return smsTo.trim().length > 0;
+    if (qrType === "vcard") return vcName.trim().length > 0;
+    return false;
+  };
 
   const generate = async () => {
-    if (!input.trim()) return;
+    const payload = buildPayload();
+    if (!payload) return;
     setLoading(true); setError("");
     try {
-      const url = await QRCodeLib.toDataURL(input.trim(), {
+      const url = await QRCodeLib.toDataURL(payload, {
         width: size, margin: 2,
-        color: { dark: "#0f0f0d", light: "#ffffff" },
+        color: { dark: darkColor, light: lightColor },
         errorCorrectionLevel: "M",
       });
       setQrUrl(url);
@@ -1487,28 +1779,94 @@ export function QRGenerator() {
     a.download = "qrcode.png"; a.href = qrUrl; a.click();
   };
 
+  const inp = (val, set, ph, type="text") => (
+    <input type={type} value={val} onChange={e=>set(e.target.value)} placeholder={ph}
+      style={{ ...inputStyle, fontSize:14, padding:"10px 12px" }}
+      onFocus={e=>(e.target.style.borderColor=T.accent)} onBlur={e=>(e.target.style.borderColor=T.border)} />
+  );
+
   return (
     <div>
-      <Row label="URL or Text">
-        <input type="text" placeholder="https://yoursite.com or any text…" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && generate()} style={{ ...inputStyle, fontSize: 14, padding: "10px 12px" }} onFocus={e => (e.target.style.borderColor = T.accent)} onBlur={e => (e.target.style.borderColor = T.border)} />
-      </Row>
+      {/* Type tabs */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:6, marginBottom:14 }}>
+        {QR_TYPES.map(t => (
+          <button key={t.id} onClick={()=>{ setQrType(t.id); setQrUrl(""); }}
+            style={{ padding:"7px 4px", border:`1.5px solid ${qrType===t.id?T.teal:T.border}`, borderRadius:8, background:qrType===t.id?T.tealDim:"transparent", color:qrType===t.id?T.teal:T.muted, fontFamily:"DM Sans, sans-serif", fontSize:11, fontWeight:qrType===t.id?700:400, cursor:"pointer", transition:"all 0.15s" }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Dynamic input fields by type */}
+      {(qrType==="url"||qrType==="text") && (
+        <Row label={qrType==="url"?"URL":"Text"}>
+          {inp(input, setInput, QR_TYPES.find(t=>t.id===qrType).placeholder)}
+        </Row>
+      )}
+      {qrType==="wifi" && (<>
+        <Row label="Network Name (SSID)">{inp(wifiSsid, setWifiSsid, "e.g. HomeNetwork")}</Row>
+        <Row label="Password">{inp(wifiPass, setWifiPass, "WiFi password")}</Row>
+        <Row label="Security">
+          <div style={{ display:"flex", gap:6 }}>
+            {["WPA","WEP","None"].map(s => (
+              <button key={s} onClick={()=>setWifiSec(s)} style={{ flex:1, padding:"7px 0", border:`1.5px solid ${wifiSec===s?T.teal:T.border}`, borderRadius:8, background:wifiSec===s?T.tealDim:"transparent", color:wifiSec===s?T.teal:T.muted, fontFamily:"DM Sans, sans-serif", fontSize:12, fontWeight:wifiSec===s?700:400, cursor:"pointer" }}>{s}</button>
+            ))}
+          </div>
+        </Row>
+      </>)}
+      {qrType==="email" && (<>
+        <Row label="To">{inp(emailTo, setEmailTo, "email@example.com", "email")}</Row>
+        <Row label="Subject">{inp(emailSub, setEmailSub, "Subject (optional)")}</Row>
+        <Row label="Message">{inp(emailBody, setEmailBody, "Body text (optional)")}</Row>
+      </>)}
+      {qrType==="sms" && (<>
+        <Row label="Phone Number">{inp(smsTo, setSmsTo, "+1234567890", "tel")}</Row>
+        <Row label="Message">{inp(smsMsg, setSmsMsg, "Message (optional)")}</Row>
+      </>)}
+      {qrType==="vcard" && (<>
+        <Row label="Full Name">{inp(vcName, setVcName, "Jane Smith")}</Row>
+        <Row label="Phone">{inp(vcPhone, setVcPhone, "+1234567890", "tel")}</Row>
+        <Row label="Email">{inp(vcEmail, setVcEmail, "jane@example.com", "email")}</Row>
+        <Row label="Organisation">{inp(vcOrg, setVcOrg, "Company (optional)")}</Row>
+      </>)}
+
+      {/* Size */}
       <Row label="Size">
-        <div style={{ display: "flex", gap: 8 }}>
-          {[{ label: "Small", val: 128 }, { label: "Medium", val: 256 }, { label: "Large", val: 512 }].map(s => (
-            <button key={s.val} onClick={() => setSize(s.val)} style={{ flex: 1, padding: "7px 0", border: `1.5px solid ${size === s.val ? T.teal : T.border}`, borderRadius: 8, cursor: "pointer", fontFamily: "DM Sans, sans-serif", fontSize: 12, fontWeight: size === s.val ? 700 : 400, background: size === s.val ? T.tealDim : "white", color: size === s.val ? T.teal : T.muted, transition: "all 0.15s" }}>
+        <div style={{ display:"flex", gap:8 }}>
+          {[{label:"Small",val:128},{label:"Medium",val:256},{label:"Large",val:512}].map(s => (
+            <button key={s.val} onClick={()=>setSize(s.val)} style={{ flex:1, padding:"7px 0", border:`1.5px solid ${size===s.val?T.teal:T.border}`, borderRadius:8, cursor:"pointer", fontFamily:"DM Sans, sans-serif", fontSize:12, fontWeight:size===s.val?700:400, background:size===s.val?T.tealDim:"white", color:size===s.val?T.teal:T.muted, transition:"all 0.15s" }}>
               {s.label}
             </button>
           ))}
         </div>
       </Row>
-      <button onClick={generate} disabled={!input.trim() || loading} style={{ width: "100%", marginTop: 4, padding: "12px 0", background: input.trim() ? T.accent : T.border, color: "white", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, fontFamily: "Syne, sans-serif", cursor: input.trim() ? "pointer" : "not-allowed", transition: "background 0.2s" }}>
+
+      {/* Colors */}
+      <Row label="Colors">
+        <div style={{ display:"flex", gap:12, alignItems:"center" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+            <input type="color" value={darkColor} onChange={e=>setDark(e.target.value)} style={{ width:32, height:32, borderRadius:6, border:`1px solid ${T.border}`, cursor:"pointer", padding:2 }} />
+            <span style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>Foreground</span>
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+            <input type="color" value={lightColor} onChange={e=>setLight(e.target.value)} style={{ width:32, height:32, borderRadius:6, border:`1px solid ${T.border}`, cursor:"pointer", padding:2 }} />
+            <span style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif" }}>Background</span>
+          </div>
+          {(darkColor !== "#0f0f0d" || lightColor !== "#ffffff") && (
+            <button onClick={()=>{ setDark("#0f0f0d"); setLight("#ffffff"); }} style={{ fontSize:11, color:T.muted, fontFamily:"DM Sans, sans-serif", background:"transparent", border:`1px solid ${T.border}`, borderRadius:6, padding:"4px 8px", cursor:"pointer" }}>Reset</button>
+          )}
+        </div>
+      </Row>
+
+      <button onClick={generate} disabled={!canGenerate() || loading}
+        style={{ width:"100%", marginTop:4, padding:"12px 0", background:canGenerate()?T.accent:T.border, color:"white", border:"none", borderRadius:10, fontSize:14, fontWeight:700, fontFamily:"Syne, sans-serif", cursor:canGenerate()?"pointer":"not-allowed", transition:"background 0.2s" }}>
         {loading ? "Generating…" : "Generate QR Code"}
       </button>
-      {error && <div style={{ marginTop: 10, padding: "9px 12px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, color: "#dc2626", fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{error}</div>}
+      {error && <div style={{ marginTop:10, padding:"9px 12px", background:"#fef2f2", border:"1px solid #fecaca", borderRadius:8, color:"#dc2626", fontSize:13, fontFamily:"DM Sans, sans-serif" }}>{error}</div>}
       {qrUrl && (
-        <div style={{ marginTop: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 14, padding: 20, background: T.card, border: `1px solid ${T.border}`, borderRadius: 12 }}>
-          <img src={qrUrl} alt="QR Code" style={{ borderRadius: 8, boxShadow: "0 2px 16px #0f0f0d14", maxWidth: "100%" }} />
-          <button onClick={download} style={{ padding: "9px 24px", background: T.ink, color: "white", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif", cursor: "pointer" }}>⬇️ Download PNG</button>
+        <div style={{ marginTop:20, display:"flex", flexDirection:"column", alignItems:"center", gap:14, padding:20, background:T.card, border:`1px solid ${T.border}`, borderRadius:12 }}>
+          <img src={qrUrl} alt="QR Code" style={{ borderRadius:8, maxWidth:"100%" }} />
+          <button onClick={download} style={{ padding:"9px 24px", background:T.ink, color:"white", border:"none", borderRadius:8, fontSize:13, fontWeight:600, fontFamily:"DM Sans, sans-serif", cursor:"pointer" }}>⬇️ Download PNG</button>
         </div>
       )}
     </div>
